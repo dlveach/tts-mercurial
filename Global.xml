@@ -1,0 +1,62 @@
+<XmlLayout xmlns="http://www.w3schools.com"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:noNamespaceSchemaLocation="../../../Configuration/XmlLayout.xsd"
+   showAnimation="Grow" hideAnimation="FadeOut">
+
+<Include path="Xml/Styles.xml" />
+
+<Defaults>
+  <Panel color="rgb(0.1,0.4,0)" image="Sprites/Outline_Sharp" />
+  <Button class="iconButton" image="Sprites/Layout/Base" iconColor="rgb(1,1,0)"
+    iconHoverColor="rgb(1,1,0)" />
+  <Button class="iconButtonWithText" iconWidth="48" padding="4 0 2 2"
+    ignoreLayout="1" width="160" height="32" />
+
+
+  <Button class="hl_button"
+    colors="White|Cyan|#C8C8C8|rgba(0.78,0.78,0.78,0.5)" />
+  <Row class="tableRow" preferredHeight="25" color="rgba(0,0,0,0.5)" />
+  <Text class="small_text" fontSize="12" color="white"/>
+  <Text class="med_text" fontSize="14" color="white"/>
+  <Text class="med_large_text" fontSize="18" color="white"/>
+  <Text class="large_text" fontSize="20" color="white" />
+</Defaults>
+
+<TableLayout id="startPanel" class="noCellBackground" height="150" width="420"
+  rectAlignment="MiddleCenter" offsetXY="0 0" active="false">
+  <Row class="headerRow">
+    <Cell>
+      <Text class="title" fontSize="20">
+        Seat all players, then press Setup Game
+      </Text>
+    </Cell>
+  </Row>
+  <Row class="viewport">
+    <Cell dontUseTableCellBackground="true">
+      <TableLayout cellPadding="7" padding="20" cellSpacing="5"
+        cellBackgroundImage="Sprites/Outline_Sharp"
+        cellBackgroundColor="rgba(1,1,0,0.125)"
+        autoCalculateHeight="1" columnWidths="120 120 120">
+        <Row preferredHeight="40">
+          <Cell dontUseTableCellBackground="true">
+            <!--Button class="iconButton" id="short" onClick="setupGame"
+              fontSize="14" text="Short" tooltip=" 16 Points "
+              tooltipPosition="Above"/-->
+          </Cell>
+          <Cell dontUseTableCellBackground="true">
+            <Button class="iconButton" id="normal" onClick="setupGame"
+              fontSize="14" text="Setup Game"/>
+          </Cell>
+          <Cell dontUseTableCellBackground="true">
+            <!--Button class="iconButton" id="long" onClick="setupGame"
+              fontSize="14" text="Long" tooltip=" 35 Points "
+              tooltipPosition="Above"/-->
+          </Cell>
+        </Row>
+      </TableLayout>
+    </Cell>
+  </Row>
+</TableLayout>
+
+
+</XmlLayout>

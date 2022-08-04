@@ -1,0 +1,262 @@
+
+
+env = {}
+env.version = "0.1"
+env.test= {}
+env.test.test_players = {"Green", "Blue", "Yellow", "White"}
+env.test.auto_switch = true
+env.test.in_dev = true
+env.test.trace = true
+env.test.verbose = true
+env.test.debug = true
+env.test.force_fresh_save = true
+env.game = {}
+env.game.player_table_order = {"White", "Yellow", "Green", "Blue"}
+
+C = {}
+C.guids = {}
+C.guids.mystcaller_base = "2c961c"
+C.guids.player_boards = {}
+C.guids.player_boards.mystcaller = "be09eb"
+C.guids.player_boards.elementalist = "e47526"
+C.guids.player_boards.archanist = "625f56"
+C.guids.player_boards.enchanter = "69525a"
+C.guids.player_boards.chaosmancer = "d453e1"
+C.guids.spell_deck = "df2dbd"
+C.guids.alterations_deck = "e482bf"
+C.guids.heroics_deck = "e510e5"
+C.guids.artifacts_deck = "e52f60"
+C.guids.elementalist_start_deck = "701cdb"
+C.guids.arcanist_start_deck = "a1dace"
+C.guids.enchanter_start_deck = "4238d0"
+C.guids.chaosmancer_start_deck = "0f39cd"
+C.guids.mystcaller_start_deck = "53db36"
+C.guids.mana_bag = "a39f6e"
+C.guids.acuity_bag = "5561d3"
+C.guids.prestige_bag = "d5b6a6"
+C.guids.arcana_tile_1 = "8f529c"
+C.guids.arcana_tile_2 = "5f944b"
+C.guids.arcana_tile_3 = "a94aad"
+C.guids.myst_rune_1 = "3444cf"
+C.guids.myst_rune_2 = "8b61f9"
+C.pos = {}
+C.rot = {}
+C.pos.spells = {}
+C.pos.spells[0] = { -5.681618, 0.973605, -17.186279 }
+C.pos.spells[1] = { -2.8328, 0.973605, -17.190039 }
+C.pos.spells[2] = { -0.016532, 0.973605, -17.200249 }
+C.pos.spells[3] = { 2.795382, 0.973605, -17.228243 }
+C.pos.spells[4] = { 5.660338, 0.973605, -17.234106 }
+C.pos.spells[5] = { 8.457616, 0.973605, -17.247536 }
+C.pos.alterations = {}
+C.pos.alterations[0] = { -5.677478, 0.973605, -8.856833 }
+C.pos.alterations[1] = { -2.828662, 0.973605, -8.860592 }
+C.pos.alterations[2] = { -0.012393, 0.973605, -8.870802 }
+C.pos.alterations[3] = { 2.799521, 0.973605, -8.898796 }
+C.pos.alterations[4] = { 5.664477, 0.973605, -8.904659 }
+C.pos.alterations[5] = { 8.461753, 0.973605, -8.918089 }
+C.pos.heroics = {}
+C.pos.heroics[0] = { -5.681297, 0.973605, -0.209943 }
+C.pos.heroics[1] = { -2.832476, 0.973605, -0.213703 }
+C.pos.heroics[2] = { -0.016209, 0.973605, -0.223913 }
+C.pos.heroics[3] = { 2.795707, 0.973605, -0.251907 }
+C.pos.heroics[4] = { 5.660657, 0.973605, -0.257771 }
+C.pos.heroics[5] = { 8.457934, 0.973605, -0.2712 }
+C.pos.myst_rune = { 12.057961, 0.96, 5.3963 }
+C.rot.myst_rune = { 0.000035, 270.16687, 0.000004 }
+
+
+--[[ Doc ]]
+function onLoad(saved_data)
+  log("Mercurial version " .. env.version .. " loading")
+  GD = {}
+  if saved_data ~= "" then
+    if env.test.trace then log("Global onLoad(): Saved load") end
+    local restore_data = JSON.decode(saved_data)
+    GD = restore_data
+    restoreGameState()
+  else
+    if env.test.trace then log("Global onLoad(): Fresh load") end
+    GD.states = {}
+    GD.states.UI = {}
+    GD.states.obj_vis = {}
+    GD.game = {}
+    GD.game.started = false
+    GD.game.spells_deck_guid = C.guids.spell_deck
+    GD.game.alterations_deck_guid = C.guids.alterations_deck
+    GD.game.heroics_deck_guid = C.guids.heroics_deck
+    GD.game.artifacts_deck_guid = C.guids.artifacts_deck
+    GD.game.players = {}
+    if not(env.test.in_dev) then
+      --TODO??
+    end
+    getObjectFromGUID(C.guids.spell_deck).shuffle()
+    getObjectFromGUID(C.guids.alterations_deck).shuffle()
+    getObjectFromGUID(C.guids.heroics_deck).shuffle()
+    getObjectFromGUID(C.guids.artifacts_deck).shuffle()
+    UI_setAttribute("startPanel", "active", true)
+  end
+  math.randomseed(os.time())        
+end
+
+--[[ Doc ]]
+function setupGame()
+  UI_setAttribute("startPanel", "active", false)
+
+  setupPlayers()
+  acuity_bag = getObjectFromGUID(C.guids.acuity_bag)
+  mana_bag = getObjectFromGUID(C.guids.mana_bag)
+  p = {
+    ["position"] = {},
+    ["flip"] = true,
+    ["top"] = true,
+    ["smooth"] = true
+  }
+  deck = getObjectFromGUID(C.guids.spell_deck)
+  for i=0,5 do
+    p.position = C.pos.spells[i]
+    deck.takeObject(p)
+  end
+  deck = getObjectFromGUID(C.guids.alterations_deck)
+  for i=0,5 do
+    p.position = C.pos.alterations[i]
+    deck.takeObject(p)
+  end
+  deck = getObjectFromGUID(C.guids.heroics_deck)
+  for i=0,5 do
+    p.position = C.pos.heroics[i]
+    deck.takeObject(p)
+    p.position[2] = p.position[2] + 1
+    mana_bag.takeObject(p)
+    p.position[2] = p.position[2] + 1
+    acuity_bag.takeObject(p)
+    p.position[2] = p.position[2] + 1
+    acuity_bag.takeObject(p)
+  end
+  -- Place acuity on alterations per player count
+  p = {
+    ["position"] = {},
+    ["smooth"] = true
+  }
+  for i=1, GD.game.player_count do
+    p.position = C.pos.alterations[i-1] --zero index
+    p.position[2] = p.position[2] + 1
+    acuity_bag.takeObject(p)
+  end
+  -- Ranom myst rune selection
+  local myst_rune
+  if (math.random(1, 10) > 5) then
+    myst_rune = getObjectFromGUID(C.guids.myst_rune_1)
+  else
+    myst_rune = getObjectFromGUID(C.guids.myst_rune_2)
+  end
+  myst_rune.setPositionSmooth(C.pos.myst_rune)
+  myst_rune.setRotation(C.rot.myst_rune)
+  -- Random flip arcanas
+  if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_1).flip() end
+  if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_2).flip() end
+  if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_3).flip() end
+  -- Give extra acuity in turn order 
+  player = GD.game.start_player 
+  if env.test.verbose then print("Player 1 is " .. GD.game.player_order[player]) end
+  for i=1, GD.game.player_count-1 do
+    player = player + 1
+    if player > GD.game.player_count then player = 1 end --wrap around
+    player_color = GD.game.player_order[player]
+    if env.test.verbose then print("Dealing " .. i .. " extra acuity to player " .. i+1 .. " - " .. player_color) end
+    acuity_bag.deal(i, player_color)
+  end
+end
+
+--TODO: refill heroics & place mana and acuity
+--TODO: refill alterations & place acuity
+--TODO: refill spells
+
+
+--[[ Doc ]]
+function setupPlayers()
+  GD.game.player_order = {}
+  GD.game.players = {}
+  seated = getSeatedPlayers()
+  if(env.test.test_players) then
+    seated = env.test.test_players
+  end
+  --getSeatedPlayers() is random, setup players in table seating order
+  for _,pcol in ipairs(env.game.player_table_order) do
+    if contains(seated, pcol) then
+      GD.game.players[pcol] = {}
+      table.insert(GD.game.player_order, pcol)
+    end
+  end
+  GD.game.player_count = #GD.game.player_order
+  GD.game.start_player = math.random(1, #GD.game.player_order)
+  if env.test.debug then 
+    log("Player count = " .. tostring(GD.game.player_count))
+    log("Seated player order: ")
+    log(GD.game.player_order)
+    log("First player is " .. GD.game.player_order[GD.game.start_player]) 
+  end
+end
+
+--[[ Wrapper function for saving obj visiblity for game restore. ]]
+  function setInvisibleTo(guid, colors)
+    if env.test.trace then log("setInvisibleTo(): "..guid) end
+    assert(type(guid) == 'string', "guid must be a string")
+    assert(colors)
+    local obj = getObjectFromGUID(guid)
+    obj.setInvisibleTo(colors)
+    GD.states.obj_vis[guid] = colors
+  end
+  
+--[[  Wrapper function for saving UI attributes for game restore. ]]
+function UI_setAttribute(id, field, value)
+  if env.test.trace and env.test.verbose then log("UI_setAttribute()") end
+  assert(type(id) == "string", "id must be a string")
+  assert(type(field) == "string", "field must be a string")
+  UI.setAttribute(id, field, value)
+  GD.states.UI[id..":"..field] = value
+end
+  
+--[[ Dpc ]]
+function onSave()
+  local data_to_save = GD
+  local saved_data = JSON.encode(data_to_save)
+  if env.test.force_fresh_save then
+    saved_data = ""
+  end
+  return saved_data
+end
+
+--[[ Doc ]]
+function restoreGameState()
+  if env.test.trace then log("restoreGameState()") end
+  --restore object visiblity
+  for g,colors in pairs(GD.states.obj_vis) do
+    local obj = getObjectFromGUID(g)
+    if obj then
+      obj.setInvisibleTo(colors)
+    end
+  end
+  --restore UI state
+  for key,value in pairs(GD.states.UI) do
+    local id = Split(key, ':')[1]
+    local field = Split(key, ':')[2]
+    UI.setAttribute(id, field, value)
+  end
+end
+
+--[[ ******** UTILITY ******** --]]
+
+--[[ Get obj position (DEVELOPMENT ONLY) ]]
+function savePosition(g)
+  o = getObjectFromGUID(g)
+  Notes.setNotes(tostring(o.getPosition()))
+end
+
+--[[ Get obj rotation (DEVELOPMENT ONLY) ]]
+  function saveRotation(g)
+  o = getObjectFromGUID(g)
+  Notes.setNotes(tostring(o.getRotation()))
+end
+
+require("tts-lib/utils")

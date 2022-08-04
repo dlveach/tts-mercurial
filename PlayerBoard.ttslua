@@ -1,0 +1,3 @@
+function onLoad()
+  log("onLoad(): Player Board " .. self.getName())
+end
