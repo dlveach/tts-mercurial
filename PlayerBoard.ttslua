@@ -1,19 +1,66 @@
+mana_loc = {}
+mana_loc[1] = { 0.325848, 0, -0.777266 }
+mana_loc[2] = { 0.642849, 0, -0.770351 }
+mana_loc[3] =  { 0.943852, 0, -0.758921 }
+mana_loc[4] = { 1.237281, 0, -0.76304 }
+mana_loc[5] = { 1.558671, 0, -0.756527 }
+mana_loc[6] = { 0.293719, 0, -0.438221 }
+mana_loc[7] = { 0.612091, 0, -0.443802 }
+mana_loc[8] = { 0.915044, 0, -0.441325 }
+mana_loc[9] = { 1.252831, 0, -0.443335 }
+mana_loc[10] = { 1.559581, 0, -0.440888 }
+acuity_loc = {}
+acuity_loc[1] = { 0.327416, 0, -0.105233 }
+acuity_loc[2] = { 0.602913, 0, -0.098424 }
+acuity_loc[3] = { 0.937014, 0, -0.092739 }
+acuity_loc[4] = { 1.243617, 0, -0.102063 }
+acuity_loc[5] = { 1.558407, 0, -0.088233 }
+acuity_loc[6] = { 0.289897, 0, 0.210014 }
+acuity_loc[7] = { 0.612284, 0, 0.215907 }
+acuity_loc[8] = { 0.926764, 0, 0.214188 }
+acuity_loc[9] = { 1.218278, 0, 0.220292 }
+acuity_loc[10] = { 1.567567, 0, 0.222189 }
+
 player_color = ""
 artifacts_deck = "e52f60"
+env = {}
 
 function onLoad()
-  log("Player Board " .. self.getName() .. ": onLoad()")
+  env = Global.getTable("env")
+  if env.test.trace then log("Player Board " .. self.getName() .. ": onLoad()") end
+end
+
+function nextPlayerBtn(player, mouse, id)
+  if env.test.trace then log(self.getName() .. ": nextPlayerBtn()") end
+  if player.color == player_color then
+    self.UI.setAttribute("next_player_pnl", "active", "false")
+    self.UI.setAttribute("cleanup_pnl", "active", "false")
+    Global.call("setNextPlayer")
+  else
+    broadcastToColor("Player " .. player.color .. ": " .. self.getName() .. " is not your class.", player.color)
+  end
+end
+
+function cleanupBtn(player, mouse, id)
+  if env.test.trace then log(self.getName() .. ": cleanupBtn()") end
+  if player.color == player_color then
+
+    log("TODO: cleanup player board")
+
+  else
+    broadcastToColor("Player " .. player.color .. ": " .. self.getName() .. " is not your class.", player.color)
+  end
 end
 
 function classSelectBtn(player, mouse, id)
-  --log(self.getName() .. ": classSelectButton()")
+  if env.test.trace then log(self.getName() .. ": classSelectBtn() player " .. player.color) end
   Global.call("setPlayerClass",{
     ["player"]=player.color, 
     ["guid"]=self.getGUID()})
 end
 
 function setPlayer(params)
-  --log(self.getName() .. ": setPlayer()")
+  if env.test.trace then log(self.getName() .. ": setPlayer()") end
   assert(params.player)
   player_color = params.player
   self.UI.setAttribute("class_select_pnl", "active", "false")
@@ -35,10 +82,18 @@ function setPlayer(params)
 end
 
 function enableClassSelectBtn()
+  if env.test.trace then log(self.getName() .. ": enableClassSelectBtn()") end
   self.UI.setAttribute("class_select_pnl", "active", "true")
 end
 
+function enableActivePlayer()
+  if env.test.trace then log(self.getName() .. ": enableActivePlayer()") end
+  self.UI.setAttribute("next_player_pnl", "active", "true")
+  self.UI.setAttribute("cleanup_pnl", "active", "true")
+end
+
 function setupBoard()
+  if env.test.trace then log(self.getName() .. ": setupBoard()") end
   if player_color == "" then
     --unasigned, delete this board
     log("Deleting board " .. self.getName())
@@ -65,4 +120,13 @@ function setupBoard()
   else
     log("TODO: setup for assigned board " .. self.getName())
   end  
+end
+
+
+--[[ Get obj position (DEVELOPMENT ONLY) ]]
+function saveLocalPosition(params)  
+  local o = getObjectFromGUID(params.guid)
+  local world_pos = o.getPosition()
+  local local_pos = self.positionToLocal(world_pos)
+  Notes.setNotes(tostring(local_pos))
 end

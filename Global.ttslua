@@ -3,16 +3,16 @@
 env = {}
 env.version = "0.1"
 env.test= {}
-env.test.test_players = {"Green", "Blue", "Yellow", "White"}
+--env.test.test_players = {"Green", "Blue", "Yellow", "White"}
+env.test.test_players = {"Yellow", "White"}
 env.test.auto_switch = true
 env.test.in_dev = true
 env.test.trace = true
-env.test.verbose = true
 env.test.debug = true
 env.test.force_fresh_save = true
 env.game = {}
---env.game.player_table_order = {"White", "Yellow", "Green", "Blue"}
-env.game.player_table_order = {"White", "Yellow"}
+env.game.player_table_order = {"White", "Yellow", "Green", "Blue"}
+env.game.verbose = true
 
 C = {}
 C.guids = {}
@@ -100,15 +100,15 @@ function setupGame()
   UI_setAttribute("startPanel", "active", false)
 
   setupPlayers()
-  acuity_bag = getObjectFromGUID(C.guids.acuity_bag)
-  mana_bag = getObjectFromGUID(C.guids.mana_bag)
-  p = {
+  local acuity_bag = getObjectFromGUID(C.guids.acuity_bag)
+  local mana_bag = getObjectFromGUID(C.guids.mana_bag)
+  local p = {
     ["position"] = {},
     ["flip"] = true,
     ["top"] = true,
     ["smooth"] = true
   }
-  deck = getObjectFromGUID(C.guids.spell_deck)
+  local deck = getObjectFromGUID(C.guids.spell_deck)
   for i=0,5 do
     p.position = C.pos.spells[i]
     deck.takeObject(p)
@@ -154,13 +154,23 @@ function setupGame()
   if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_2).flip() end
   if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_3).flip() end
   -- Give extra acuity in turn order 
-  player = GD.game.start_player 
-  if env.test.verbose then print("Player 1 is " .. GD.game.player_order[player]) end
+  if env.game.verbose then 
+    local order = GD.game.player_order[GD.game.start_player]
+    local p = GD.game.start_player
+    for i=1, #GD.game.player_order - 1 do
+      p = p + 1
+      if p > #GD.game.player_order then p = 1 end
+      order = order .. ", " .. GD.game.player_order[p]
+    end
+    print("Player order is " .. order)
+  end
+  local player = GD.game.start_player 
+  if env.game.verbose then print("Player 1 is " .. GD.game.player_order[player]) end
   for i=1, GD.game.player_count-1 do
     player = player + 1
     if player > GD.game.player_count then player = 1 end --wrap around
     player_color = GD.game.player_order[player]
-    if env.test.verbose then print("Dealing " .. i .. " extra acuity to player " .. i+1 .. " - " .. player_color) end
+    if env.game.verbose then print("Dealing " .. i .. " extra acuity to player " .. i+1 .. " - " .. player_color) end
     acuity_bag.deal(i, player_color)
   end
   -- Enable class select buttons
@@ -170,6 +180,7 @@ function setupGame()
     class_board.call("enableClassSelectBtn")
   end
   GD.game.assigned_boards_count = 0
+  broadcastToAll("All players select one mage class to comlpete setup.")
 end
 
 --TODO: refill heroics & place mana and acuity
@@ -181,7 +192,7 @@ end
 function setupPlayers()
   GD.game.player_order = {}
   GD.game.players = {}
-  seated = getSeatedPlayers()
+  local seated = getSeatedPlayers()
   if(env.test.test_players) then
     seated = env.test.test_players
   end
@@ -194,6 +205,7 @@ function setupPlayers()
   end
   GD.game.player_count = #GD.game.player_order
   GD.game.start_player = math.random(1, #GD.game.player_order)
+  GD.game.current_player = GD.game.start_player
   if env.test.debug then 
     log("Player count = " .. tostring(GD.game.player_count))
     log("Seated player order: ")
@@ -207,14 +219,13 @@ end
     if env.test.trace then log("setInvisibleTo(): "..guid) end
     assert(type(guid) == 'string', "guid must be a string")
     assert(colors)
-    local obj = getObjectFromGUID(guid)
-    obj.setInvisibleTo(colors)
+    getObjectFromGUID(guid).setInvisibleTo(colors)
     GD.states.obj_vis[guid] = colors
   end
   
 --[[  Wrapper function for saving UI attributes for game restore. ]]
 function UI_setAttribute(id, field, value)
-  if env.test.trace and env.test.verbose then log("UI_setAttribute()") end
+  if env.test.trace and env.game.verbose then log("UI_setAttribute()") end
   assert(type(id) == "string", "id must be a string")
   assert(type(field) == "string", "field must be a string")
   UI.setAttribute(id, field, value)
@@ -254,26 +265,48 @@ function setPlayerClass(params)
   if env.test.trace then log("Global: setPlayerClass()") end
   assert(params.player)
   assert(params.guid)
-  local class_board = getObjectFromGUID(params.guid)
-  assert(class_board)
   local pcol = params.player
-  if GD.game.players[pcol].class then
+  if not(contains(GD.game.player_order, pcol)) then
+    broadcastToAll("Player " .. pcol .. " is not a player in this game.")
+    return
+  elseif GD.game.players[pcol].class then
     broadcastToColor("Player " .. pcol .. " cannot select a second class.", pcol)
+    return
   else
-    print("Player " .. pcol .. " selected class " .. class_board.getName())
+    local class_board = getObjectFromGUID(params.guid)
+    assert(class_board)
+    if env.game.verbose then print("Player " .. pcol .. " selected class " .. class_board.getName()) end
     GD.game.players[pcol].class = class_board.getName()
     GD.game.players[pcol].board_guid = class_board.getGUID()
+    --complete player assignment in board
     class_board.call("setPlayer", {["player"]=pcol})  
     GD.game.assigned_boards_count = GD.game.assigned_boards_count + 1
   end
+  --If all players assigned to boards, setup the boards for play    
   if GD.game.assigned_boards_count == GD.game.player_count then
-    --all players assigned to boards, setup the boards for play    
     for _,guid in pairs(C.guids.player_boards) do
-      board = getObjectFromGUID(guid)
-      board.call("setupBoard")
+      getObjectFromGUID(guid).call("setupBoard")
     end
     --TODO: enable fillEmptyCards button    
+    local pcol = GD.game.player_order[GD.game.current_player]
+    local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
+    board.call("enableActivePlayer")
+    if env.game.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
   end
+end
+
+--[[ TODO: Document ]]
+function setNextPlayer()
+  if env.test.trace then log("Global: setNextPlayer()") end
+  if GD.game.current_player == #GD.game.player_order then
+    GD.game.current_player = 1
+  else
+    GD.game.current_player = GD.game.current_player + 1
+  end
+  local pcol = GD.game.player_order[GD.game.current_player]
+  local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
+  board.call("enableActivePlayer")
+  if env.game.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
 end
 
 function getMystRuneGuid()
@@ -284,13 +317,13 @@ end
 
 --[[ Get obj position (DEVELOPMENT ONLY) ]]
 function savePosition(g)
-  o = getObjectFromGUID(g)
+  local o = getObjectFromGUID(g)
   Notes.setNotes(tostring(o.getPosition()))
 end
 
 --[[ Get obj rotation (DEVELOPMENT ONLY) ]]
   function saveRotation(g)
-  o = getObjectFromGUID(g)
+  local o = getObjectFromGUID(g)
   Notes.setNotes(tostring(o.getRotation()))
 end
 
