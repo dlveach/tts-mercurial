@@ -11,7 +11,8 @@ env.test.verbose = true
 env.test.debug = true
 env.test.force_fresh_save = true
 env.game = {}
-env.game.player_table_order = {"White", "Yellow", "Green", "Blue"}
+--env.game.player_table_order = {"White", "Yellow", "Green", "Blue"}
+env.game.player_table_order = {"White", "Yellow"}
 
 C = {}
 C.guids = {}
@@ -26,11 +27,6 @@ C.guids.spell_deck = "df2dbd"
 C.guids.alterations_deck = "e482bf"
 C.guids.heroics_deck = "e510e5"
 C.guids.artifacts_deck = "e52f60"
-C.guids.elementalist_start_deck = "701cdb"
-C.guids.arcanist_start_deck = "a1dace"
-C.guids.enchanter_start_deck = "4238d0"
-C.guids.chaosmancer_start_deck = "0f39cd"
-C.guids.mystcaller_start_deck = "53db36"
 C.guids.mana_bag = "a39f6e"
 C.guids.acuity_bag = "5561d3"
 C.guids.prestige_bag = "d5b6a6"
@@ -66,7 +62,7 @@ C.pos.myst_rune = { 12.057961, 0.96, 5.3963 }
 C.rot.myst_rune = { 0.000035, 270.16687, 0.000004 }
 
 
---[[ Doc ]]
+--[[ TODO: Document ]]
 function onLoad(saved_data)
   log("Mercurial version " .. env.version .. " loading")
   GD = {}
@@ -99,7 +95,7 @@ function onLoad(saved_data)
   math.randomseed(os.time())        
 end
 
---[[ Doc ]]
+--[[ TODO: Document ]]
 function setupGame()
   UI_setAttribute("startPanel", "active", false)
 
@@ -152,6 +148,7 @@ function setupGame()
   end
   myst_rune.setPositionSmooth(C.pos.myst_rune)
   myst_rune.setRotation(C.rot.myst_rune)
+  GD.game.myst_rune_guid = myst_rune.getGUID()
   -- Random flip arcanas
   if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_1).flip() end
   if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_2).flip() end
@@ -166,6 +163,13 @@ function setupGame()
     if env.test.verbose then print("Dealing " .. i .. " extra acuity to player " .. i+1 .. " - " .. player_color) end
     acuity_bag.deal(i, player_color)
   end
+  -- Enable class select buttons
+  for class, guid in pairs(C.guids.player_boards) do
+    class_board = getObjectFromGUID(guid)
+    assert(class_board)
+    class_board.call("enableClassSelectBtn")
+  end
+  GD.game.assigned_boards_count = 0
 end
 
 --TODO: refill heroics & place mana and acuity
@@ -173,7 +177,7 @@ end
 --TODO: refill spells
 
 
---[[ Doc ]]
+--[[ TODO: Document ]]
 function setupPlayers()
   GD.game.player_order = {}
   GD.game.players = {}
@@ -217,7 +221,7 @@ function UI_setAttribute(id, field, value)
   GD.states.UI[id..":"..field] = value
 end
   
---[[ Dpc ]]
+--[[ TODO: Document ]]
 function onSave()
   local data_to_save = GD
   local saved_data = JSON.encode(data_to_save)
@@ -227,7 +231,7 @@ function onSave()
   return saved_data
 end
 
---[[ Doc ]]
+--[[ TODO: Document ]]
 function restoreGameState()
   if env.test.trace then log("restoreGameState()") end
   --restore object visiblity
@@ -243,6 +247,37 @@ function restoreGameState()
     local field = Split(key, ':')[2]
     UI.setAttribute(id, field, value)
   end
+end
+
+--[[ TODO: Document ]]
+function setPlayerClass(params)  
+  if env.test.trace then log("Global: setPlayerClass()") end
+  assert(params.player)
+  assert(params.guid)
+  local class_board = getObjectFromGUID(params.guid)
+  assert(class_board)
+  local pcol = params.player
+  if GD.game.players[pcol].class then
+    broadcastToColor("Player " .. pcol .. " cannot select a second class.", pcol)
+  else
+    print("Player " .. pcol .. " selected class " .. class_board.getName())
+    GD.game.players[pcol].class = class_board.getName()
+    GD.game.players[pcol].board_guid = class_board.getGUID()
+    class_board.call("setPlayer", {["player"]=pcol})  
+    GD.game.assigned_boards_count = GD.game.assigned_boards_count + 1
+  end
+  if GD.game.assigned_boards_count == GD.game.player_count then
+    --all players assigned to boards, setup the boards for play    
+    for _,guid in pairs(C.guids.player_boards) do
+      board = getObjectFromGUID(guid)
+      board.call("setupBoard")
+    end
+    --TODO: enable fillEmptyCards button    
+  end
+end
+
+function getMystRuneGuid()
+  return GD.game.myst_rune_guid
 end
 
 --[[ ******** UTILITY ******** --]]

@@ -1,3 +1,68 @@
+player_color = ""
+artifacts_deck = "e52f60"
+
 function onLoad()
-  log("onLoad(): Player Board " .. self.getName())
+  log("Player Board " .. self.getName() .. ": onLoad()")
+end
+
+function classSelectBtn(player, mouse, id)
+  --log(self.getName() .. ": classSelectButton()")
+  Global.call("setPlayerClass",{
+    ["player"]=player.color, 
+    ["guid"]=self.getGUID()})
+end
+
+function setPlayer(params)
+  --log(self.getName() .. ": setPlayer()")
+  assert(params.player)
+  player_color = params.player
+  self.UI.setAttribute("class_select_pnl", "active", "false")
+  log(self.getName() .. " class assigned to player " .. player_color)
+  deck = getObjectFromGUID(start_deck)
+  log(deck)
+  card_count = #deck.getObjects()
+  deck.deal(card_count, player_color)
+  deck = getObjectFromGUID(artifacts_deck)
+  deck.deal(artifact_cards, player_color)
+  if take_myst_rune then
+    --get the myst rune and move it to Mystcaller
+    local guid = Global.call("getMystRuneGuid")
+    local pos = self.getPosition()
+    pos[1] = pos[1] - 4
+    local rune = getObjectFromGUID(guid)
+    rune.setPosition(pos)
+  end
+end
+
+function enableClassSelectBtn()
+  self.UI.setAttribute("class_select_pnl", "active", "true")
+end
+
+function setupBoard()
+  if player_color == "" then
+    --unasigned, delete this board
+    log("Deleting board " .. self.getName())
+    local pos = self.getPosition()
+    local hits = Physics.cast({
+      origin       = pos,
+      direction    = {1,0,0},
+      type         = 2,
+      size         = {4,4,4},
+      max_distance = 5,
+      debug        = false,
+    })
+    if hits ~= nil then
+      for _,h in pairs(hits) do
+        if string.match(h.hit_object.tag, "Dice") then
+          h.hit_object.destruct()
+        elseif string.match(h.hit_object.tag, "Generic") then
+          h.hit_object.destruct()
+        elseif string.match(h.hit_object.tag, "Tile") then
+          h.hit_object.destruct()
+        end
+      end
+    end
+  else
+    log("TODO: setup for assigned board " .. self.getName())
+  end  
 end
