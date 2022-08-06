@@ -95,125 +95,6 @@ function onLoad(saved_data)
   math.randomseed(os.time())        
 end
 
---[[ TODO: Document ]]
-function setupGame()
-  UI_setAttribute("startPanel", "active", false)
-
-  setupPlayers()
-  local acuity_bag = getObjectFromGUID(C.guids.acuity_bag)
-  local mana_bag = getObjectFromGUID(C.guids.mana_bag)
-  local p = {
-    ["position"] = {},
-    ["flip"] = true,
-    ["top"] = true,
-    ["smooth"] = true
-  }
-  local deck = getObjectFromGUID(C.guids.spell_deck)
-  for i=0,5 do
-    p.position = C.pos.spells[i]
-    deck.takeObject(p)
-  end
-  deck = getObjectFromGUID(C.guids.alterations_deck)
-  for i=0,5 do
-    p.position = C.pos.alterations[i]
-    deck.takeObject(p)
-  end
-  deck = getObjectFromGUID(C.guids.heroics_deck)
-  for i=0,5 do
-    p.position = C.pos.heroics[i]
-    deck.takeObject(p)
-    p.position[2] = p.position[2] + 1
-    mana_bag.takeObject(p)
-    p.position[2] = p.position[2] + 1
-    acuity_bag.takeObject(p)
-    p.position[2] = p.position[2] + 1
-    acuity_bag.takeObject(p)
-  end
-  -- Place acuity on alterations per player count
-  p = {
-    ["position"] = {},
-    ["smooth"] = true
-  }
-  for i=1, GD.game.player_count do
-    p.position = C.pos.alterations[i-1] --zero index
-    p.position[2] = p.position[2] + 1
-    acuity_bag.takeObject(p)
-  end
-  -- Ranom myst rune selection
-  local myst_rune
-  if (math.random(1, 10) > 5) then
-    myst_rune = getObjectFromGUID(C.guids.myst_rune_1)
-  else
-    myst_rune = getObjectFromGUID(C.guids.myst_rune_2)
-  end
-  myst_rune.setPositionSmooth(C.pos.myst_rune)
-  myst_rune.setRotation(C.rot.myst_rune)
-  GD.game.myst_rune_guid = myst_rune.getGUID()
-  -- Random flip arcanas
-  if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_1).flip() end
-  if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_2).flip() end
-  if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_3).flip() end
-  -- Give extra acuity in turn order 
-  if env.game.verbose then 
-    local order = GD.game.player_order[GD.game.start_player]
-    local p = GD.game.start_player
-    for i=1, #GD.game.player_order - 1 do
-      p = p + 1
-      if p > #GD.game.player_order then p = 1 end
-      order = order .. ", " .. GD.game.player_order[p]
-    end
-    print("Player order is " .. order)
-  end
-  local player = GD.game.start_player 
-  if env.game.verbose then print("Player 1 is " .. GD.game.player_order[player]) end
-  for i=1, GD.game.player_count-1 do
-    player = player + 1
-    if player > GD.game.player_count then player = 1 end --wrap around
-    player_color = GD.game.player_order[player]
-    if env.game.verbose then print("Dealing " .. i .. " extra acuity to player " .. i+1 .. " - " .. player_color) end
-    acuity_bag.deal(i, player_color)
-  end
-  -- Enable class select buttons
-  for class, guid in pairs(C.guids.player_boards) do
-    class_board = getObjectFromGUID(guid)
-    assert(class_board)
-    class_board.call("enableClassSelectBtn")
-  end
-  GD.game.assigned_boards_count = 0
-  broadcastToAll("All players select one mage class to comlpete setup.")
-end
-
---TODO: refill heroics & place mana and acuity
---TODO: refill alterations & place acuity
---TODO: refill spells
-
-
---[[ TODO: Document ]]
-function setupPlayers()
-  GD.game.player_order = {}
-  GD.game.players = {}
-  local seated = getSeatedPlayers()
-  if(env.test.test_players) then
-    seated = env.test.test_players
-  end
-  --getSeatedPlayers() is random, setup players in table seating order
-  for _,pcol in ipairs(env.game.player_table_order) do
-    if contains(seated, pcol) then
-      GD.game.players[pcol] = {}
-      table.insert(GD.game.player_order, pcol)
-    end
-  end
-  GD.game.player_count = #GD.game.player_order
-  GD.game.start_player = math.random(1, #GD.game.player_order)
-  GD.game.current_player = GD.game.start_player
-  if env.test.debug then 
-    log("Player count = " .. tostring(GD.game.player_count))
-    log("Seated player order: ")
-    log(GD.game.player_order)
-    log("First player is " .. GD.game.player_order[GD.game.start_player]) 
-  end
-end
-
 --[[ Wrapper function for saving obj visiblity for game restore. ]]
   function setInvisibleTo(guid, colors)
     if env.test.trace then log("setInvisibleTo(): "..guid) end
@@ -261,6 +142,50 @@ function restoreGameState()
 end
 
 --[[ TODO: Document ]]
+function startGameBtn()
+  UI_setAttribute("startPanel", "active", false)
+  GD.game.player_order = {}
+  GD.game.players = {}
+  local seated = getSeatedPlayers()
+  if(env.test.test_players) then
+    seated = env.test.test_players
+  end
+  --getSeatedPlayers() is random, setup players in table seating order
+  for _,pcol in ipairs(env.game.player_table_order) do
+    if contains(seated, pcol) then
+      GD.game.players[pcol] = {}
+      table.insert(GD.game.player_order, pcol)
+    end
+  end
+  GD.game.player_count = #GD.game.player_order
+  GD.game.start_player = math.random(1, #GD.game.player_order)
+  GD.game.current_player = GD.game.start_player
+  if (math.random(1, 10) > 5) then
+    GD.game.myst_rune = C.guids.myst_rune_1
+  else
+    GD.game.myst_rune = C.guids.myst_rune_2
+  end
+  if env.game.verbose then 
+    local order = GD.game.player_order[GD.game.start_player]
+    local p = GD.game.start_player
+    for i=1, #GD.game.player_order - 1 do
+      p = p + 1
+      if p > #GD.game.player_order then p = 1 end
+      order = order .. ", " .. GD.game.player_order[p]
+    end
+    print("Player order is " .. order)
+  end
+  -- Enable class select buttons
+  for class, guid in pairs(C.guids.player_boards) do
+    class_board = getObjectFromGUID(guid)
+    assert(class_board)
+    class_board.call("enableClassSelectBtn")
+  end
+  GD.game.assigned_boards_count = 0
+  broadcastToAll("In reverse player order players select one mage class to comlpete setup.")
+end
+
+--[[ TODO: Document ]]
 function setPlayerClass(params)  
   if env.test.trace then log("Global: setPlayerClass()") end
   assert(params.player)
@@ -282,19 +207,84 @@ function setPlayerClass(params)
     class_board.call("setPlayer", {["player"]=pcol})  
     GD.game.assigned_boards_count = GD.game.assigned_boards_count + 1
   end
-  --If all players assigned to boards, setup the boards for play    
-  if GD.game.assigned_boards_count == GD.game.player_count then
-    for _,guid in pairs(C.guids.player_boards) do
-      getObjectFromGUID(guid).call("setupBoard")
-    end
-    --TODO: enable fillEmptyCards button    
-    local pcol = GD.game.player_order[GD.game.current_player]
-    local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
-    board.call("enableActivePlayer")
-    if env.game.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
-    GD.game.started = true
-  end
+  --If all players assigned to boards, do final setup    
+  if GD.game.assigned_boards_count == GD.game.player_count then finalSetup() end
 end
+
+--[[ TODO: Document ]]
+function finalSetup()
+
+      --TODO: enable fillEmptyCards button    
+
+  --cleanup unused boards
+  for _,guid in pairs(C.guids.player_boards) do
+    getObjectFromGUID(guid).call("setupBoard")
+  end  
+  --deal out starting cards
+  local acuity_bag = getObjectFromGUID(C.guids.acuity_bag)
+  local mana_bag = getObjectFromGUID(C.guids.mana_bag)
+  local p = {
+    ["position"] = {},
+    ["flip"] = true,
+    ["top"] = true,
+    ["smooth"] = true
+  }
+  local deck = getObjectFromGUID(C.guids.spell_deck)
+  for i=0,5 do
+    p.position = C.pos.spells[i]
+    deck.takeObject(p)
+  end
+  deck = getObjectFromGUID(C.guids.alterations_deck)
+  for i=0,5 do
+    p.position = C.pos.alterations[i]
+    deck.takeObject(p)
+  end
+  deck = getObjectFromGUID(C.guids.heroics_deck)
+  for i=0,5 do
+    p.position = C.pos.heroics[i]
+    deck.takeObject(p)
+    p.position[2] = p.position[2] + 1
+    mana_bag.takeObject(p)
+    p.position[2] = p.position[2] + 1
+    acuity_bag.takeObject(p)
+    p.position[2] = p.position[2] + 1
+    acuity_bag.takeObject(p)
+  end
+  -- Place acuity on alterations per player count
+  p = { ["position"] = {}, ["smooth"] = true }
+  for i=1, GD.game.player_count do
+    p.position = C.pos.alterations[i-1] --zero index
+    p.position[2] = p.position[2] + 1
+    acuity_bag.takeObject(p)
+  end
+  -- Place the previously random selected myst rune
+  local myst_rune = getObjectFromGUID(GD.game.myst_rune)
+  myst_rune.setPositionSmooth(C.pos.myst_rune)
+  myst_rune.setRotation(C.rot.myst_rune)
+  -- Random flip arcanas
+  if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_1).flip() end
+  if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_2).flip() end
+  if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_3).flip() end
+  -- Give extra acuity to players in turn order 
+  --TODO: place on player boards
+  local player = GD.game.start_player 
+  for i=1, GD.game.player_count-1 do
+    player = player + 1
+    if player > GD.game.player_count then player = 1 end --wrap around
+    player_color = GD.game.player_order[player]
+    if env.game.verbose then print("Dealing " .. i .. " extra acuity to player " .. i+1 .. " - " .. player_color) end
+    acuity_bag.deal(i, player_color)
+  end
+  local pcol = GD.game.player_order[GD.game.current_player]
+  local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
+  board.call("enableActivePlayer")
+  if env.game.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
+  GD.game.started = true
+end
+
+--TODO: refill heroics & place mana and acuity
+--TODO: refill alterations & place acuity
+--TODO: refill spells
 
 --[[ TODO: Document ]]
 function setNextPlayer()
@@ -310,8 +300,9 @@ function setNextPlayer()
   if env.game.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
 end
 
+--[[ TODO: Document ]]
 function getMystRuneGuid()
-  return GD.game.myst_rune_guid
+  return GD.game.myst_rune
 end
 
 --[[ ******** UTILITY ******** --]]

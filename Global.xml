@@ -27,7 +27,7 @@
   <Row class="headerRow">
     <Cell>
       <Text class="title" fontSize="20">
-        Seat all players, then press Setup Game
+        Seat all players, then press Start Game
       </Text>
     </Cell>
   </Row>
@@ -39,18 +39,12 @@
         autoCalculateHeight="1" columnWidths="120 120 120">
         <Row preferredHeight="40">
           <Cell dontUseTableCellBackground="true">
-            <!--Button class="iconButton" id="short" onClick="setupGame"
-              fontSize="14" text="Short" tooltip=" 16 Points "
-              tooltipPosition="Above"/-->
           </Cell>
           <Cell dontUseTableCellBackground="true">
-            <Button class="iconButton" id="normal" onClick="setupGame"
-              fontSize="14" text="Setup Game"/>
+            <Button class="iconButton" id="normal" onClick="startGameBtn"
+              fontSize="14" text="Start Game"/>
           </Cell>
           <Cell dontUseTableCellBackground="true">
-            <!--Button class="iconButton" id="long" onClick="setupGame"
-              fontSize="14" text="Long" tooltip=" 35 Points "
-              tooltipPosition="Above"/-->
           </Cell>
         </Row>
       </TableLayout>
