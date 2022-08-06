@@ -2,7 +2,6 @@
    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    xsi:noNamespaceSchemaLocation="../../../Configuration/XmlLayout.xsd"
    showAnimation="Grow" hideAnimation="FadeOut">
-
 <Include path="Xml/Styles.xml" />
 
 <Defaults>
@@ -31,7 +30,7 @@
   height="20" width="80"
   color="rgba(0,0,0,0)"
   scale="3 3.5">
-  <Button id="tile_harvest_btn" width="80" onClick="classSelectBtn"
+  <Button id="class_sel_btn_id" width="80" onClick="classSelectBtn"
     class="ButtonWithText">Select</Button>
 </Panel>
 
@@ -44,7 +43,7 @@
   height="20" width="80"
   color="rgba(0,0,0,0)"
   scale="1 1">
-  <Button id="next_player_btn" width="75" height="40" onClick="nextPlayerBtn"
+  <Button id="next_player_btn_id" width="75" height="40" onClick="nextPlayerBtn"
     class="ButtonWithText">Done</Button>
 </Panel>
 
@@ -57,7 +56,7 @@
   height="20" width="80"
   color="rgba(0,0,0,0)"
   scale="1 1">
-  <Button id="cleanup_btn" width="200" height="35" onClick="cleanupBtn"
+  <Button id="cleanup_btn_id" width="200" height="35" onClick="cleanupBtn"
     class="ButtonWithText">Cleanup after cast</Button>
 </Panel>
 

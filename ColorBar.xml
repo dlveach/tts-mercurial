@@ -1,0 +1,11 @@
+<XmlLayout xmlns="http://www.w3schools.com"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:noNamespaceSchemaLocation="../../../Configuration/XmlLayout.xsd"
+   showAnimation="Grow" hideAnimation="FadeOut">
+<Include path="Xml/Styles.xml" />
+
+<Panel id="block_panel" active="true" rectAlignment="MiddleCenter" position="0 0 -150" rotation="0 0 90" scale = ".1 1">
+  <Text id="block_text_id" alignment="MiddleCenter" color="White" fontSize="80" text="Classname" />
+</Panel>
+
+</XmlLayout>

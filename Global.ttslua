@@ -3,8 +3,8 @@
 env = {}
 env.version = "0.1"
 env.test= {}
---env.test.test_players = {"Green", "Blue", "Yellow", "White"}
-env.test.test_players = {"Yellow", "White"}
+env.test.test_players = {"Green", "Blue", "Yellow", "White"}
+--env.test.test_players = {"Yellow", "White"}
 env.test.auto_switch = true
 env.test.in_dev = true
 env.test.trace = true
@@ -292,6 +292,7 @@ function setPlayerClass(params)
     local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
     board.call("enableActivePlayer")
     if env.game.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
+    GD.game.started = true
   end
 end
 

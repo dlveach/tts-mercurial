@@ -28,6 +28,15 @@ env = {}
 function onLoad()
   env = Global.getTable("env")
   if env.test.trace then log("Player Board " .. self.getName() .. ": onLoad()") end
+  local block = getObjectFromGUID(block_guid)
+  assert (block)  
+  block.UI.setAttribute("block_text_id", "text", self.getName())
+  if not(env.test.in_dev) then
+    self.setLock(true)
+    self.interactable = false
+    block.setLock(true)
+    block.interactable = false
+  end
 end
 
 function nextPlayerBtn(player, mouse, id)
@@ -65,8 +74,7 @@ function setPlayer(params)
   player_color = params.player
   self.UI.setAttribute("class_select_pnl", "active", "false")
   log(self.getName() .. " class assigned to player " .. player_color)
-  deck = getObjectFromGUID(start_deck)
-  log(deck)
+  local deck = getObjectFromGUID(start_deck)
   card_count = #deck.getObjects()
   deck.deal(card_count, player_color)
   deck = getObjectFromGUID(artifacts_deck)
@@ -79,6 +87,9 @@ function setPlayer(params)
     local rune = getObjectFromGUID(guid)
     rune.setPosition(pos)
   end
+  local block = getObjectFromGUID(block_guid)
+  assert (block)
+  block.setColorTint(player_color)
 end
 
 function enableClassSelectBtn()
@@ -96,7 +107,6 @@ function setupBoard()
   if env.test.trace then log(self.getName() .. ": setupBoard()") end
   if player_color == "" then
     --unasigned, delete this board
-    log("Deleting board " .. self.getName())
     local pos = self.getPosition()
     local hits = Physics.cast({
       origin       = pos,
@@ -117,8 +127,17 @@ function setupBoard()
         end
       end
     end
-  else
-    log("TODO: setup for assigned board " .. self.getName())
+    local block = getObjectFromGUID(block_guid)
+    if block then 
+      block.setColorTint("Grey")
+      block.UI.setAttribute("block_panel", "active", "false")
+      --Mystcaller hack
+      if self.getName() == "Mystcaller" then
+        block.destruct() 
+        getObjectFromGUID(start_deck).destruct()
+        getObjectFromGUID(mystcaller_guid).destruct()
+      end
+    end 
   end  
 end
 
