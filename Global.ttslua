@@ -23,10 +23,10 @@ C.guids.player_boards.elementalist = "e47526"
 C.guids.player_boards.archanist = "625f56"
 C.guids.player_boards.enchanter = "69525a"
 C.guids.player_boards.chaosmancer = "d453e1"
-C.guids.spell_deck = "df2dbd"
-C.guids.alterations_deck = "e482bf"
-C.guids.heroics_deck = "e510e5"
-C.guids.artifacts_deck = "e52f60"
+C.guids.spell_deck = "85f568"
+C.guids.alterations_deck = "2d1923"
+C.guids.heroics_deck = "edf655"
+C.guids.artifacts_deck = "675a94"
 C.guids.mana_bag = "a39f6e"
 C.guids.acuity_bag = "5561d3"
 C.guids.prestige_bag = "d5b6a6"
@@ -213,6 +213,7 @@ end
 
 --[[ TODO: Document ]]
 function finalSetup()
+  if env.test.trace then log("Global: finalSetup()") end
 
       --TODO: enable fillEmptyCards button    
 
@@ -266,14 +267,14 @@ function finalSetup()
   if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_2).flip() end
   if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_3).flip() end
   -- Give extra acuity to players in turn order 
-  --TODO: place on player boards
   local player = GD.game.start_player 
   for i=1, GD.game.player_count-1 do
     player = player + 1
     if player > GD.game.player_count then player = 1 end --wrap around
     player_color = GD.game.player_order[player]
     if env.game.verbose then print("Dealing " .. i .. " extra acuity to player " .. i+1 .. " - " .. player_color) end
-    acuity_bag.deal(i, player_color)
+    local board = getObjectFromGUID(GD.game.players[player_color].board_guid)
+    board.call("dealAcuity", {["amount"]=i})
   end
   local pcol = GD.game.player_order[GD.game.current_player]
   local board = getObjectFromGUID(GD.game.players[pcol].board_guid)

@@ -1,66 +1,304 @@
 mana_loc = {}
-mana_loc[1] = { 0.325848, 0, -0.777266 }
-mana_loc[2] = { 0.642849, 0, -0.770351 }
-mana_loc[3] =  { 0.943852, 0, -0.758921 }
-mana_loc[4] = { 1.237281, 0, -0.76304 }
-mana_loc[5] = { 1.558671, 0, -0.756527 }
-mana_loc[6] = { 0.293719, 0, -0.438221 }
-mana_loc[7] = { 0.612091, 0, -0.443802 }
-mana_loc[8] = { 0.915044, 0, -0.441325 }
-mana_loc[9] = { 1.252831, 0, -0.443335 }
-mana_loc[10] = { 1.559581, 0, -0.440888 }
+mana_loc[1] = { 0.325848, -0.5, -0.777266 }
+mana_loc[2] = { 0.642849, -0.5, -0.770351 }
+mana_loc[3] = { 0.943852, -0.5, -0.758921 }
+mana_loc[4] = { 1.237281, -0.5, -0.76304 }
+mana_loc[5] = { 1.558671, -0.5, -0.756527 }
+mana_loc[6] = { 0.293719, -0.5, -0.438221 }
+mana_loc[7] = { 0.612091, -0.5, -0.443802 }
+mana_loc[8] = { 0.915044, -0.5, -0.441325 }
+mana_loc[9] = { 1.252831, -0.5, -0.443335 }
+mana_loc[10] = { 1.559581, -0.5, -0.440888 }
 acuity_loc = {}
-acuity_loc[1] = { 0.327416, 0, -0.105233 }
-acuity_loc[2] = { 0.602913, 0, -0.098424 }
-acuity_loc[3] = { 0.937014, 0, -0.092739 }
-acuity_loc[4] = { 1.243617, 0, -0.102063 }
-acuity_loc[5] = { 1.558407, 0, -0.088233 }
-acuity_loc[6] = { 0.289897, 0, 0.210014 }
-acuity_loc[7] = { 0.612284, 0, 0.215907 }
-acuity_loc[8] = { 0.926764, 0, 0.214188 }
-acuity_loc[9] = { 1.218278, 0, 0.220292 }
-acuity_loc[10] = { 1.567567, 0, 0.222189 }
+acuity_loc[1] = { 0.327416, -0.5, -0.105233 }
+acuity_loc[2] = { 0.602913, -0.5, -0.098424 }
+acuity_loc[3] = { 0.937014, -0.5, -0.092739 }
+acuity_loc[4] = { 1.243617, -0.5, -0.102063 }
+acuity_loc[5] = { 1.558407, -0.5, -0.088233 }
+acuity_loc[6] = { 0.289897, -0.5, 0.210014 }
+acuity_loc[7] = { 0.612284, -0.5, 0.215907 }
+acuity_loc[8] = { 0.926764, -0.5, 0.214188 }
+acuity_loc[9] = { 1.218278, -0.5, 0.220292 }
+acuity_loc[10] = { 1.567567, -0.5, 0.222189 }
+dice_loc = {}
+dice_loc[1] = { 2.699662, -1, -0.859595 }
+dice_loc[2] = { 3.274788, -1, -0.861671 }
+dice_loc[3] = { 2.692801, -1, -0.363973 }
+dice_loc[4] = { 3.260115, -1, -0.355712 }
+dice_loc[5] = { 2.669944, -1, 0.131452 }
+dice_loc[6] = { 3.258827, -1, 0.143394 }
+dice_loc[7] = { 2.665641, -1, 0.659981 }
+dice_loc[8] = { 3.266375, -1, 0.662818 }
 
-player_color = ""
-artifacts_deck = "e52f60"
+--TODO: get these from global?  refactor to guids module to require?
+artifacts_deck = "675a94"
+acuity_bag_guid = "5561d3"
+
+spell_discards_local_pos = { 9.098128, 0.186394, 0.810905 }
+used_alterations_local_pos = { 5.197762, 0.186394, -0.238625 }
+active_spells_zone_local_pos = { 2.03446, -2.351135, 3.498505 }
+tile_drop_zone_local_pos = { -0.842202, -2.55, -0.003846 }
+
 env = {}
+GD = {}
 
-function onLoad()
+loading = true
+
+--[[ Game loading. ]]
+function onLoad(saved_data)
   env = Global.getTable("env")
-  if env.test.trace then log("Player Board " .. self.getName() .. ": onLoad()") end
-  local block = getObjectFromGUID(block_guid)
-  assert (block)  
-  block.UI.setAttribute("block_text_id", "text", self.getName())
+  color_block = getObjectFromGUID(block_guid)
+  color_block.UI.setAttribute("block_text_id", "text", self.getName())
+  self.setLock(true)
+  color_block.setLock(true)
   if not(env.test.in_dev) then
-    self.setLock(true)
     self.interactable = false
-    block.setLock(true)
-    block.interactable = false
+    color_block.interactable = false
   end
+  if saved_data ~= "" then
+    if env.test.trace then log("Player Board " .. self.getName() .. " saved load") end
+    local restore_data = JSON.decode(saved_data)
+    GD = restore_data
+    --if GD.board.setup_board then
+    if GD.board.initialized then
+      restoreGameState()
+    end
+  else
+    if env.test.trace then log("Player Board " .. self.getName() .. " fresh load") end
+    GD.states = {}
+    GD.states.UI = {}
+    GD.states.obj_vis = {}
+    GD.board = {}
+    --GD.board.setup_board = false
+    GD.board.player_color = ""
+    GD.board.initialized = false
+  end
+  loading = false
 end
 
+function createZones()
+  if env.test.trace then log(self.getName() .. ": createZones()") end
+  local spell_pos = self.positionToWorld(active_spells_zone_local_pos)
+  spawnObject({
+    type              = 'ScriptingTrigger', 
+    position          = spell_pos,
+    scale             = {15.29391, 5.1, 7.632049}, 
+    callback_function = function(obj)
+        obj.setPosition(spell_pos)
+        GD.board.spells_zone = obj.getGUID()
+    end,
+    sound             = false,
+    snap_to_grid      = false,
+  })
+  local drop_pos = self.positionToWorld(tile_drop_zone_local_pos)
+  spawnObject({
+    type              = 'ScriptingTrigger', 
+    position          = drop_pos,
+    scale             = {3.27755, 5.1, 3.59142}, 
+    callback_function = function(obj)
+        obj.setPosition(drop_pos)
+        GD.board.tile_drop_zone = obj.getGUID()
+    end,
+    sound             = false,
+    snap_to_grid      = false,
+  })
+
+  
+end
+
+
+--[[ Save game state ]]
+function onSave()
+  local data_to_save = GD
+  local saved_data = JSON.encode(data_to_save)
+  if env.test.force_fresh_save then saved_data = "" end
+  return saved_data
+end
+
+--[[ Restore game state during a load from saved data. ]]
+function restoreGameState()
+  setupBoard()
+  --TODO: anything else?  move to onLoad() if not
+end
+
+--[[ Wrapper function for saving obj visiblity for game restore. ]]
+  function setInvisibleTo(guid, colors)
+    if env.test.trace then log("setInvisibleTo(): "..guid) end
+    assert(type(guid) == 'string', "guid must be a string")
+    assert(colors)
+    getObjectFromGUID(guid).setInvisibleTo(colors)
+    GD.states.obj_vis[guid] = colors
+  end
+  
+--[[  Wrapper function for saving UI attributes for game restore. ]]
+function UI_setAttribute(id, field, value)
+  if env.test.trace and env.game.verbose then log(self.getName() .. ": UI_setAttribute()") end
+  assert(type(id) == "string", "id must be a string")
+  assert(type(field) == "string", "field must be a string")
+  self.UI.setAttribute(id, field, value)
+  GD.states.UI[id..":"..field] = value
+end
+
+--[[ Handler for player "Done" button. ]]
 function nextPlayerBtn(player, mouse, id)
   if env.test.trace then log(self.getName() .. ": nextPlayerBtn()") end
-  if player.color == player_color then
-    self.UI.setAttribute("next_player_pnl", "active", "false")
-    self.UI.setAttribute("cleanup_pnl", "active", "false")
+  if player.color == GD.board.player_color then
+    UI_setAttribute("next_player_pnl", "active", "false")
+    UI_setAttribute("cleanup_pnl", "active", "false")
     Global.call("setNextPlayer")
   else
     broadcastToColor("Player " .. player.color .. ": " .. self.getName() .. " is not your class.", player.color)
   end
 end
 
+--[[ Handler for "Cleanup" button press.  Cleanup player board after a spell cast. ]]
 function cleanupBtn(player, mouse, id)
   if env.test.trace then log(self.getName() .. ": cleanupBtn()") end
-  if player.color == player_color then
-
-    log("TODO: cleanup player board")
-
-  else
+  if not(player.color == GD.board.player_color) then
     broadcastToColor("Player " .. player.color .. ": " .. self.getName() .. " is not your class.", player.color)
+    return
+  end
+  local dice = {}
+  local spells = {}
+  local mana = {}    
+  local zone = getObjectFromGUID(GD.board.spells_zone)
+  assert(zone)
+  local stuff = zone.getObjects()
+  for _,o in pairs(stuff) do
+    if o.hasTag("Dice") then table.insert(dice, o) 
+    elseif o.hasTag("Mana") then table.insert(mana, o)
+    elseif o.hasTag("Spell") then table.insert(spells, o)
+    elseif o.hasTag("Acuity") then o.destruct()
+    else
+      log("Unknown Object: " .. o.getGUID())
+      log(o.getTags())
+    end
+  end
+  for _,obj in pairs(dice) do placeObject(obj) end
+  for _,obj in pairs(spells) do placeObject(obj) end
+  for _,obj in pairs(mana) do placeObject(obj) end
+    --TODO:  re-roll all dice?
+end
+
+--[[ Document --]]
+function onCollisionEnter(hit_info)
+  if loading then return end
+  --if env.test.trace then log(self.getName() .. ":onCollisionEnter()") end
+  if GD.board.initialized then
+    local zone = getObjectFromGUID(GD.board.tile_drop_zone)
+    if zone == nil then
+      log(self.getName()..":onCollisionEnter() ERROR: No drop zone")
+    else
+      for _,obj in pairs(zone.getObjects()) do
+        if obj.getGUID() == hit_info.collision_object.getGUID() then placeObject(obj) end
+      end
+    end
   end
 end
 
+--[[ Document --]]
+function placeObject(obj)
+  if env.test.trace then log(self.getName() .. ":placeObject()") end
+  local p = {
+    origin       = {},
+    direction    = {0,1,0},
+    type         = 2,
+    size         = {0.25,0.25,0.25},
+    max_distance = 1,
+    debug        = false,    
+  }
+  --TODO: refactor common code
+  if obj.hasTag("Mana") then
+    local index = 1
+    local looking = true
+    while looking do
+      p.origin = self.positionToWorld(mana_loc[index])
+      local hits = Physics.cast(p)
+      local empty = true
+      if hits ~= nil then
+        for _,h in pairs(hits) do
+          local o = h.hit_object
+          if o.hasTag("Mana") then empty = false end
+        end
+        if empty then
+          looking = false
+          obj.setPosition(self.positionToWorld(mana_loc[index]))
+          obj.setRotation({0,0,0})
+        else
+          index = index + 1
+          if index > 10 then
+            looking = false
+            log("ERROR: mana index > 10")
+          end
+        end
+      else
+        log("ERROR: got no hits for mana index "..index) --shouldn't ever happen, table and tile will hit
+      end
+    end
+  elseif obj.hasTag("Acuity") then
+    local index = 1
+    local looking = true
+    while looking do
+      p.origin = self.positionToWorld(acuity_loc[index])
+      local hits = Physics.cast(p)
+      local empty = true
+      if hits ~= nil then
+        for _,h in pairs(hits) do
+          local o = h.hit_object
+          if o.hasTag("Acuity") then empty = false end
+        end
+        if empty then
+          looking = false
+          obj.setPosition(self.positionToWorld(acuity_loc[index]))
+          obj.setRotation({0,0,0})
+        else
+          index = index + 1
+          if index > 10 then
+            looking = false
+            log("ERROR: acuity index > 10")
+          end
+        end
+      else
+        log("ERROR: got no hits for acuity index "..index) --shouldn't ever happen, table and tile will hit
+      end
+    end  
+  elseif obj.hasTag("Dice") then
+    local index = 1
+    local looking = true
+    while looking do
+      p.origin = self.positionToWorld(dice_loc[index])
+      local hits = Physics.cast(p)
+      local empty = true
+      if hits ~= nil then
+        for _,h in pairs(hits) do
+          local o = h.hit_object
+          if o.hasTag("Dice") then empty = false end
+        end
+        if empty then
+          looking = false
+          obj.setPosition(self.positionToWorld(dice_loc[index]))
+        else
+          index = index + 1
+          if index > 8 then
+            looking = false
+            log("ERROR: dice index > 8")
+          end
+        end
+      else
+        log("ERROR: got no hits for dice index "..index) --shouldn't ever happen, table will hit
+      end
+    end  
+  elseif obj.hasTag("Spell") then
+    local pos = Vector(self.positionToWorld(spell_discards_local_pos))
+    pos.y = 3
+    obj.setPosition(pos)
+  else
+    log("ERROR: unknown object")
+  end
+end
+
+
+--[[ Handler for "Select" button press.  Call Global to assign playerboard to player. ]]
 function classSelectBtn(player, mouse, id)
   if env.test.trace then log(self.getName() .. ": classSelectBtn() player " .. player.color) end
   Global.call("setPlayerClass",{
@@ -68,17 +306,19 @@ function classSelectBtn(player, mouse, id)
     ["guid"]=self.getGUID()})
 end
 
+--[[ Called from Global after it checks to ensure player has not already selected a class.
+      Sets up player for this class.  ]]
 function setPlayer(params)
   if env.test.trace then log(self.getName() .. ": setPlayer()") end
   assert(params.player)
-  player_color = params.player
-  self.UI.setAttribute("class_select_pnl", "active", "false")
-  log(self.getName() .. " class assigned to player " .. player_color)
+  GD.board.player_color = params.player
+  UI_setAttribute("class_select_pnl", "active", "false")
+  --log(self.getName() .. " class assigned to player " .. GD.board.player_color)
   local deck = getObjectFromGUID(start_deck)
   card_count = #deck.getObjects()
-  deck.deal(card_count, player_color)
+  deck.deal(card_count, GD.board.player_color)
   deck = getObjectFromGUID(artifacts_deck)
-  deck.deal(artifact_cards, player_color)
+  deck.deal(artifact_cards, GD.board.player_color)
   if take_myst_rune then
     --get the myst rune and move it to Mystcaller
     local guid = Global.call("getMystRuneGuid")
@@ -87,25 +327,45 @@ function setPlayer(params)
     local rune = getObjectFromGUID(guid)
     rune.setPosition(pos)
   end
-  local block = getObjectFromGUID(block_guid)
-  assert (block)
-  block.setColorTint(player_color)
+  color_block.setColorTint(GD.board.player_color)
 end
 
+--[[ Called from Global during player setup.  ]]
+function dealAcuity(params)
+  if env.test.trace then log(self.getName() .. ": dealAcuity()") end
+  assert(params.amount)
+  log("placing " .. params.amount .. " extra acuity on " .. self.getName())
+  local acuity_bag = getObjectFromGUID(acuity_bag_guid)
+  local pos = self.getPosition()
+  pos.x = pos.x - 1.5
+  for i=1, params.amount do
+    pos.y = pos.y + 1
+    acuity_bag.takeObject({
+      position = pos,
+      smooth = false,
+  })    
+  end
+end
+
+--[[ Called from Global at start of game.  ]]
 function enableClassSelectBtn()
   if env.test.trace then log(self.getName() .. ": enableClassSelectBtn()") end
-  self.UI.setAttribute("class_select_pnl", "active", "true")
+  UI_setAttribute("class_select_pnl", "active", "true")
 end
 
+--[[ Called from Global when this player is active. ]]
 function enableActivePlayer()
   if env.test.trace then log(self.getName() .. ": enableActivePlayer()") end
-  self.UI.setAttribute("next_player_pnl", "active", "true")
-  self.UI.setAttribute("cleanup_pnl", "active", "true")
+  UI_setAttribute("next_player_pnl", "active", "true")
+  UI_setAttribute("cleanup_pnl", "active", "true")
 end
 
+--[[ Called from Global after all players have selected a class.  Also may be called during game restore.
+      If this board is unnassigned, clear all the stuff for it (dice etc.) from the game. ]]
 function setupBoard()
   if env.test.trace then log(self.getName() .. ": setupBoard()") end
-  if player_color == "" then
+  --GD.board.setup_board = true
+  if GD.board.player_color == "" then
     --unasigned, delete this board
     local pos = self.getPosition()
     local hits = Physics.cast({
@@ -118,31 +378,30 @@ function setupBoard()
     })
     if hits ~= nil then
       for _,h in pairs(hits) do
-        if string.match(h.hit_object.tag, "Dice") then
-          h.hit_object.destruct()
-        elseif string.match(h.hit_object.tag, "Generic") then
-          h.hit_object.destruct()
-        elseif string.match(h.hit_object.tag, "Tile") then
+        if (string.match(h.hit_object.tag, "Dice") or 
+            string.match(h.hit_object.tag, "Generic") or 
+            string.match(h.hit_object.tag, "Tile")) then
           h.hit_object.destruct()
         end
       end
     end
-    local block = getObjectFromGUID(block_guid)
-    if block then 
-      block.setColorTint("Grey")
-      block.UI.setAttribute("block_panel", "active", "false")
-      --Mystcaller hack
-      if self.getName() == "Mystcaller" then
-        block.destruct() 
-        getObjectFromGUID(start_deck).destruct()
-        getObjectFromGUID(mystcaller_guid).destruct()
-      end
-    end 
+    color_block.setColorTint("Grey")
+    color_block.UI.setAttribute("block_panel", "active", "false")
+    --Mystcaller hack
+    if self.getName() == "Mystcaller" then
+      color_block.destruct() 
+      getObjectFromGUID(start_deck).destruct()
+      getObjectFromGUID(mystcaller_guid).destruct()
+    end
+  else
+    local zone = getObjectFromGUID(GD.board.spells_zone) --TODO: check all zones?
+    if zone == nil then createZones() end  
+    GD.board.initialized = true
   end  
 end
 
+--[[ ***** DEVELOPMENT ONLY UTILS --]]
 
---[[ Get obj position (DEVELOPMENT ONLY) ]]
 function saveLocalPosition(params)  
   local o = getObjectFromGUID(params.guid)
   local world_pos = o.getPosition()
