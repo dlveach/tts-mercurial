@@ -3,8 +3,8 @@
 env = {}
 env.version = "0.1"
 env.test= {}
-env.test.test_players = {"Green", "Blue", "Yellow", "White"}
---env.test.test_players = {"Yellow", "White"}
+--env.test.test_players = {"Green", "Blue", "Yellow", "White"}
+env.test.test_players = {"Yellow", "White"}
 env.test.auto_switch = true
 env.test.in_dev = true
 env.test.trace = true
@@ -35,6 +35,7 @@ C.guids.arcana_tile_2 = "5f944b"
 C.guids.arcana_tile_3 = "a94aad"
 C.guids.myst_rune_1 = "3444cf"
 C.guids.myst_rune_2 = "8b61f9"
+C.guids.fill_alterations_btn = "c19ef3"
 C.pos = {}
 C.rot = {}
 C.pos.spells = {}
@@ -61,8 +62,7 @@ C.pos.heroics[5] = { 8.457934, 0.973605, -0.2712 }
 C.pos.myst_rune = { 12.057961, 0.96, 5.3963 }
 C.rot.myst_rune = { 0.000035, 270.16687, 0.000004 }
 
-
---[[ TODO: Document ]]
+--[[ Game is loading. ]]
 function onLoad(saved_data)
   log("Mercurial version " .. env.version .. " loading")
   GD = {}
@@ -91,8 +91,19 @@ function onLoad(saved_data)
     getObjectFromGUID(C.guids.heroics_deck).shuffle()
     getObjectFromGUID(C.guids.artifacts_deck).shuffle()
     UI_setAttribute("startPanel", "active", true)
+    local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
+    log(btn)
+    setInvisibleTo(btn.getGUID(), env.game.player_table_order)
+    --btn.UI.setAttribute("button_panel", "active", "false")
   end
-  math.randomseed(os.time())        
+  math.randomseed(os.time())
+  --start the refill alterations watcher
+  Timer.create({
+    identifier     = "Alterations_watcher",
+    function_name  = "checkFillAlterations",
+    delay          = 2,
+    repetitions    = 0,
+  })
 end
 
 --[[ Wrapper function for saving obj visiblity for game restore. ]]
@@ -113,7 +124,7 @@ function UI_setAttribute(id, field, value)
   GD.states.UI[id..":"..field] = value
 end
   
---[[ TODO: Document ]]
+--[[ Save game state ]]
 function onSave()
   local data_to_save = GD
   local saved_data = JSON.encode(data_to_save)
@@ -123,7 +134,7 @@ function onSave()
   return saved_data
 end
 
---[[ TODO: Document ]]
+--[[ Restore game state from saved load. ]]
 function restoreGameState()
   if env.test.trace then log("restoreGameState()") end
   --restore object visiblity
@@ -139,9 +150,18 @@ function restoreGameState()
     local field = Split(key, ':')[2]
     UI.setAttribute(id, field, value)
   end
+--[[  
+  local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
+  if GD.game.started then
+    btn.UI.setAttribute("button_panel", "active", "true")
+  else
+    btn.UI.setAttribute("button_panel", "active", "false")
+  end
+]]  
 end
 
---[[ TODO: Document ]]
+--[[ Button handler for "Start Game".  Setup player order and
+    enable class board selection. ]]
 function startGameBtn()
   UI_setAttribute("startPanel", "active", false)
   GD.game.player_order = {}
@@ -150,7 +170,7 @@ function startGameBtn()
   if(env.test.test_players) then
     seated = env.test.test_players
   end
-  --getSeatedPlayers() is random, setup players in table seating order
+  --getSeatedPlayers() is random, use table order
   for _,pcol in ipairs(env.game.player_table_order) do
     if contains(seated, pcol) then
       GD.game.players[pcol] = {}
@@ -185,7 +205,10 @@ function startGameBtn()
   broadcastToAll("In reverse player order players select one mage class to comlpete setup.")
 end
 
---[[ TODO: Document ]]
+--[[ Called from player board on class select.
+    If player is unnassigned, set associations to player board.
+    Otherwise show error message and return with no action.
+    Calls back to player board to finish setup if successful. ]]
 function setPlayerClass(params)  
   if env.test.trace then log("Global: setPlayerClass()") end
   assert(params.player)
@@ -211,19 +234,14 @@ function setPlayerClass(params)
   if GD.game.assigned_boards_count == GD.game.player_count then finalSetup() end
 end
 
---[[ TODO: Document ]]
+--[[ Final game setup after all players have selected a class. ]]
 function finalSetup()
   if env.test.trace then log("Global: finalSetup()") end
-
-      --TODO: enable fillEmptyCards button    
-
   --cleanup unused boards
   for _,guid in pairs(C.guids.player_boards) do
     getObjectFromGUID(guid).call("setupBoard")
   end  
   --deal out starting cards
-  local acuity_bag = getObjectFromGUID(C.guids.acuity_bag)
-  local mana_bag = getObjectFromGUID(C.guids.mana_bag)
   local p = {
     ["position"] = {},
     ["flip"] = true,
@@ -240,28 +258,29 @@ function finalSetup()
     p.position = C.pos.alterations[i]
     deck.takeObject(p)
   end
-  deck = getObjectFromGUID(C.guids.heroics_deck)
-  for i=0,5 do
-    p.position = C.pos.heroics[i]
-    deck.takeObject(p)
-    p.position[2] = p.position[2] + 1
-    mana_bag.takeObject(p)
-    p.position[2] = p.position[2] + 1
-    acuity_bag.takeObject(p)
-    p.position[2] = p.position[2] + 1
-    acuity_bag.takeObject(p)
-  end
-  -- Place acuity on alterations per player count
-  p = { ["position"] = {}, ["smooth"] = true }
+  local card = 1
+  Wait.time(function() 
+    if card > 6 then return end -- safety
+    placeHeroic(Vector(C.pos.heroics[card - 1]), 1)  --TODO: fix zero index
+    card = card + 1
+  end, .25, 6)
+ -- Place acuity on alterations per player count
+  local acuity_bag = getObjectFromGUID(C.guids.acuity_bag)
   for i=1, GD.game.player_count do
-    p.position = C.pos.alterations[i-1] --zero index
-    p.position[2] = p.position[2] + 1
-    acuity_bag.takeObject(p)
+    local pos = Vector(C.pos.alterations[i-1])  --TODO: fix zero index
+    pos.y = pos.y + 1
+    acuity_bag.takeObject({ callback_function = function(obj) obj.setPositionSmooth(pos, false, false) end }) 
   end
-  -- Place the previously random selected myst rune
-  local myst_rune = getObjectFromGUID(GD.game.myst_rune)
-  myst_rune.setPositionSmooth(C.pos.myst_rune)
-  myst_rune.setRotation(C.rot.myst_rune)
+  -- Place the previously random selected myst rune (if Mystcaller not taken)
+  local mystcaller = false
+  for _,p in pairs(GD.game.players) do
+    if p.class == "Mystcaller" then mystcaller = true end
+  end
+  if not(mystcaller) then
+    local myst_rune = getObjectFromGUID(GD.game.myst_rune)
+    myst_rune.setPositionSmooth(C.pos.myst_rune)
+    myst_rune.setRotation(C.rot.myst_rune)
+  end
   -- Random flip arcanas
   if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_1).flip() end
   if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_2).flip() end
@@ -280,14 +299,283 @@ function finalSetup()
   local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
   board.call("enableActivePlayer")
   if env.game.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
+  local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
+  btn.UI.setAttribute("button_panel", "active", "true")
   GD.game.started = true
 end
 
---TODO: refill heroics & place mana and acuity
---TODO: refill alterations & place acuity
---TODO: refill spells
+--[[ Support function.  Recursive.  Place a heroic card and the bonus bits on it. --]]
+function placeHeroic(location, iteration)
+  if iteration > 4 then return end
+  local acuity_bag = getObjectFromGUID(C.guids.acuity_bag)
+  local mana_bag = getObjectFromGUID(C.guids.mana_bag)
+  local pos = Vector(location)
+  if iteration == 1 then
+    getObjectFromGUID(C.guids.heroics_deck).takeObject({
+      ["position"] = pos,
+      ["flip"] = true,
+      ["top"] = true,
+      ["smooth"] = false
+    })
+  elseif iteration == 2 then
+    pos.y = 1
+    mana_bag.takeObject({ callback_function = function(obj) obj.setPositionSmooth(pos, false, false) end })
+  elseif iteration == 3 then
+    pos.y = 2
+    pos.z = pos.z - 1
+    acuity_bag.takeObject({ callback_function = function(obj) obj.setPositionSmooth(pos, false, false) end })
+  elseif iteration == 4 then
+    pos.y = 3
+    pos.z = pos.z + 1
+    acuity_bag.takeObject({ callback_function = function(obj) obj.setPositionSmooth(pos, false, false) end })
+  end
+  iteration = iteration + 1
+  Wait.frames(function() placeHeroic(location, iteration) end, 10)
+end  
 
---[[ TODO: Document ]]
+--[[ Called from setNextPlayer (on turn "done") --]]
+function refillCards()
+  if env.test.trace then log("Global: refillCards()") end
+  refillSpells()
+  refillAlterations()
+  refillHeroics()
+end
+
+--[[ Shift spell cards left to fill empty spaces, placing new cards in rightmost spot. --]]
+function refillSpells()
+  if env.test.trace then log("Global: refillSpells()") end
+  local p = {
+    origin       = {},
+    direction    = {0,1,0},
+    type         = 3,
+    size         = {2.4,2,4.2},
+    max_distance = 0,
+    debug        = false,    
+  }  
+  local deck = getObjectFromGUID(C.guids.spell_deck)
+  local spots = {}
+  local empty_spots = 0
+  for i=0,5 do  --TODO: fix 0 index
+    p.origin =  C.pos.spells[i]
+    local hits = Physics.cast(p)
+    local empty = true
+    if hits ~= nil then
+      for _,hit in ipairs(hits) do
+        if hit.hit_object.tag ~= "Surface" then
+          if hit.hit_object.hasTag("Spell") then
+            spots[i] = hit.hit_object.getGUID()
+            empty = false
+          end
+        end
+      end
+    end
+    if empty then 
+      spots[i] = "-"
+      empty_spots = empty_spots + 1
+    end
+  end
+  --recursively shift cards left into empty spots and fill last spot
+  local function shift(empty_spots)
+    for i=0,5 do
+      if spots[i] == "-" then
+        for j=i+1,5 do
+          local pos = C.pos.spells[j-1]
+          card = getObjectFromGUID(spots[j])
+          if card ~= nil then 
+            card.setPosition(pos)
+            spots[j-1] = spots[j]
+            spots[j] = "-"
+          end
+        end
+      end
+    end
+    local card = deck.takeObject({
+      ["position"] = C.pos.spells[5],
+      ["flip"] = true,
+      ["top"] = true,
+      ["smooth"] = false
+    })
+    spots[5] = card.getGUID()
+    empty_spots = empty_spots - 1
+    if empty_spots > 0 then
+      Wait.frames(function() shift(empty_spots) end, 1)
+    end
+  end
+  if empty_spots > 0 then
+    shift(empty_spots)
+  end
+end
+
+--[[ Timer watchdog.  Sstarted in onLoad(). 
+    If any Alteration positions are empty, show fill button. 
+    Otherwise hide it.  --]]
+    --TODO: consider using a script zone??? 
+function checkFillAlterations()
+  if not(GD.game.started) then return end
+  local p = {
+    origin       = {},
+    direction    = {0,1,0},
+    type         = 3,
+    size         = {2.4,2,4.2},
+    max_distance = 0,
+    debug        = false,    
+  }  
+  local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
+  for i=0,5 do  --TODO: fix 0 index
+    p.origin =  C.pos.alterations[i]
+    local hits = Physics.cast(p)
+    local empty = true
+    if hits ~= nil then
+      for _,hit in ipairs(hits) do
+        if hit.hit_object.tag ~= "Surface" then
+          if hit.hit_object.hasTag("Alteration") then
+            empty = false
+          end
+        end
+      end
+    end
+    if empty then 
+      btn.UI.setAttribute("button_panel", "active", "true")
+      return
+    end
+  end
+  btn.UI.setAttribute("button_panel", "active", "false")
+end
+
+--[[ Handler for fill alterations button.   --]]
+function refillAlterationsBtn(player, button, id)
+  if env.test.trace then log("Global: refillAlterationsBtn() pressed by "..player.color) end
+  local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
+  btn.UI.setAttribute("button_panel", "active", "false")
+  refillAlterations()
+end
+
+--[[ Shift spell cards left to fill empty spaces, placing new cards in rightmost spot. 
+    Move any acuity with cards.  If leftmost card was not taken, add acuity to it. --]]
+function refillAlterations()
+  if env.test.trace then log("Global: refillAlterations()") end
+  local p = {
+    origin       = {},
+    direction    = {0,1,0},
+    type         = 3,
+    size         = {2.4,2,4.2},
+    max_distance = 0,
+    debug        = false,    
+  }  
+  local deck = getObjectFromGUID(C.guids.alterations_deck)
+  local spots = {}
+  local acuity = {}
+  local empty_spots = 0
+  for i=0,5 do  --TODO: fix 0 index
+    acuity[i] = {}
+    p.origin =  C.pos.alterations[i]
+    local hits = Physics.cast(p)
+    local empty = true
+    if hits ~= nil then
+      for _,hit in ipairs(hits) do
+        if hit.hit_object.tag ~= "Surface" then
+          if hit.hit_object.hasTag("Alteration") then
+            spots[i] = hit.hit_object.getGUID()
+            empty = false
+          elseif hit.hit_object.hasTag("Acuity") then
+            table.insert(acuity[i], hit.hit_object.getGUID())
+          end
+        end
+      end
+    end
+    if empty then 
+      spots[i] = "-"
+      empty_spots = empty_spots + 1
+    end
+  end
+  --add acuity to left most spot if not empty and a card taken
+  if spots[0] ~= "-" and empty_spots > 0 then
+    local bag = getObjectFromGUID(C.guids.acuity_bag)
+    local pos = Vector(C.pos.alterations[0])  --TODO: fix zero index
+    pos.y = pos.y + 3
+    pos = scatter(pos, {1,0,1.5})
+    bag.takeObject({ callback_function = function(obj) obj.setPositionSmooth(pos, false, false) end }) 
+  end
+  --recursively shift cards left into empty spots and fill last spot
+  local function shift(empty_spots)
+    for i=0,5 do
+      if spots[i] == "-" then
+        for j=i+1,5 do
+          local pos = C.pos.alterations[j-1]
+          card = getObjectFromGUID(spots[j])
+          if card ~= nil then 
+            card.setPosition(pos)
+            spots[j-1] = spots[j]
+            spots[j] = "-"
+            for _,g in ipairs(acuity[j]) do
+              local o = getObjectFromGUID(g)
+              local delta_x = C.pos.alterations[j][1] - C.pos.alterations[j-1][1]
+              local o_pos = o.getPosition()
+              o_pos.x = o_pos.x - delta_x
+              log(o_pos)
+              o.setPositionSmooth(o_pos, false, true)
+              table.insert(acuity[j-1], g)
+            end
+            acuity[j] = {} 
+          end
+        end
+      end
+    end
+    local card = deck.takeObject({
+      ["position"] = C.pos.alterations[5],
+      ["flip"] = true,
+      ["top"] = true,
+      ["smooth"] = false
+    })
+    spots[5] = card.getGUID()
+    empty_spots = empty_spots - 1
+    if empty_spots > 0 then
+      Wait.time(function() shift(empty_spots) end, 1)
+    end
+  end
+  if empty_spots > 0 then
+    shift(empty_spots)
+  end
+end
+
+--[[ Doc --]]
+function refillHeroics()
+  if env.test.trace then log("Global: refillHeroics()") end
+  local p = {
+    origin       = {},
+    direction    = {0,1,0},
+    type         = 3,
+    size         = {2.4,2,4.2},
+    max_distance = 0,
+    debug        = false,    
+  }  
+  local deck = getObjectFromGUID(C.guids.heroics_deck)
+  local empty_spots = {}
+  for i=0,5 do  --TODO: fix 0 index
+    p.origin =  C.pos.heroics[i]
+    local hits = Physics.cast(p)
+    local empty = true
+    if hits ~= nil then
+      for _,hit in ipairs(hits) do
+        if hit.hit_object.tag ~= "Surface" then
+          if hit.hit_object.hasTag("Heroic") then empty = false end
+        end
+      end
+    end
+    if empty then  table.insert(empty_spots, C.pos.heroics[i]) end
+  end
+  local function fillSpot()
+    if empty_spots[1] == nil then return end 
+    placeHeroic(Vector(empty_spots[1]), 1) 
+    table.remove(empty_spots, 1)
+    Wait.frames(function() fillSpot() end, 30)    
+  end
+  if #empty_spots > 0 then
+    fillSpot()
+  end
+end
+
+--[[ Document ]]
 function setNextPlayer()
   if env.test.trace then log("Global: setNextPlayer()") end
   if GD.game.current_player == #GD.game.player_order then
@@ -295,13 +583,14 @@ function setNextPlayer()
   else
     GD.game.current_player = GD.game.current_player + 1
   end
+  refillCards()
   local pcol = GD.game.player_order[GD.game.current_player]
   local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
   board.call("enableActivePlayer")
   if env.game.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
 end
 
---[[ TODO: Document ]]
+--[[ Special case needed by Mystcaller board only. ]]
 function getMystRuneGuid()
   return GD.game.myst_rune
 end

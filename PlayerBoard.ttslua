@@ -1,3 +1,4 @@
+--Board relative positions
 mana_loc = {}
 mana_loc[1] = { 0.325848, -0.5, -0.777266 }
 mana_loc[2] = { 0.642849, -0.5, -0.770351 }
@@ -29,24 +30,20 @@ dice_loc[5] = { 2.669944, -1, 0.131452 }
 dice_loc[6] = { 3.258827, -1, 0.143394 }
 dice_loc[7] = { 2.665641, -1, 0.659981 }
 dice_loc[8] = { 3.266375, -1, 0.662818 }
-
---TODO: get these from global?  refactor to guids module to require?
-artifacts_deck = "675a94"
-acuity_bag_guid = "5561d3"
-
 spell_discards_local_pos = { 9.098128, 0.186394, 0.810905 }
 used_alterations_local_pos = { 5.197762, 0.186394, -0.238625 }
 active_spells_zone_local_pos = { 2.03446, -2.351135, 3.498505 }
-tile_drop_zone_local_pos = { -0.842202, -2.55, -0.003846 }
+class_board_drop_zone_local_pos = { -0.842202, -2.55, -0.003846 }
 
 env = {}
+C = {}
 GD = {}
-
 loading = true
 
 --[[ Game loading. ]]
 function onLoad(saved_data)
   env = Global.getTable("env")
+  C = Global.getTable("C")
   color_block = getObjectFromGUID(block_guid)
   color_block.UI.setAttribute("block_text_id", "text", self.getName())
   self.setLock(true)
@@ -59,9 +56,8 @@ function onLoad(saved_data)
     if env.test.trace then log("Player Board " .. self.getName() .. " saved load") end
     local restore_data = JSON.decode(saved_data)
     GD = restore_data
-    --if GD.board.setup_board then
     if GD.board.initialized then
-      restoreGameState()
+      restoreBoardState()
     end
   else
     if env.test.trace then log("Player Board " .. self.getName() .. " fresh load") end
@@ -76,10 +72,13 @@ function onLoad(saved_data)
   loading = false
 end
 
+--[[ Create script zones for this player board.  
+    Not sure they survive save/load so there is a
+    check to see if they are there.  --]]
 function createZones()
   if env.test.trace then log(self.getName() .. ": createZones()") end
   local spell_pos = self.positionToWorld(active_spells_zone_local_pos)
-  spawnObject({
+  local p = {
     type              = 'ScriptingTrigger', 
     position          = spell_pos,
     scale             = {15.29391, 5.1, 7.632049}, 
@@ -89,23 +88,21 @@ function createZones()
     end,
     sound             = false,
     snap_to_grid      = false,
-  })
-  local drop_pos = self.positionToWorld(tile_drop_zone_local_pos)
-  spawnObject({
-    type              = 'ScriptingTrigger', 
-    position          = drop_pos,
-    scale             = {3.27755, 5.1, 3.59142}, 
-    callback_function = function(obj)
-        obj.setPosition(drop_pos)
-        GD.board.tile_drop_zone = obj.getGUID()
-    end,
-    sound             = false,
-    snap_to_grid      = false,
-  })
-
-  
+  }
+  if getObjectFromGUID(GD.board.spells_zone) == nil then
+    spawnObject(p) 
+  end
+  local drop_pos = self.positionToWorld(class_board_drop_zone_local_pos)
+  p.position          = drop_pos
+  p.scale             = {3.27755, 5.1, 3.59142}
+  p.callback_function = function(obj)
+    obj.setPosition(drop_pos)
+    GD.board.class_board_drop_zone = obj.getGUID()
+    end
+  if getObjectFromGUID(GD.board.class_board_drop_zone) == nil then
+    spawnObject(p) 
+  end
 end
-
 
 --[[ Save game state ]]
 function onSave()
@@ -115,10 +112,22 @@ function onSave()
   return saved_data
 end
 
---[[ Restore game state during a load from saved data. ]]
-function restoreGameState()
+--[[ Restore this board's state during a load from saved data. ]]
+function restoreBoardState()
   setupBoard()
-  --TODO: anything else?  move to onLoad() if not
+  --restore object visiblity
+  for g,colors in pairs(GD.states.obj_vis) do
+    local obj = getObjectFromGUID(g)
+    if obj then
+      obj.setInvisibleTo(colors)
+    end
+  end
+  --restore UI state
+  for key,value in pairs(GD.states.UI) do
+    local id = Split(key, ':')[1]
+    local field = Split(key, ':')[2]
+    UI.setAttribute(id, field, value)
+  end
 end
 
 --[[ Wrapper function for saving obj visiblity for game restore. ]]
@@ -145,6 +154,7 @@ function nextPlayerBtn(player, mouse, id)
   if player.color == GD.board.player_color then
     UI_setAttribute("next_player_pnl", "active", "false")
     UI_setAttribute("cleanup_pnl", "active", "false")
+    GD.board.active = false
     Global.call("setNextPlayer")
   else
     broadcastToColor("Player " .. player.color .. ": " .. self.getName() .. " is not your class.", player.color)
@@ -177,20 +187,26 @@ function cleanupBtn(player, mouse, id)
   for _,obj in pairs(dice) do placeObject(obj) end
   for _,obj in pairs(spells) do placeObject(obj) end
   for _,obj in pairs(mana) do placeObject(obj) end
-    --TODO:  re-roll all dice?
 end
 
 --[[ Document --]]
 function onCollisionEnter(hit_info)
   if loading then return end
   --if env.test.trace then log(self.getName() .. ":onCollisionEnter()") end
+  if GD.board.active == false then
+    broadcastToAll(self.getName() .. " is not the active player board.")
+    return
+  end
   if GD.board.initialized then
-    local zone = getObjectFromGUID(GD.board.tile_drop_zone)
+    local zone = getObjectFromGUID(GD.board.class_board_drop_zone)
     if zone == nil then
       log(self.getName()..":onCollisionEnter() ERROR: No drop zone")
     else
       for _,obj in pairs(zone.getObjects()) do
-        if obj.getGUID() == hit_info.collision_object.getGUID() then placeObject(obj) end
+        if obj.getGUID() == hit_info.collision_object.getGUID() then 
+        --ignore spells here
+        if not(obj.hasTag("Spell")) then placeObject(obj) end
+        end
       end
     end
   end
@@ -292,11 +308,15 @@ function placeObject(obj)
     local pos = Vector(self.positionToWorld(spell_discards_local_pos))
     pos.y = 3
     obj.setPosition(pos)
+  elseif obj.hasTag("Arcana") then
+    log("--- TODO: Fix Arcana drop")
+    --TODO: place Arcana in player area
+  elseif obj.hasTag("Alteration") or obj.hasTag("Artifact") then
+    obj.deal(1, GD.board.player_color)
   else
-    log("ERROR: unknown object")
+    log("ERROR: unhandled` object")
   end
 end
-
 
 --[[ Handler for "Select" button press.  Call Global to assign playerboard to player. ]]
 function classSelectBtn(player, mouse, id)
@@ -313,11 +333,10 @@ function setPlayer(params)
   assert(params.player)
   GD.board.player_color = params.player
   UI_setAttribute("class_select_pnl", "active", "false")
-  --log(self.getName() .. " class assigned to player " .. GD.board.player_color)
   local deck = getObjectFromGUID(start_deck)
   card_count = #deck.getObjects()
   deck.deal(card_count, GD.board.player_color)
-  deck = getObjectFromGUID(artifacts_deck)
+  deck = getObjectFromGUID(C.guids.artifacts_deck)
   deck.deal(artifact_cards, GD.board.player_color)
   if take_myst_rune then
     --get the myst rune and move it to Mystcaller
@@ -325,7 +344,8 @@ function setPlayer(params)
     local pos = self.getPosition()
     pos[1] = pos[1] - 4
     local rune = getObjectFromGUID(guid)
-    rune.setPosition(pos)
+    rune.setPositionSmooth(pos, false, false)
+    rune.setRotation(C.rot.myst_rune)
   end
   color_block.setColorTint(GD.board.player_color)
 end
@@ -335,15 +355,16 @@ function dealAcuity(params)
   if env.test.trace then log(self.getName() .. ": dealAcuity()") end
   assert(params.amount)
   log("placing " .. params.amount .. " extra acuity on " .. self.getName())
-  local acuity_bag = getObjectFromGUID(acuity_bag_guid)
+  local acuity_bag = getObjectFromGUID(C.guids.acuity_bag)
   local pos = self.getPosition()
   pos.x = pos.x - 1.5
   for i=1, params.amount do
     pos.y = pos.y + 1
     acuity_bag.takeObject({
-      position = pos,
-      smooth = false,
-  })    
+      callback_function = function(obj) 
+        obj.setPositionSmooth(pos, false, false)
+      end
+    })
   end
 end
 
@@ -358,6 +379,7 @@ function enableActivePlayer()
   if env.test.trace then log(self.getName() .. ": enableActivePlayer()") end
   UI_setAttribute("next_player_pnl", "active", "true")
   UI_setAttribute("cleanup_pnl", "active", "true")
+  GD.board.active = true
 end
 
 --[[ Called from Global after all players have selected a class.  Also may be called during game restore.
@@ -394,9 +416,9 @@ function setupBoard()
       getObjectFromGUID(mystcaller_guid).destruct()
     end
   else
-    local zone = getObjectFromGUID(GD.board.spells_zone) --TODO: check all zones?
-    if zone == nil then createZones() end  
+    createZones()
     GD.board.initialized = true
+    GD.board.active = false
   end  
 end
 
