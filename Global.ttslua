@@ -3,13 +3,13 @@
 env = {}
 env.version = "0.1"
 env.test= {}
---env.test.test_players = {"Green", "Blue", "Yellow", "White"}
-env.test.test_players = {"Yellow", "White"}
+env.test.test_players = {"Green", "Blue", "Yellow", "White"}
+--env.test.test_players = {"Yellow", "White"}
 env.test.auto_switch = true
 env.test.in_dev = true
 env.test.trace = true
 env.test.debug = true
-env.test.force_fresh_save = true
+env.test.force_fresh_save = false
 env.game = {}
 env.game.player_table_order = {"White", "Yellow", "Green", "Blue"}
 env.game.verbose = true
@@ -92,9 +92,7 @@ function onLoad(saved_data)
     getObjectFromGUID(C.guids.artifacts_deck).shuffle()
     UI_setAttribute("startPanel", "active", true)
     local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
-    log(btn)
     setInvisibleTo(btn.getGUID(), env.game.player_table_order)
-    --btn.UI.setAttribute("button_panel", "active", "false")
   end
   math.randomseed(os.time())
   --start the refill alterations watcher
@@ -107,13 +105,13 @@ function onLoad(saved_data)
 end
 
 --[[ Wrapper function for saving obj visiblity for game restore. ]]
-  function setInvisibleTo(guid, colors)
-    if env.test.trace then log("setInvisibleTo(): "..guid) end
-    assert(type(guid) == 'string', "guid must be a string")
-    assert(colors)
-    getObjectFromGUID(guid).setInvisibleTo(colors)
-    GD.states.obj_vis[guid] = colors
-  end
+function setInvisibleTo(guid, colors)
+  if env.test.trace then log("setInvisibleTo(): "..guid) end
+  assert(type(guid) == 'string', "guid must be a string")
+  assert(colors)
+  getObjectFromGUID(guid).setInvisibleTo(colors)
+  GD.states.obj_vis[guid] = colors
+end
   
 --[[  Wrapper function for saving UI attributes for game restore. ]]
 function UI_setAttribute(id, field, value)
@@ -140,9 +138,7 @@ function restoreGameState()
   --restore object visiblity
   for g,colors in pairs(GD.states.obj_vis) do
     local obj = getObjectFromGUID(g)
-    if obj then
-      obj.setInvisibleTo(colors)
-    end
+    if obj then obj.setInvisibleTo(colors) end
   end
   --restore UI state
   for key,value in pairs(GD.states.UI) do
@@ -150,14 +146,6 @@ function restoreGameState()
     local field = Split(key, ':')[2]
     UI.setAttribute(id, field, value)
   end
---[[  
-  local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
-  if GD.game.started then
-    btn.UI.setAttribute("button_panel", "active", "true")
-  else
-    btn.UI.setAttribute("button_panel", "active", "false")
-  end
-]]  
 end
 
 --[[ Button handler for "Start Game".  Setup player order and
@@ -197,7 +185,7 @@ function startGameBtn()
   end
   -- Enable class select buttons
   for class, guid in pairs(C.guids.player_boards) do
-    class_board = getObjectFromGUID(guid)
+    local class_board = getObjectFromGUID(guid)
     assert(class_board)
     class_board.call("enableClassSelectBtn")
   end
@@ -249,12 +237,12 @@ function finalSetup()
     ["smooth"] = true
   }
   local deck = getObjectFromGUID(C.guids.spell_deck)
-  for i=0,5 do
+  for i=0,5 do --TODO: fix zero index
     p.position = C.pos.spells[i]
     deck.takeObject(p)
   end
   deck = getObjectFromGUID(C.guids.alterations_deck)
-  for i=0,5 do
+  for i=0,5 do  --TODO: fix zero index
     p.position = C.pos.alterations[i]
     deck.takeObject(p)
   end
@@ -287,14 +275,20 @@ function finalSetup()
   if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_3).flip() end
   -- Give extra acuity to players in turn order 
   local player = GD.game.start_player 
-  for i=1, GD.game.player_count-1 do
-    player = player + 1
-    if player > GD.game.player_count then player = 1 end --wrap around
-    player_color = GD.game.player_order[player]
-    if env.game.verbose then print("Dealing " .. i .. " extra acuity to player " .. i+1 .. " - " .. player_color) end
-    local board = getObjectFromGUID(GD.game.players[player_color].board_guid)
-    board.call("dealAcuity", {["amount"]=i})
-  end
+  local count = 1
+  Wait.time(
+    function()
+      player = player + 1
+      if player > GD.game.player_count then player = 1 end --wrap around
+      player_color = GD.game.player_order[player]
+      if env.game.verbose then print("Dealing " .. count .. " extra acuity to player " .. count+1 .. " - " .. player_color) end
+      local board = getObjectFromGUID(GD.game.players[player_color].board_guid)
+      board.call("dealAcuity", {["amount"]=count})
+      count = count + 1
+    end, 
+    .5, 
+    GD.game.player_count-1
+  )
   local pcol = GD.game.player_order[GD.game.current_player]
   local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
   board.call("enableActivePlayer")
@@ -304,7 +298,8 @@ function finalSetup()
   GD.game.started = true
 end
 
---[[ Support function.  Recursive.  Place a heroic card and the bonus bits on it. --]]
+--[[ Place a heroic card and the bonus bits on it.
+    Recursive to add delay for placing bits.   --]]
 function placeHeroic(location, iteration)
   if iteration > 4 then return end
   local acuity_bag = getObjectFromGUID(C.guids.acuity_bag)
@@ -489,7 +484,7 @@ function refillAlterations()
     end
   end
   --add acuity to left most spot if not empty and a card taken
-  if spots[0] ~= "-" and empty_spots > 0 then
+  if spots[0] ~= "-" and empty_spots > 0 then 
     local bag = getObjectFromGUID(C.guids.acuity_bag)
     local pos = Vector(C.pos.alterations[0])  --TODO: fix zero index
     pos.y = pos.y + 3
@@ -498,7 +493,7 @@ function refillAlterations()
   end
   --recursively shift cards left into empty spots and fill last spot
   local function shift(empty_spots)
-    for i=0,5 do
+    for i=0,5 do  --TODO: fix zero index
       if spots[i] == "-" then
         for j=i+1,5 do
           local pos = C.pos.alterations[j-1]
@@ -538,7 +533,7 @@ function refillAlterations()
   end
 end
 
---[[ Doc --]]
+--[[ Refill the Heroics card positions. --]]
 function refillHeroics()
   if env.test.trace then log("Global: refillHeroics()") end
   local p = {
@@ -564,6 +559,7 @@ function refillHeroics()
     end
     if empty then  table.insert(empty_spots, C.pos.heroics[i]) end
   end
+  --fill the spot(s).  Recursive to add delay between.
   local function fillSpot()
     if empty_spots[1] == nil then return end 
     placeHeroic(Vector(empty_spots[1]), 1) 
@@ -575,7 +571,8 @@ function refillHeroics()
   end
 end
 
---[[ Document ]]
+--[[ Set the next player in player_order.  
+  Wraps to first player if last is current. ]]
 function setNextPlayer()
   if env.test.trace then log("Global: setNextPlayer()") end
   if GD.game.current_player == #GD.game.player_order then
