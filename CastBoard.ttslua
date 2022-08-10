@@ -1,0 +1,191 @@
+
+
+card_pos = {}
+-- Basic spells
+card_pos[1] = { 1.438755, 0.213605, -0.04988 }
+card_pos[2] = { 1.042972, 0.213605, -0.049451 }
+card_pos[3] = { 0.650321, 0.213605, -0.04882 }
+card_pos[4] = { 0.254488, 0.213605, -0.048932 }
+card_pos[5] = { -0.139665, 0.213605, -0.050011 }
+card_pos[6] = { -0.533876, 0.213605, -0.048747 }
+-- link cards
+card_pos[7] = { 1.439186, 0.213605, 0.641172 }
+card_pos[8] = { 1.044027, 0.213605, 0.64143 }
+card_pos[9] = { 0.647323, 0.213605, 0.641918 }
+card_pos[10] = { 0.252662, 0.213605, 0.641797 }
+card_pos[11] = { -0.140845, 0.213605, 0.639541 }
+card_pos[12] = { -0.534633, 0.213605, 0.639114 }
+-- enchantments
+card_pos[13] = { -0.962158, 0.213605, 0.565574 }
+card_pos[14] = { -1.208436, 0.213605, 0.433976 }
+card_pos[15] = { -1.443572, 0.213605, 0.302281 }
+
+env = {}
+C = {}
+GD = {}
+
+acuity_zone_restore_local_pos = { -1.292114, 2.55086, -0.734628 }
+acuity_zone_ruin_local_pos = { -1.29429, 2.550616, -0.364394 }
+
+loading = true
+
+function onLoad(saved_data)
+  env = Global.getTable("env")
+  C = Global.getTable("C")
+  if saved_data ~= "" then
+    if env.test.trace then log(self.getName() .. " saved load") end
+
+  else
+    if env.test.trace then log(self.getName() .. " fresh load") end
+    GD.states = {}
+    GD.states.UI = {}
+    GD.states.obj_vis = {}
+    GD.board = {}
+
+  end
+  loading = false
+end
+
+--[[ Save game state ]]
+function onSave()
+  local data_to_save = GD
+  local saved_data = JSON.encode(data_to_save)
+  if env.test.force_fresh_save then saved_data = "" end
+  return saved_data
+end
+
+--[[ Restore this board's state during a load from saved data. ]]
+function restoreBoardState()
+  if env.test.trace then log(self.getName()..":restoreBoardState()") end
+  if GD.board.initialized then
+    setupBoard()
+  end
+  --restore object visiblity
+  for g,colors in pairs(GD.states.obj_vis) do
+    local obj = getObjectFromGUID(g)
+    if obj then
+      obj.setInvisibleTo(colors)
+    end
+  end
+  --restore UI state
+  for key,value in pairs(GD.states.UI) do
+    local id = Split(key, ':')[1]
+    local field = Split(key, ':')[2]
+    self.UI.setAttribute(id, field, value)
+  end
+end
+
+--[[ Wrapper function for saving obj visiblity for game restore. ]]
+  function setInvisibleTo(guid, colors)
+    if env.test.trace then log("setInvisibleTo(): "..guid) end
+    assert(type(guid) == 'string', "guid must be a string")
+    assert(colors)
+    getObjectFromGUID(guid).setInvisibleTo(colors)
+    GD.states.obj_vis[guid] = colors
+  end
+  
+--[[  Wrapper function for saving UI attributes for game restore. ]]
+function UI_setAttribute(id, field, value)
+  if env.test.trace and env.test.debug then log(self.getName() .. ": UI_setAttribute()") end
+  assert(type(id) == "string", "id must be a string")
+  assert(type(field) == "string", "field must be a string")
+  self.UI.setAttribute(id, field, value)
+  GD.states.UI[id..":"..field] = value
+end
+
+function setupBoard()
+  if env.test.trace then log(self.getName() .. ": setupBoard()") end
+  log("TODO: setupBoard(): anything?")
+end
+
+function onDrop(player_color)
+  GD.board.player_color = player_color
+  local z = getObjectFromGUID(GD.board.acuity_restore_zone)
+  if z ~= nil then z.destruct() end
+  z = getObjectFromGUID(GD.board.acuity_ruin_zone)
+  if z ~= nil then z.destruct() end
+  createZones()
+end
+
+--[[ Create the acuity zones ]]
+  function createZones()
+  if env.test.trace then log(self.getName() .. ": createZones()") end
+  local acuity_restore_pos = self.positionToWorld(acuity_zone_restore_local_pos)
+  local p = {
+    type              = 'ScriptingTrigger', 
+    position          = acuity_restore_pos,
+    scale             = {5.385339, 2, 2.32006}, 
+    callback_function = function(obj)
+        obj.setPosition(acuity_restore_pos)
+        GD.board.acuity_restore_zone = obj.getGUID()
+    end,
+    sound             = false,
+    snap_to_grid      = false,
+  }
+  spawnObject(p) 
+  --[[if getObjectFromGUID(GD.board.spells_zone) == nil then
+    spawnObject(p) 
+  end]]
+  local acuity_ruin_pos = self.positionToWorld(acuity_zone_ruin_local_pos)
+  p.position          = acuity_ruin_pos
+  p.callback_function = function(obj)
+    obj.setPosition(acuity_ruin_pos)
+    GD.board.acuity_ruin_zone = obj.getGUID()
+    end
+  spawnObject(p) 
+    --[[if getObjectFromGUID(GD.board.acuity_ruin_zone) == nil then
+    spawnObject(p) 
+  end]]
+end
+
+function onCollisionEnter(hit_info)
+  if loading then return end
+  for i=1,15 do
+    o = getCard(i)
+    if o ~= nil then
+      log(o.tag.." "..o.getGUID().." found at position "..i)
+      return
+    end
+  end
+end
+
+
+function t_getCard(params)
+  local i = params.index
+  return getCard(i)
+end
+
+--[[ Return the card at location by index.  Returns nil if empty. --]]
+function getCard(loc_index)
+  assert( (loc_index > 0) and (loc_index <= 15) )
+  --if env.test.trace then log(self.getName() .. ": getCard()") end
+  local p = {
+    origin       = self.positionToWorld(card_pos[loc_index]),
+    direction    = {0,1,0},
+    type         = 2,
+    size         = {0.25,0.25,0.25},
+    max_distance = 1,
+    debug        = false,    
+  }
+  local hits = Physics.cast(p)
+  if hits ~= nil then
+    for _,h in pairs(hits) do
+      local o = h.hit_object
+      if o.hasTag("Spell") then 
+        return o 
+      elseif o.tag == "Deck" then
+        return o
+      end
+    end
+  end
+  return nil
+end
+
+--[[ ************ DEV ONLY***************** --]]
+
+function saveLocalPosition(params)  
+  local o = getObjectFromGUID(params.guid)
+  local world_pos = o.getPosition()
+  local local_pos = self.positionToLocal(world_pos)
+  Notes.setNotes(tostring(local_pos))
+end
