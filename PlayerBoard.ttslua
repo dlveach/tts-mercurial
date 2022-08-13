@@ -1,39 +1,69 @@
 --Board relative positions
-mana_loc = {}
-mana_loc[1] = { 0.325848, -0.5, -0.777266 }
-mana_loc[2] = { 0.642849, -0.5, -0.770351 }
-mana_loc[3] = { 0.943852, -0.5, -0.758921 }
-mana_loc[4] = { 1.237281, -0.5, -0.76304 }
-mana_loc[5] = { 1.558671, -0.5, -0.756527 }
-mana_loc[6] = { 0.293719, -0.5, -0.438221 }
-mana_loc[7] = { 0.612091, -0.5, -0.443802 }
-mana_loc[8] = { 0.915044, -0.5, -0.441325 }
-mana_loc[9] = { 1.252831, -0.5, -0.443335 }
-mana_loc[10] = { 1.559581, -0.5, -0.440888 }
-acuity_loc = {}
-acuity_loc[1] = { 0.327416, -0.5, -0.105233 }
-acuity_loc[2] = { 0.602913, -0.5, -0.098424 }
-acuity_loc[3] = { 0.937014, -0.5, -0.092739 }
-acuity_loc[4] = { 1.243617, -0.5, -0.102063 }
-acuity_loc[5] = { 1.558407, -0.5, -0.088233 }
-acuity_loc[6] = { 0.289897, -0.5, 0.210014 }
-acuity_loc[7] = { 0.612284, -0.5, 0.215907 }
-acuity_loc[8] = { 0.926764, -0.5, 0.214188 }
-acuity_loc[9] = { 1.218278, -0.5, 0.220292 }
-acuity_loc[10] = { 1.567567, -0.5, 0.222189 }
-dice_loc = {}
-dice_loc[1] = { 2.699662, -1, -0.859595 }
-dice_loc[2] = { 3.274788, -1, -0.861671 }
-dice_loc[3] = { 2.692801, -1, -0.363973 }
-dice_loc[4] = { 3.260115, -1, -0.355712 }
-dice_loc[5] = { 2.669944, -1, 0.131452 }
-dice_loc[6] = { 3.258827, -1, 0.143394 }
-dice_loc[7] = { 2.665641, -1, 0.659981 }
-dice_loc[8] = { 3.266375, -1, 0.662818 }
-spell_discards_local_pos = { 9.098128, 0.186394, 0.810905 }
-used_alterations_local_pos = { 5.197762, 0.186394, -0.238625 }
-active_spells_zone_local_pos = { 2.03446, -2.351135, 3.498505 }
-class_board_drop_zone_local_pos = { -0.842202, -2.55, -0.003846 }
+mana_local_pos = {}
+mana_local_pos[1] = { 0.325848, -0.5, -0.777266 }
+mana_local_pos[2] = { 0.642849, -0.5, -0.770351 }
+mana_local_pos[3] = { 0.943852, -0.5, -0.758921 }
+mana_local_pos[4] = { 1.237281, -0.5, -0.76304 }
+mana_local_pos[5] = { 1.558671, -0.5, -0.756527 }
+mana_local_pos[6] = { 0.293719, -0.5, -0.438221 }
+mana_local_pos[7] = { 0.612091, -0.5, -0.443802 }
+mana_local_pos[8] = { 0.915044, -0.5, -0.441325 }
+mana_local_pos[9] = { 1.252831, -0.5, -0.443335 }
+mana_local_pos[10] = { 1.559581, -0.5, -0.440888 }
+acuity_local_pos = {}
+acuity_local_pos[1] = { 0.327416, -0.5, -0.105233 }
+acuity_local_pos[2] = { 0.602913, -0.5, -0.098424 }
+acuity_local_pos[3] = { 0.937014, -0.5, -0.092739 }
+acuity_local_pos[4] = { 1.243617, -0.5, -0.102063 }
+acuity_local_pos[5] = { 1.558407, -0.5, -0.088233 }
+acuity_local_pos[6] = { 0.289897, -0.5, 0.210014 }
+acuity_local_pos[7] = { 0.612284, -0.5, 0.215907 }
+acuity_local_pos[8] = { 0.926764, -0.5, 0.214188 }
+acuity_local_pos[9] = { 1.218278, -0.5, 0.220292 }
+acuity_local_pos[10] = { 1.567567, -0.5, 0.222189 }
+dice_local_pos = {}
+dice_local_pos[1] = { 2.699662, -1, -0.859595 }
+dice_local_pos[2] = { 3.274788, -1, -0.861671 }
+dice_local_pos[3] = { 2.692801, -1, -0.363973 }
+dice_local_pos[4] = { 3.260115, -1, -0.355712 }
+dice_local_pos[5] = { 2.669944, -1, 0.131452 }
+dice_local_pos[6] = { 3.258827, -1, 0.143394 }
+dice_local_pos[7] = { 2.665641, -1, 0.659981 }
+dice_local_pos[8] = { 3.266375, -1, 0.662818 }
+heroics_local_pos = {}
+heroics_local_pos[1] = { 8.026311, 0.186396, 2.947193 }
+heroics_local_pos[2] = { 8.043096, 0.186396, 2.426311 }
+heroics_local_pos[3] = { 8.034476, 0.186396, 1.922377 }
+heroics_local_pos[4] = { 8.038564, 0.186395, 1.426908 }
+heroics_local_pos[5] = { 8.029942, 0.186396, 0.914504 }
+spells_local_pos = {}
+spells_local_pos[1] = { -1.393784, 0.186396, 2.121494 }
+spells_local_pos[2] = { -0.369069, 0.186396, 2.136242 }
+spells_local_pos[3] = { 0.658648, 0.186396, 2.134193 }
+spells_local_pos[4] = { 1.686339, 0.186396, 2.12854 }
+spells_local_pos[5] = { 2.740341, 0.186396, 2.119081 }
+link_spells_local_pos = {}
+link_spells_local_pos[1] = { -1.393219, 0.186396, 4.027077 }
+link_spells_local_pos[2] = { -0.368504, 0.186396, 4.041823 }
+link_spells_local_pos[3] = { 0.659214, 0.186396, 4.039776 }
+link_spells_local_pos[4] = { 1.686906, 0.186396, 4.034122 }
+link_spells_local_pos[5] = { 2.740907, 0.186396, 4.024664 }
+enchantment_spells_local_pos = {}
+enchantment_spells_local_pos[1] = { 3.897315, 0.186396, 4.018102 }
+enchantment_spells_local_pos[2] = { 4.975488, 0.186396, 4.017481 }
+enchantment_spells_local_pos[3] = { 6.059778, 0.186396, 4.008014 }
+
+spell_discards_local_pos = { 9.686725, 0.186396, 0.937226 }
+used_alterations_local_pos = { 2.731754, 0.186396, -0.061831 }
+drop_zone_local_pos = { -0.842196, -1.424986, -0.003841 }
+dice_zone_local_pos = { 5.382422, -2.351135, 0.733407 }
+dice_zone_size = {["x"]=6.015524,["y"]=5.1,["z"]=6.659328}
+prestige_zone_local_pos = { 9.690072, -2.351135, 2.93751 }
+prestige_zone_size = {["x"]=2.736159,["y"]=5.1,["z"]=2.836752}
+acuity_restore_zone_local_pos = { 6.601711, -2.351135, -1.90781 }
+acuity_restore_zone_size = {["x"]=3.37996,["y"]=5.1,["z"]=1.50891}
+acuity_ruin_zone_local_pos = { 8.798397, -2.351135, -1.924995 }
+acuity_ruin_zone_size = {["x"]=3.420197,["y"]=5.1,["z"]=1.508913}
 
 env = {}
 C = {}
@@ -44,14 +74,7 @@ loading = true
 function onLoad(saved_data)
   env = Global.getTable("env")
   C = Global.getTable("C")
-  color_block = getObjectFromGUID(block_guid)
-  color_block.UI.setAttribute("block_text_id", "text", self.getName())
-  self.setLock(true)
-  color_block.setLock(true)
-  if not(env.test.in_dev) then
-    self.interactable = false
-    color_block.interactable = false
-  end
+  --self.interactable = false
   if saved_data ~= "" then
     if env.test.trace then log("Player Board " .. self.getName() .. " saved load") end
     local restore_data = JSON.decode(saved_data)
@@ -65,6 +88,8 @@ function onLoad(saved_data)
     GD.board = {}
     GD.board.player_color = ""
     GD.board.initialized = false
+    GD.board.player_position = 0  -- 1 to 4 when initialized
+    GD.board.color_bar_guid = ""
   end
   loading = false
 end
@@ -113,24 +138,17 @@ end
     check to see if they are there.  --]]
 function createZones()
   if env.test.trace then log(self.getName() .. ": createZones()") end
-  local spell_pos = self.positionToWorld(active_spells_zone_local_pos)
+
   local p = {
     type              = 'ScriptingTrigger', 
-    position          = spell_pos,
-    scale             = {15.29391, 5.1, 7.632049}, 
-    callback_function = function(obj)
-        obj.setPosition(spell_pos)
-        GD.board.spells_zone = obj.getGUID()
-    end,
     sound             = false,
     snap_to_grid      = false,
   }
-  if getObjectFromGUID(GD.board.spells_zone) == nil then
-    spawnObject(p) 
-  end
-  local drop_pos = self.positionToWorld(class_board_drop_zone_local_pos)
+
+  -- cast board drop zone
+  local drop_pos = self.positionToWorld(drop_zone_local_pos)
   p.position          = drop_pos
-  p.scale             = {3.27755, 5.1, 3.59142}
+  p.scale             = {3.27755, 3, 3.59142}
   p.callback_function = function(obj)
     obj.setPosition(drop_pos)
     GD.board.class_board_drop_zone = obj.getGUID()
@@ -138,6 +156,58 @@ function createZones()
   if getObjectFromGUID(GD.board.class_board_drop_zone) == nil then
     spawnObject(p) 
   end
+
+  --dice zone
+  local dice_pos = self.positionToWorld(dice_zone_local_pos)
+  p.position          = dice_pos
+  p.scale             = dice_zone_size
+  p.callback_function = function(obj)
+    obj.setPosition(dice_pos)
+    GD.board.class_board_dice_zone = obj.getGUID()
+    end
+  if getObjectFromGUID(GD.board.class_board_dice_zone) == nil then
+    spawnObject(p) 
+  end
+
+  --prestige zone
+  local prestige_pos = self.positionToWorld(prestige_zone_local_pos)
+  p.position          = prestige_pos
+  p.scale             = prestige_zone_size
+  p.callback_function = function(obj)
+    obj.setPosition(prestige_pos)
+    GD.board.prestige_zone = obj.getGUID()
+    end
+  if getObjectFromGUID(GD.board.prestige_zone) == nil then
+    spawnObject(p) 
+  end
+
+  --acuity restore zone
+  local acuity_restore_pos = self.positionToWorld(acuity_restore_zone_local_pos)
+  p.position          = acuity_restore_pos
+  p.scale             = acuity_restore_zone_size
+  p.callback_function = function(obj)
+    obj.setPosition(acuity_restore_pos)
+    GD.board.acuity_restore_zone = obj.getGUID()
+    end
+  if getObjectFromGUID(GD.board.acuity_restore_zone) == nil then
+    spawnObject(p) 
+  end
+
+  --acuity ruin zone
+  local acuity_ruin_pos = self.positionToWorld(acuity_ruin_zone_local_pos)
+  p.position          = acuity_ruin_pos
+  p.scale             = acuity_ruin_zone_size
+  p.callback_function = function(obj)
+    obj.setPosition(acuity_ruin_pos)
+    GD.board.acuity__zone = obj.getGUID()
+    end
+  if getObjectFromGUID(GD.board.acuity_ruin_zone) == nil then
+    spawnObject(p) 
+  end
+
+
+  log(self.getName().." TODO: create card zones etc. in rest of play area relative to self")
+
 end
 
 --[[ Save game state ]]
@@ -154,6 +224,8 @@ function nextPlayerBtn(player, mouse, id)
   if player.color == GD.board.player_color then
     UI_setAttribute("next_player_pnl", "active", "false")
     UI_setAttribute("cleanup_pnl", "active", "false")
+    local color_bar = getObjectFromGUID(C.guids.color_bars[GD.board.player_position])
+    color_bar.setInvisibleTo(env.game.player_table_order)
     GD.board.active = false
     Global.call("setNextPlayer")
   else
@@ -230,7 +302,7 @@ function placeObject(obj)
     local index = 1
     local looking = true
     while looking do
-      p.origin = self.positionToWorld(mana_loc[index])
+      p.origin = self.positionToWorld(mana_local_pos[index])
       local hits = Physics.cast(p)
       local empty = true
       if hits ~= nil then
@@ -240,7 +312,7 @@ function placeObject(obj)
         end
         if empty then
           looking = false
-          obj.setPosition(self.positionToWorld(mana_loc[index]))
+          obj.setPosition(self.positionToWorld(mana_local_pos[index]))
           obj.setRotation({0,0,0})
         else
           index = index + 1
@@ -257,7 +329,7 @@ function placeObject(obj)
     local index = 1
     local looking = true
     while looking do
-      p.origin = self.positionToWorld(acuity_loc[index])
+      p.origin = self.positionToWorld(acuity_local_pos[index])
       local hits = Physics.cast(p)
       local empty = true
       if hits ~= nil then
@@ -268,8 +340,8 @@ function placeObject(obj)
         if empty then
           looking = false
           obj.setRotation({0,0,0})
-          obj.setPosition(self.positionToWorld(acuity_loc[index]))
-          --obj.setPositionSmooth(self.positionToWorld(acuity_loc[index]), false, true)
+          obj.setPosition(self.positionToWorld(acuity_local_pos[index]))
+          --obj.setPositionSmooth(self.positionToWorld(acuity_local_pos[index]), false, true)
         else
           index = index + 1
           if index > 10 then
@@ -285,7 +357,7 @@ function placeObject(obj)
     local index = 1
     local looking = true
     while looking do
-      p.origin = self.positionToWorld(dice_loc[index])
+      p.origin = self.positionToWorld(dice_local_pos[index])
       local hits = Physics.cast(p)
       local empty = true
       if hits ~= nil then
@@ -295,7 +367,7 @@ function placeObject(obj)
         end
         if empty then
           looking = false
-          obj.setPosition(self.positionToWorld(dice_loc[index]))
+          obj.setPosition(self.positionToWorld(dice_local_pos[index]))
         else
           index = index + 1
           if index > 8 then
@@ -308,11 +380,12 @@ function placeObject(obj)
       end
     end  
   elseif obj.hasTag("Spell") then
-    local pos = Vector(self.positionToWorld(spell_discards_local_pos))
-    pos.y = 3
-    obj.setPosition(pos)
+    log("--- TODO: Spell drop")
+    --local pos = Vector(self.positionToWorld(spell_discards_local_pos))
+    --pos.y = 3
+    --obj.setPosition(pos)
   elseif obj.hasTag("Arcana") then
-    log("--- TODO: Fix Arcana drop")
+    log("--- TODO:Arcana drop")
     --TODO: place Arcana in player area
   elseif obj.hasTag("Alteration") or obj.hasTag("Artifact") then
     obj.deal(1, GD.board.player_color)
@@ -321,12 +394,36 @@ function placeObject(obj)
   end
 end
 
---[[ Handler for "Select" button press.  Call Global to assign playerboard to player. ]]
-function classSelectBtn(player, mouse, id)
-  if env.test.trace then log(self.getName() .. ": classSelectBtn() player " .. player.color) end
-  Global.call("setPlayerClass",{
-    ["player"]=player.color, 
-    ["guid"]=self.getGUID()})
+--[[ Handler for player selecting (dropping) this board.  
+    Call Global to check conditions and assign playerboard & position to player. ]]
+function onDrop(player_color)
+  if env.test.trace then log(self.getName().." onDrop()") end
+  for i=1,4 do
+    local zone_guid = C.guids.board_zones[i]
+    z = getObjectFromGUID(zone_guid)
+    if z ~= nil then
+      for _,o in pairs(z.getObjects()) do
+        if o.getGUID() == self.getGUID() then
+          if env.test.debug then log(self.getName()..":"..self.getGUID().." dropped in position "..tostring(i).." by "..player_color) end
+          local pos = self.getPosition()
+          pos.x = z.getPosition().x
+          pos.z = z.getPosition().z
+          self.setPosition(pos)
+          local board_guid = self.getGUID()
+          Wait.condition(function()
+            Global.call("setPlayerClass",{
+              ["player"]=player_color, 
+              ["guid"]=board_guid,
+              ["position"]=i,
+            }) end,
+            function() return self.resting end)
+        end
+      end
+    else
+      log("No player zone here")
+      broadcastToColor("Not a valid Class Board location", player_color)
+    end
+  end
 end
 
 --[[ Called from Global after it checks to ensure player has not already selected a class.
@@ -334,7 +431,11 @@ end
 function setPlayer(params)
   if env.test.trace then log(self.getName() .. ": setPlayer()") end
   assert(params.player)
+  assert(params.position)
+  self.setLock(true)
+  self.interactable = false
   GD.board.player_color = params.player
+  GD.board.player_position = params.position
   UI_setAttribute("class_select_pnl", "active", "false")
   local deck = getObjectFromGUID(start_deck)
   card_count = #deck.getObjects()
@@ -350,7 +451,13 @@ function setPlayer(params)
     rune.setPositionSmooth(pos, false, false)
     rune.setRotation(C.rot.myst_rune)
   end
-  color_block.setColorTint(GD.board.player_color)
+  color_bar = getObjectFromGUID(C.guids.color_bars[GD.board.player_position])
+  color_bar.UI.setAttribute("block_text_id", "text", self.getName())
+  color_bar.setColorTint(GD.board.player_color)
+  color_bar.setInvisibleTo({})
+
+  log(self.getName().." TODO: additional class board setup, get all the bits.")
+  
 end
 
 --[[ Called from Global during player setup.  ]]
@@ -367,59 +474,74 @@ function dealAcuity(params)
   Wait.time(function() deal() end, .5, params.amount)
 end
 
---[[ Called from Global at start of game.  ]]
-function enableClassSelectBtn()
-  if env.test.trace then log(self.getName() .. ": enableClassSelectBtn()") end
-  UI_setAttribute("class_select_pnl", "active", "true")
-end
-
 --[[ Called from Global when this player is active. ]]
 function enableActivePlayer()
   if env.test.trace then log(self.getName() .. ": enableActivePlayer()") end
   UI_setAttribute("next_player_pnl", "active", "true")
   UI_setAttribute("cleanup_pnl", "active", "true")
-  GD.board.active = true
+  local color_bar = getObjectFromGUID(C.guids.color_bars[GD.board.player_position])
+  color_bar.setInvisibleTo({})
+GD.board.active = true
 end
 
 --[[ Called from Global after all players have selected a class.  Also may be called during game restore.
       If this board is unnassigned, clear all the stuff for it (dice etc.) from the game. ]]
 function setupBoard()
   if env.test.trace then log(self.getName() .. ": setupBoard()") end
-  --GD.board.setup_board = true
   if GD.board.player_color == "" then
     --unasigned, delete this board
-    local pos = self.getPosition()
-    local hits = Physics.cast({
-      origin       = pos,
-      direction    = {1,0,0},
-      type         = 2,
-      size         = {4,4,4},
-      max_distance = 5,
-      debug        = false,
-    })
-    if hits ~= nil then
-      for _,h in pairs(hits) do
-        if (string.match(h.hit_object.tag, "Dice") or 
-            string.match(h.hit_object.tag, "Generic") or 
-            string.match(h.hit_object.tag, "Tile")) then
-          h.hit_object.destruct()
-        end
-      end
-    end
-    color_block.setColorTint("Grey")
-    color_block.UI.setAttribute("block_panel", "active", "false")
-    --Mystcaller hack
-    if self.getName() == "Mystcaller" then
-      color_block.destruct() 
       getObjectFromGUID(start_deck).destruct()
-      getObjectFromGUID(mystcaller_guid).destruct()
-    end
+      self.destruct()
   else
     createZones()
     GD.board.initialized = true
     GD.board.active = false
+    local color_bar = getObjectFromGUID(C.guids.color_bars[GD.board.player_position])
+    color_bar.setInvisibleTo(env.game.player_table_order)
   end  
 end
+
+--[[ Return a table with unallocated dice values. --]]
+function getUnallocatedDiceValues(params)
+  local dice_zone = getObjectFromGUID(GD.board.class_board_dice_zone)
+  if dice_zone == nil then
+    log(self.getName().." getUnallocatedDiceValues(): Attempt to get dice but zone is nil.")
+    return nil
+  end
+  local objects = dice_zone.getObjects()
+  local result = {}
+  for _,o in pairs(objects) do
+    if o.hasTag("Dice") then
+      --result[o.getGUID()] = o.getRotationValue()
+      table.insert(result, o.getRotationValue())
+    end
+  end
+  return result
+end
+
+--[[ Return a count of unused acuity on the player class board. --]]
+function getUnusedAcuityCount(params)
+  local p = {
+    origin       = {},
+    direction    = {0,1,0},
+    type         = 2,
+    size         = {0.25,0.25,0.25},
+    max_distance = 1,
+    debug        = false,    
+  }
+  local count = 0
+  for i=1,10 do
+    p.origin = self.positionToWorld(acuity_local_pos[i])
+    local hits = Physics.cast(p)
+    if hits ~= nil then
+      for _,h in pairs(hits) do
+        if h.hit_object.hasTag("Acuity") then count = count + 1 end
+      end
+    end
+  end
+  return count
+end
+
 
 --[[ ***** DEVELOPMENT ONLY UTILS --]]
 

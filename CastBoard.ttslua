@@ -20,12 +20,15 @@ card_pos[13] = { -0.962158, 0.213605, 0.565574 }
 card_pos[14] = { -1.208436, 0.213605, 0.433976 }
 card_pos[15] = { -1.443572, 0.213605, 0.302281 }
 
+
+acuity_zone_restore_local_pos = { -1.292114, 1.176995, -0.734628 }
+acuity_zone_ruin_local_pos = { -1.29429, 1.176995, -0.364394 } 
+
+dice_translation = {"ruin","ruin","","","restore","restore"}
+
 env = {}
 C = {}
 GD = {}
-
-acuity_zone_restore_local_pos = { -1.292114, 2.55086, -0.734628 }
-acuity_zone_ruin_local_pos = { -1.29429, 2.550616, -0.364394 }
 
 loading = true
 
@@ -34,14 +37,24 @@ function onLoad(saved_data)
   C = Global.getTable("C")
   if saved_data ~= "" then
     if env.test.trace then log(self.getName() .. " saved load") end
-
+    local restore_data = JSON.decode(saved_data)
+    GD = restore_data
+    restoreBoardState()    
   else
     if env.test.trace then log(self.getName() .. " fresh load") end
     GD.states = {}
     GD.states.UI = {}
     GD.states.obj_vis = {}
     GD.board = {}
-
+    GD.board.power = {}
+    GD.board.power.ruin = {}
+    GD.board.power.ruin.dice = 0
+    GD.board.power.ruin.acuity = 0
+    GD.board.power.ruin.cards = 0
+    GD.board.power.restore = {}
+    GD.board.power.restore.dice = 0
+    GD.board.power.restore.acuity = 0
+    GD.board.power.restore.cards = 0
   end
   loading = false
 end
@@ -104,7 +117,32 @@ function onDrop(player_color)
   if z ~= nil then z.destruct() end
   z = getObjectFromGUID(GD.board.acuity_ruin_zone)
   if z ~= nil then z.destruct() end
-  createZones()
+  --Don't create zones until the board is fully at rest
+  Wait.condition(function() createZones() end, function() return self.resting end)
+  --Get information from player class board for evaluating spell power
+  local g = Global.call("getPlayerClassBoardGUID", {["player_color"]=player_color})
+  if g ~= "" then
+    local board = getObjectFromGUID(g)
+    log("Board is"..board.getName())
+    GD.board.dice_values = {}
+    GD.board.dice_values = board.call("getUnallocatedDiceValues", {})
+    GD.board.acuity_count = {}
+    GD.board.acuity_count = board.call("getUnusedAcuityCount", {})
+  else
+    log(self.getName().." onDrop(): ERROR unable to get player class board")
+  end 
+  GD.board.power.ruin.dice = 0
+  GD.board.power.restore.dice = 0
+  for _,d in pairs(GD.board.dice_values) do
+    if dice_translation[d] == "ruin" then
+      GD.board.power.ruin.dice = GD.board.power.ruin.dice + 1
+    elseif dice_translation[d] == "restore" then
+      GD.board.power.restore.dice = GD.board.power.restore.dice + 1
+    end
+  end
+  UI_setAttribute("dice_restore_text_id", "text", tostring(GD.board.power.restore.dice))
+  UI_setAttribute("dice_ruin_text_id", "text", tostring(GD.board.power.ruin.dice))
+  updateTotal()
 end
 
 --[[ Create the acuity zones ]]
@@ -123,9 +161,6 @@ end
     snap_to_grid      = false,
   }
   spawnObject(p) 
-  --[[if getObjectFromGUID(GD.board.spells_zone) == nil then
-    spawnObject(p) 
-  end]]
   local acuity_ruin_pos = self.positionToWorld(acuity_zone_ruin_local_pos)
   p.position          = acuity_ruin_pos
   p.callback_function = function(obj)
@@ -133,9 +168,6 @@ end
     GD.board.acuity_ruin_zone = obj.getGUID()
     end
   spawnObject(p) 
-    --[[if getObjectFromGUID(GD.board.acuity_ruin_zone) == nil then
-    spawnObject(p) 
-  end]]
 end
 
 function onCollisionEnter(hit_info)
@@ -144,15 +176,10 @@ function onCollisionEnter(hit_info)
     o = getCard(i)
     if o ~= nil then
       log(o.tag.." "..o.getGUID().." found at position "..i)
+      log(self.getName().." onCollisionEnter(): TODO: spell power update")
       return
     end
   end
-end
-
-
-function t_getCard(params)
-  local i = params.index
-  return getCard(i)
 end
 
 --[[ Return the card at location by index.  Returns nil if empty. --]]
@@ -179,6 +206,26 @@ function getCard(loc_index)
     end
   end
   return nil
+end
+
+function updateTotal()
+  local total_restore = 0
+  local total_ruin = 0
+  local total_myst = 0
+
+  total_restore = total_restore + GD.board.power.restore.dice
+  total_restore = total_restore + GD.board.power.restore.acuity
+  total_restore = total_restore + GD.board.power.restore.cards
+
+  total_ruin = total_ruin + GD.board.power.ruin.dice
+  total_ruin = total_ruin + GD.board.power.ruin.acuity
+  total_ruin = total_ruin + GD.board.power.ruin.cards
+
+  if total_restore == total_ruin then total_myst = total_restore end
+
+  UI_setAttribute("total_restore_text_id", "text", tostring(total_restore))
+  UI_setAttribute("total_ruin_text_id", "text", tostring(total_ruin))
+  UI_setAttribute("total_myst_text_id", "text", tostring(total_myst))
 end
 
 --[[ ************ DEV ONLY***************** --]]
