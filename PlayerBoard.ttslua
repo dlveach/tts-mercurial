@@ -22,14 +22,14 @@ acuity_local_pos[8] = { 0.926764, -0.5, 0.214188 }
 acuity_local_pos[9] = { 1.218278, -0.5, 0.220292 }
 acuity_local_pos[10] = { 1.567567, -0.5, 0.222189 }
 dice_local_pos = {}
-dice_local_pos[1] = { 2.699662, -1, -0.859595 }
-dice_local_pos[2] = { 3.274788, -1, -0.861671 }
-dice_local_pos[3] = { 2.692801, -1, -0.363973 }
-dice_local_pos[4] = { 3.260115, -1, -0.355712 }
-dice_local_pos[5] = { 2.669944, -1, 0.131452 }
-dice_local_pos[6] = { 3.258827, -1, 0.143394 }
-dice_local_pos[7] = { 2.665641, -1, 0.659981 }
-dice_local_pos[8] = { 3.266375, -1, 0.662818 }
+dice_local_pos[1] = { 4.9, -1, -0.859595 }
+dice_local_pos[2] = { 6.0, -1, -0.861671 }
+dice_local_pos[3] = { 4.9, -1, -0.363973 }
+dice_local_pos[4] = { 6.0, -1, -0.355712 }
+dice_local_pos[5] = { 4.9, -1, 0.131452 }
+dice_local_pos[6] = { 6.0, -1, 0.143394 }
+dice_local_pos[7] = { 4.9, -1, 0.659981 }
+dice_local_pos[8] = { 6.0, -1, 0.662818 }
 heroics_local_pos = {}
 heroics_local_pos[1] = { 8.026311, 0.186396, 2.947193 }
 heroics_local_pos[2] = { 8.043096, 0.186396, 2.426311 }
@@ -64,11 +64,16 @@ acuity_restore_zone_local_pos = { 6.601711, -2.351135, -1.90781 }
 acuity_restore_zone_size = {["x"]=3.37996,["y"]=5.1,["z"]=1.50891}
 acuity_ruin_zone_local_pos = { 8.798397, -2.351135, -1.924995 }
 acuity_ruin_zone_size = {["x"]=3.420197,["y"]=5.1,["z"]=1.508913}
+spells_zone_local_pos = { 2.326385, -2.351134, 3.205592}
+spells_zone_size = {["x"]=15.35225,["y"]=5.1,["z"]=6.884419}
+
+dice_translation = {"ruin","ruin","","","restore","restore"}
 
 env = {}
 C = {}
 GD = {}
 loading = true
+action = "drop"
 
 --[[ Game loading. ]]
 function onLoad(saved_data)
@@ -90,6 +95,17 @@ function onLoad(saved_data)
     GD.board.initialized = false
     GD.board.player_position = 0  -- 1 to 4 when initialized
     GD.board.color_bar_guid = ""
+    --spell cast stuff
+    GD.board.power = {}
+    GD.board.power.ruin = {}
+    GD.board.power.ruin.dice = 0
+    GD.board.power.ruin.acuity = 0
+    GD.board.power.ruin.cards = 0
+    GD.board.power.restore = {}
+    GD.board.power.restore.dice = 0
+    GD.board.power.restore.acuity = 0
+    GD.board.power.restore.cards = 0
+    --scoring stuff (TODO)
   end
   loading = false
 end
@@ -99,6 +115,11 @@ function restoreBoardState()
   if env.test.trace then log(self.getName()..":restoreBoardState()") end
   if GD.board.initialized then
     setupBoard()
+    if GD.board.active  then
+      local color_bar = getObjectFromGUID(C.guids.color_bars[GD.board.player_position])
+      color_bar.setInvisibleTo({})
+      color_bar.UI.setAttribute("block_panel", "active", "true")
+    end
   end
   --restore object visiblity
   for g,colors in pairs(GD.states.obj_vis) do
@@ -144,7 +165,6 @@ function createZones()
     sound             = false,
     snap_to_grid      = false,
   }
-
   -- cast board drop zone
   local drop_pos = self.positionToWorld(drop_zone_local_pos)
   p.position          = drop_pos
@@ -156,19 +176,17 @@ function createZones()
   if getObjectFromGUID(GD.board.class_board_drop_zone) == nil then
     spawnObject(p) 
   end
-
   --dice zone
   local dice_pos = self.positionToWorld(dice_zone_local_pos)
   p.position          = dice_pos
   p.scale             = dice_zone_size
   p.callback_function = function(obj)
     obj.setPosition(dice_pos)
-    GD.board.class_board_dice_zone = obj.getGUID()
+    GD.board.dice_zone = obj.getGUID()
     end
-  if getObjectFromGUID(GD.board.class_board_dice_zone) == nil then
+  if getObjectFromGUID(GD.board.dice_zone) == nil then
     spawnObject(p) 
   end
-
   --prestige zone
   local prestige_pos = self.positionToWorld(prestige_zone_local_pos)
   p.position          = prestige_pos
@@ -180,7 +198,6 @@ function createZones()
   if getObjectFromGUID(GD.board.prestige_zone) == nil then
     spawnObject(p) 
   end
-
   --acuity restore zone
   local acuity_restore_pos = self.positionToWorld(acuity_restore_zone_local_pos)
   p.position          = acuity_restore_pos
@@ -192,22 +209,28 @@ function createZones()
   if getObjectFromGUID(GD.board.acuity_restore_zone) == nil then
     spawnObject(p) 
   end
-
   --acuity ruin zone
   local acuity_ruin_pos = self.positionToWorld(acuity_ruin_zone_local_pos)
   p.position          = acuity_ruin_pos
   p.scale             = acuity_ruin_zone_size
   p.callback_function = function(obj)
     obj.setPosition(acuity_ruin_pos)
-    GD.board.acuity__zone = obj.getGUID()
+    GD.board.acuity_ruin_zone = obj.getGUID()
     end
   if getObjectFromGUID(GD.board.acuity_ruin_zone) == nil then
     spawnObject(p) 
   end
-
-
-  log(self.getName().." TODO: create card zones etc. in rest of play area relative to self")
-
+  --zpell cards zone
+  local spells_zone_pos = self.positionToWorld(spells_zone_local_pos)
+  p.position          = spells_zone_pos
+  p.scale             = spells_zone_size
+  p.callback_function = function(obj)
+    obj.setPosition(spells_zone_pos)
+    GD.board.spells_zone = obj.getGUID()
+    end
+  if getObjectFromGUID(GD.board.spells_zone) == nil then
+    spawnObject(p) 
+  end
 end
 
 --[[ Save game state ]]
@@ -223,9 +246,10 @@ function nextPlayerBtn(player, mouse, id)
   if env.test.trace then log(self.getName() .. ": nextPlayerBtn()") end
   if player.color == GD.board.player_color then
     UI_setAttribute("next_player_pnl", "active", "false")
-    UI_setAttribute("cleanup_pnl", "active", "false")
+    UI_setAttribute("cleanup_pnl", "active", "false")    
     local color_bar = getObjectFromGUID(C.guids.color_bars[GD.board.player_position])
     color_bar.setInvisibleTo(env.game.player_table_order)
+    color_bar.UI.setAttribute("block_panel", "active", "false")
     GD.board.active = false
     Global.call("setNextPlayer")
   else
@@ -256,6 +280,7 @@ function cleanupBtn(player, mouse, id)
       log(o.getTags())
     end
   end
+  action = "cleanup"
   for _,obj in pairs(dice) do placeObject(obj) end
   for _,obj in pairs(spells) do placeObject(obj) end
   for _,obj in pairs(mana) do placeObject(obj) end
@@ -277,6 +302,7 @@ function onCollisionEnter(hit_info)
           elseif not(obj.hasTag("Spell")) then 
             placeObject(obj) 
           end ]]          
+          action = "drop"
           if not(obj.hasTag("Spell")) then 
             placeObject(obj) 
           end
@@ -341,7 +367,6 @@ function placeObject(obj)
           looking = false
           obj.setRotation({0,0,0})
           obj.setPosition(self.positionToWorld(acuity_local_pos[index]))
-          --obj.setPositionSmooth(self.positionToWorld(acuity_local_pos[index]), false, true)
         else
           index = index + 1
           if index > 10 then
@@ -354,39 +379,22 @@ function placeObject(obj)
       end
     end  
   elseif obj.hasTag("Dice") then
-    local index = 1
-    local looking = true
-    while looking do
-      p.origin = self.positionToWorld(dice_local_pos[index])
-      local hits = Physics.cast(p)
-      local empty = true
-      if hits ~= nil then
-        for _,h in pairs(hits) do
-          local o = h.hit_object
-          if o.hasTag("Dice") then empty = false end
-        end
-        if empty then
-          looking = false
-          obj.setPosition(self.positionToWorld(dice_local_pos[index]))
-        else
-          index = index + 1
-          if index > 8 then
-            looking = false
-            log("ERROR: dice index > 8")
-          end
-        end
-      else
-        log("ERROR: got no hits for dice index "..index) --shouldn't ever happen, table will hit
-      end
-    end  
+    local pos = scatter(self.positionToWorld(dice_zone_local_pos), {1.25,0,1.5}, {0.1,0,0.1})
+    obj.setPosition(pos)
   elseif obj.hasTag("Spell") then
-    log("--- TODO: Spell drop")
-    --local pos = Vector(self.positionToWorld(spell_discards_local_pos))
-    --pos.y = 3
-    --obj.setPosition(pos)
+    if action == "drop" then
+      log("--- TODO: Spell drop, locate best spell position")
+    elseif action == "cleanup" then
+      local pos = Vector(self.positionToWorld(spell_discards_local_pos))
+      pos.y = 3
+      obj.setPosition(pos)
+    end
   elseif obj.hasTag("Arcana") then
-    log("--- TODO:Arcana drop")
-    --TODO: place Arcana in player area
+    local pos = Vector(self.positionToWorld(spell_discards_local_pos))
+    pos.y = 3
+    obj.setPosition(pos)
+  elseif obj.hasTag("Heroic") then
+    log("--- TODO: Heroc drop.  Place in next empty Heroic position.")
   elseif obj.hasTag("Alteration") or obj.hasTag("Artifact") then
     obj.deal(1, GD.board.player_color)
   else
@@ -455,9 +463,43 @@ function setPlayer(params)
   color_bar.UI.setAttribute("block_text_id", "text", self.getName())
   color_bar.setColorTint(GD.board.player_color)
   color_bar.setInvisibleTo({})
-
-  log(self.getName().." TODO: additional class board setup, get all the bits.")
-  
+  UI_setAttribute("total_restore_panel", "active", "true")
+  UI_setAttribute("total_ruin_panel", "active", "true")
+  UI_setAttribute("total_myst_panel", "active", "true")
+  UI_setAttribute("dice_restore_panel", "active", "true")
+  UI_setAttribute("dice_ruin_panel", "active", "true")
+  UI_setAttribute("acuity_restore_panel", "active", "true")
+  UI_setAttribute("acuity_ruin_panel", "active", "true")
+  UI_setAttribute("update_spell_pnl", "active", "true")
+  --Starting dice
+  local dice_bag = getObjectFromGUID(C.guids.dice_bag)
+  local function dice()
+    dice_bag.takeObject({
+      callback_function = function(obj) 
+        obj.setValue(math.random(1,6))
+        placeObject(obj) 
+      end
+    })
+  end
+  Wait.time(function() dice() end, .25, start_dice)
+  --Starting mana
+  local mana_bag = getObjectFromGUID(C.guids.mana_bag)
+  local function mana()
+    mana_bag.takeObject({
+      callback_function = function(obj) placeObject(obj) end
+    })
+  end
+  Wait.time(function() mana() end, .25, start_mana)
+  --Starting acuity
+  if start_acuity > 0 then
+    local acuity_bag = getObjectFromGUID(C.guids.acuity_bag)
+    local function acuity()
+      acuity_bag.takeObject({
+        callback_function = function(obj) placeObject(obj) end
+      })
+    end
+    Wait.time(function() acuity() end, .25, start_acuity)
+  end
 end
 
 --[[ Called from Global during player setup.  ]]
@@ -471,7 +513,7 @@ function dealAcuity(params)
       callback_function = function(obj) placeObject(obj) end
     })
   end
-  Wait.time(function() deal() end, .5, params.amount)
+  Wait.time(function() deal() end, .25, params.amount)
 end
 
 --[[ Called from Global when this player is active. ]]
@@ -479,9 +521,11 @@ function enableActivePlayer()
   if env.test.trace then log(self.getName() .. ": enableActivePlayer()") end
   UI_setAttribute("next_player_pnl", "active", "true")
   UI_setAttribute("cleanup_pnl", "active", "true")
+  --UI_setAttribute("update_spell_pnl", "active", "true")
   local color_bar = getObjectFromGUID(C.guids.color_bars[GD.board.player_position])
   color_bar.setInvisibleTo({})
-GD.board.active = true
+  color_bar.UI.setAttribute("block_panel", "active", "true")
+  GD.board.active = true
 end
 
 --[[ Called from Global after all players have selected a class.  Also may be called during game restore.
@@ -498,15 +542,16 @@ function setupBoard()
     GD.board.active = false
     local color_bar = getObjectFromGUID(C.guids.color_bars[GD.board.player_position])
     color_bar.setInvisibleTo(env.game.player_table_order)
+    color_bar.UI.setAttribute("block_panel", "active", "false")
   end  
 end
 
 --[[ Return a table with unallocated dice values. --]]
-function getUnallocatedDiceValues(params)
-  local dice_zone = getObjectFromGUID(GD.board.class_board_dice_zone)
+function getUnallocatedDiceValues()
+  local dice_zone = getObjectFromGUID(GD.board.dice_zone)
   if dice_zone == nil then
-    log(self.getName().." getUnallocatedDiceValues(): Attempt to get dice but zone is nil.")
-    return nil
+    log(self.getName().." getUnallocatedDiceValues(): ERROR: Attempt to get dice but zone is nil.")
+    return {}
   end
   local objects = dice_zone.getObjects()
   local result = {}
@@ -520,7 +565,7 @@ function getUnallocatedDiceValues(params)
 end
 
 --[[ Return a count of unused acuity on the player class board. --]]
-function getUnusedAcuityCount(params)
+function getUnusedAcuityCount()
   local p = {
     origin       = {},
     direction    = {0,1,0},
@@ -540,6 +585,78 @@ function getUnusedAcuityCount(params)
     end
   end
   return count
+end
+
+--[[ Button handler to trigger spell power update --]]
+function updateSpellPowerBtn(player, mouse, id)
+  local pcol = player.color
+  if env.test.trace then log(self.getName() .. ": updateSpellPowerBtn() "..pcol) end
+  updateSpellPower()
+end
+
+--[[ Calculate spell power for this player board and update UI elements --]]
+function updateSpellPower()
+  if env.test.trace then log(self.getName() .. ": updateSpellPower()") end
+  local total_restore = 0
+  local total_ruin = 0
+  local total_myst = 0
+  --update power contribution by unused dice
+  GD.board.power.ruin.dice = 0
+  GD.board.power.restore.dice = 0
+  for _,d in pairs(getUnallocatedDiceValues()) do
+    if dice_translation[d] == "ruin" then
+      GD.board.power.ruin.dice = GD.board.power.ruin.dice + 1
+    elseif dice_translation[d] == "restore" then
+      GD.board.power.restore.dice = GD.board.power.restore.dice + 1
+    end
+  end
+  UI_setAttribute("dice_restore_text_id", "text", tostring(GD.board.power.restore.dice))
+  UI_setAttribute("dice_ruin_text_id", "text", tostring(GD.board.power.ruin.dice))
+  --uppdate power contributed by acuity spaces
+  GD.board.power.restore.acuity = 0
+  local acuity_restore_zone = getObjectFromGUID(GD.board.acuity_restore_zone)
+  local acuity_count = 0
+  for _,o in pairs(acuity_restore_zone.getObjects()) do
+    if o.hasTag("Acuity") then
+      acuity_count = acuity_count + 1
+    end
+  end
+  if acuity_count > 0 then
+    local val,_ = math.modf(acuity_count/3)
+    GD.board.power.restore.acuity = val
+  else
+    GD.board.power.restore.acuity = 0
+  end
+  UI_setAttribute("acuity_restore_text_id", "text", tostring(GD.board.power.restore.acuity))
+  GD.board.power.ruin.acuity = 0
+  local acuity_ruin_zone = getObjectFromGUID(GD.board.acuity_ruin_zone)
+  local ruin_count = 0
+  for _,o in pairs(acuity_ruin_zone.getObjects()) do
+    if o.hasTag("Acuity") then
+      ruin_count = ruin_count + 1
+    end
+  end
+  if ruin_count > 0 then
+    local val,_ = math.modf(ruin_count/4)
+    GD.board.power.ruin.acuity = val
+  else
+    GD.board.power.ruin.acuity = 0
+  end
+  UI_setAttribute("acuity_ruin_text_id", "text", tostring(GD.board.power.ruin.acuity))
+
+  --TODO: update power from spell cards
+
+  --calculate totals and update UI
+  total_restore = total_restore + GD.board.power.restore.dice
+  total_restore = total_restore + GD.board.power.restore.acuity
+  total_restore = total_restore + GD.board.power.restore.cards
+  total_ruin = total_ruin + GD.board.power.ruin.dice
+  total_ruin = total_ruin + GD.board.power.ruin.acuity
+  total_ruin = total_ruin + GD.board.power.ruin.cards
+  if total_restore == total_ruin then total_myst = total_restore end
+  UI_setAttribute("total_restore_text_id", "text", tostring(total_restore))
+  UI_setAttribute("total_ruin_text_id", "text", tostring(total_ruin))
+  UI_setAttribute("total_myst_text_id", "text", tostring(total_myst))
 end
 
 

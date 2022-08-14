@@ -80,9 +80,11 @@ function onLoad(saved_data)
   dice_bag.setInvisibleTo(env.game.player_table_order)
   for i=1,4 do
     local bar = getObjectFromGUID(C.guids.color_bars[i])
-    bar.interactable = false
-    bar.UI.setAttribute("block_text_id", "text", "")
-    bar.setInvisibleTo(env.game.player_table_order)
+    if bar ~= nil then
+      bar.interactable = false
+      bar.UI.setAttribute("block_text_id", "text", "")
+      bar.setInvisibleTo(env.game.player_table_order)
+    end
   end
   GD = {}
   if saved_data ~= "" then
@@ -264,6 +266,8 @@ function finalSetup()
     if GD.game.positions[i] == "" then
       getObjectFromGUID(C.guids.color_bars[i]).destruct()
     end
+    local zone =getObjectFromGUID(C.guids.board_zones[i])
+    if zone ~= nil then zone.destruct() end
   end
   --deal out starting cards
   local p = {

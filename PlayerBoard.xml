@@ -5,13 +5,11 @@
 <Include path="Xml/Styles.xml" />
 
 <Defaults>
-  <Panel color="rgb(0.1,0.4,0)" image="Sprites/Outline_Sharp" />
+  <!--Panel color="rgb(0.1,0.4,0)" image="Sprites/Outline_Sharp" /-->
   <Button class="iconButton" image="Sprites/Layout/Base" iconColor="rgb(1,1,0)"
     iconHoverColor="rgb(1,1,0)" />
   <Button class="iconButtonWithText" iconWidth="48" padding="4 0 2 2"
     ignoreLayout="1" width="160" height="32" />
-
-
   <Button class="hl_button"
     colors="White|Cyan|#C8C8C8|rgba(0.78,0.78,0.78,0.5)" />
   <Row class="tableRow" preferredHeight="25" color="rgba(0,0,0,0.5)" />
@@ -19,26 +17,61 @@
   <Text class="med_text" fontSize="14" color="white"/>
   <Text class="med_large_text" fontSize="18" color="white"/>
   <Text class="large_text" fontSize="20" color="white" />
+
+  <Text class="restore" fontSize="25" color="#08A4C1" />
+  <Text class="restore_small" fontSize="20" color="#08A4C1" />
+  <Text class="ruin" fontSize="25" color="#B81717" />
+  <Text class="ruin_small" fontSize="20" color="#B81717" />
+  <Text class="myst" fontSize="25" color="#099139" />
 </Defaults>
 
-<Panel id="class_select_pnl" active="false"
-  allowDragging="false"
-  returnToOriginalPositionWhenReleased="false"
-  rectAlignment="LowerCenter"
-  position="0 -120 5"
-  rotation="180 0 0"
-  height="20" width="80"
-  color="rgba(0,0,0,0)"
-  scale="3.5 4.5">
-  <Button id="class_sel_btn_id" width="80" onClick="classSelectBtn"
-    class="ButtonWithText">Select</Button>
+<Panel id="total_restore_panel" active="false" rectAlignment="middleCenter" 
+  height="30" width="30"
+  position="30 -221 -20" rotation="180 0 0" scale = "1.4 1.4">
+  <Text id="total_restore_text_id" class="restore" alignment="MiddleCenter" text="0" />
+</Panel>
+
+<Panel id="total_ruin_panel" active="false" rectAlignment="middleCenter" 
+  height="30" width="30"
+  position="30 -157 -20" rotation="180 0 0" scale = "1.4 1.4">
+  <Text id="total_ruin_text_id" class="ruin" alignment="MiddleCenter" text="0" />
+</Panel>
+
+<Panel id="total_myst_panel" active="false" rectAlignment="middleCenter" 
+  height="30" width="30"
+  position="235 -189 -20" rotation="180 0 0" scale = "1.4 1.4">
+  <Text id="total_myst_text_id" class="myst" alignment="MiddleCenter" text="0" />
+</Panel>
+
+<Panel id="dice_restore_panel" active="false" rectAlignment="middleCenter" 
+  height="25" width="25"
+  position="485 -212 -20" rotation="180 0 0" scale = "1.1 1.1">
+  <Text id="dice_restore_text_id" class="restore_small" alignment="MiddleCenter" text="0" />
+</Panel>
+
+<Panel id="dice_ruin_panel" active="false" rectAlignment="middleCenter" 
+  height="25" width="25"
+  position="485 -172 -20" rotation="180 0 0" scale = "1.1 1.1">
+  <Text id="dice_ruin_text_id" class="ruin_small" alignment="MiddleCenter" text="0" />
+</Panel>
+
+<Panel id="acuity_restore_panel" active="false" rectAlignment="middleCenter" 
+  height="25" width="25"
+  position="711 -189 -20" rotation="180 0 0" scale = "1.2 1.2">
+  <Text id="acuity_restore_text_id" class="restore_small" alignment="MiddleCenter" text="0" />
+</Panel>
+
+<Panel id="acuity_ruin_panel" active="false" rectAlignment="middleCenter" 
+  height="25" width="25"
+  position="931 -189 -20" rotation="180 0 0" scale = "1.2 1.2">
+  <Text id="acuity_ruin_text_id" class="ruin_small" alignment="MiddleCenter" text="0" />
 </Panel>
 
 <Panel id="next_player_pnl" active="false"
   allowDragging="false"
   returnToOriginalPositionWhenReleased="false"
   rectAlignment="LowerCenter"
-  position="140 -130 1"
+  position="-190 -130 -20"
   rotation="180 0 0"
   height="20" width="80"
   color="rgba(0,0,0,0)"
@@ -47,11 +80,24 @@
     class="ButtonWithText">Done</Button>
 </Panel>
 
+<Panel id="update_spell_pnl" active="false"
+  allowDragging="false"
+  returnToOriginalPositionWhenReleased="false"
+  rectAlignment="LowerCenter"
+  position="-105 -180 -20"
+  rotation="180 0 0"
+  height="20" width="80"
+  color="rgba(0,0,0,0)"
+  scale="1 1">
+  <Button id="update_spell_btn_id" color="rgba(0,0,0,0)" width="70" height="60" onClick="updateSpellPowerBtn"
+    ></Button>
+</Panel>
+
 <Panel id="cleanup_pnl" active="false"
   allowDragging="false"
   returnToOriginalPositionWhenReleased="false"
   rectAlignment="LowerCenter"
-  position="210 550 1"
+  position="210 550 -20"
   rotation="180 0 0"
   height="20" width="80"
   color="rgba(0,0,0,0)"
