@@ -46,6 +46,8 @@ C.guids.arcana_tile_3 = "a94aad"
 C.guids.myst_rune_1 = "3444cf"
 C.guids.myst_rune_2 = "8b61f9"
 C.guids.fill_alterations_btn = "c19ef3"
+C.guids.fill_spells_btn = "6e7155"
+
 C.pos = {}
 C.rot = {}
 C.pos.spells = {}
@@ -118,12 +120,15 @@ function onLoad(saved_data)
     UI_setAttribute("startPanel", "active", true)
     local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
     setInvisibleTo(btn.getGUID(), env.game.player_table_order)
+    btn = getObjectFromGUID(C.guids.fill_spells_btn)
+    setInvisibleTo(btn.getGUID(), env.game.player_table_order)
+    
   end
   math.randomseed(os.time())
   --start the refill alterations watcher
   Timer.create({
     identifier     = "Alterations_watcher",
-    function_name  = "checkFillAlterations",
+    function_name  = "checkFillBtns",
     delay          = 2,
     repetitions    = 0,
   })
@@ -333,8 +338,8 @@ function finalSetup()
   local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
   board.call("enableActivePlayer")
   if env.game.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
-  local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
-  btn.UI.setAttribute("button_panel", "active", "true")
+  --local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
+  --btn.UI.setAttribute("button_panel", "active", "true")
   GD.game.started = true
 end
 
@@ -441,10 +446,13 @@ function refillSpells()
   end
 end
 
---[[ Timer watchdog.  Sstarted in onLoad(). 
-    If any Alteration positions are empty, show fill button. 
-    Otherwise hide it.  --]]
-    --TODO: consider using a script zone??? 
+--[[ Timer watchdog functions.  Timer started in onLoad(). 
+    If any Alteration or Spell positions are empty, show fill button. 
+    Otherwise hide buttons.  --]]
+function checkFillBtns()
+  checkFillSpells()
+  checkFillAlterations()
+end
 function checkFillAlterations()
   if not(GD.game.started) then return end
   --log("checkFillAlterations()")
@@ -477,6 +485,38 @@ function checkFillAlterations()
   end
   btn.UI.setAttribute("button_panel", "active", "false")
 end
+function checkFillSpells()
+  if not(GD.game.started) then return end
+  --log("checkFillSpells()")
+  local p = {
+    origin       = {},
+    direction    = {0,1,0},
+    type         = 3,
+    size         = {1,2,2},
+    max_distance = 0,
+    debug        = false,    
+  }  
+  local btn = getObjectFromGUID(C.guids.fill_spells_btn)
+  for i=1,6 do  
+    p.origin =  C.pos.spells[i]
+    local hits = Physics.cast(p)
+    local empty = true
+    if hits ~= nil then
+      for _,hit in ipairs(hits) do
+        if hit.hit_object.tag ~= "Surface" then
+          if hit.hit_object.hasTag("Spell") then
+            empty = false
+          end
+        end
+      end
+    end
+    if empty then 
+      btn.UI.setAttribute("button_panel", "active", "true")
+      return
+    end
+  end
+  btn.UI.setAttribute("button_panel", "active", "false")
+end
 
 --[[ Handler for fill alterations button.   --]]
 function refillAlterationsBtn(player, button, id)
@@ -484,6 +524,14 @@ function refillAlterationsBtn(player, button, id)
   local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
   btn.UI.setAttribute("button_panel", "active", "false")
   refillAlterations()
+end
+
+--[[ Handler for fill spells button.   --]]
+function refillSpellsBtn(player, button, id)
+  if env.test.trace then log("Global: refillSpellsBtn() pressed by "..player.color) end
+  local btn = getObjectFromGUID(C.guids.fill_spells_btn)
+  btn.UI.setAttribute("button_panel", "active", "false")
+  refillSpells()
 end
 
 --[[ Shift spell cards left to fill empty spaces, placing new cards in rightmost spot. 
@@ -644,6 +692,22 @@ function getPlayerClassBoardGUID(params)
     return ""
   end
 end
+
+--[[ Handle objects dropped in game.  Only certain object tags supported.  --]]
+function onObjectDrop(player_color, obj)
+  if GD.game.started then
+    if obj.hasTag("Spell") then
+      local g = GD.game.players[player_color].board_guid
+      local board = getObjectFromGUID(g)
+      board.call("spellDrop", {["guid"]=obj.getGUID()})
+    elseif obj.hasTag("Acuity") then
+      local g = GD.game.players[player_color].board_guid
+      local board = getObjectFromGUID(g)
+      board.call("acuityDrop", {["guid"]=obj.getGUID()})
+    end
+  end
+end
+
 
 --[[ ******** UTILITY ******** --]]
 

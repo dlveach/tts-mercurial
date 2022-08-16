@@ -412,24 +412,31 @@ function onDrop(player_color)
     if z ~= nil then
       for _,o in pairs(z.getObjects()) do
         if o.getGUID() == self.getGUID() then
+          --ensure tile is in range to be snapped by moving to center of zone
+          local pos = z.getPosition()
+          local new_pos = o.getPosition()
+          new_pos.x = pos.x
+          new_pos.z = pos.z
+          new_pos.y = 3
+          o.setPosition(new_pos)
+          --setup teh board & player area after it's settled in position
           if env.test.debug then log(self.getName()..":"..self.getGUID().." dropped in position "..tostring(i).." by "..player_color) end
-          local pos = self.getPosition()
-          pos.x = z.getPosition().x
-          pos.z = z.getPosition().z
-          self.setPosition(pos)
           local board_guid = self.getGUID()
-          Wait.condition(function()
-            Global.call("setPlayerClass",{
+          Wait.condition(
+            function() Global.call("setPlayerClass",{
               ["player"]=player_color, 
               ["guid"]=board_guid,
               ["position"]=i,
             }) end,
-            function() return self.resting end)
+            function() return self.resting end
+          )
+          z.destruct()
+          break;
         end
       end
     else
       log("No player zone here")
-      broadcastToColor("Not a valid Class Board location", player_color)
+      --broadcastToColor("Not a valid Class Board location", player_color)
     end
   end
 end
@@ -659,8 +666,74 @@ function updateSpellPower()
   UI_setAttribute("total_myst_text_id", "text", tostring(total_myst))
 end
 
+--[[ ******** EXPERIMENTAL ******** --]]
+
+function t_getSpellPower(params)
+  assert(params.guid)
+  local card = getObjectFromGUID(params.guid)
+  return getSpellPower(card)
+end
+
+--[[ Process the GM notes on a spell card.  Return the restore power and ruin power of the card. --]]
+function getSpellPower(card)
+  if env.test.trace then log(self.getName() .. ": updateSpellPower()") end
+  assert(card)
+  local gm_note = card.getGMNotes()
+  local data = JSON.decode(gm_note)
+  if data ~= nil then
+    assert(data.restore)
+    assert(data.ruin)
+    return data.restore, data.ruin
+  end
+  return 0, 0
+end
+
+--[[ Called from global on spell card drop by player for this board. 
+      Triggers spell power update if dropped in board's spell card zone. --]]
+function spellDrop(params)
+  if env.test.trace then log(self.getName() .. ": spellDrop()") end
+  local card_guid = params.guid
+  local z = getObjectFromGUID(GD.board.spells_zone)
+  for _,o in pairs(z.getObjects()) do
+    if o.getGUID() == card_guid then
+      updateSpellPower()
+      return
+    end
+  end
+end
+
+--[[ Called from global on acuity drop by player for this board.
+      Triggers spell power update if dropped in board's restore or ruin zone. --]]
+function acuityDrop(params)
+  if env.test.trace then log(self.getName() .. ": acuityDrop()") end
+  local acuity_guid = params.guid
+  local z = getObjectFromGUID(GD.board.acuity_restore_zone)
+  for _,o in pairs(z.getObjects()) do
+    if o.getGUID() == acuity_guid then
+      updateSpellPower()
+      return
+    end
+  end
+  z = getObjectFromGUID(GD.board.acuity_ruin_zone)
+  for _,o in pairs(z.getObjects()) do
+    if o.getGUID() == acuity_guid then
+      updateSpellPower()
+      return
+    end
+  end
+end
+  
+
 
 --[[ ***** DEVELOPMENT ONLY UTILS --]]
+
+function setGMNote(card, data)
+  assert(card)
+  assert(data)
+  assert(type(data) == "table")
+  assert(card.hasTag("Spell"))
+  card.setGMNotes(JSON.encode_pretty(variable)(data))
+end
 
 function saveLocalPosition(params)  
   local o = getObjectFromGUID(params.guid)

@@ -3,54 +3,45 @@
    xsi:noNamespaceSchemaLocation="../../../Configuration/XmlLayout.xsd"
    showAnimation="Grow" hideAnimation="FadeOut">
 
-<Include path="Xml/Styles.xml" />
-
 <Defaults>
-  <Panel color="rgb(0.1,0.4,0)" image="Sprites/Outline_Sharp" />
-  <Button class="iconButton" image="Sprites/Layout/Base" iconColor="rgb(1,1,0)"
-    iconHoverColor="rgb(1,1,0)" />
-  <Button class="iconButtonWithText" iconWidth="48" padding="4 0 2 2"
-    ignoreLayout="1" width="160" height="32" />
 
+  <Panel class="title" 
+         color="rgb(0.1,0.7,0.7)" 
+         preferredHeight="25"
+         image="Sprites/Layout/Title" />
 
-  <Button class="hl_button"
-    colors="White|Cyan|#C8C8C8|rgba(0.78,0.78,0.78,0.5)" />
-  <Row class="tableRow" preferredHeight="25" color="rgba(0,0,0,0.5)" />
-  <Text class="small_text" fontSize="12" color="white"/>
-  <Text class="med_text" fontSize="14" color="white"/>
-  <Text class="med_large_text" fontSize="18" color="white"/>
-  <Text class="large_text" fontSize="20" color="white" />
+  <Button font="Arial Bold"
+          fontSize="20"
+          image="Sprites/Layout/Button"
+          colors="rgb(0.1,0.3,0.4|rgb(0.1,0.5,0.7)|rgb(0.1,0.5,0.7" 
+          textColor="rgb(0,1,1)"
+          textShadow="rgba(0,0,0,0.5)"/>          
+
+  <VerticalLayout class="buttonList"
+                  spacing="16"
+                  padding="20"
+                  image="Sprites/Layout/Viewport"
+                  color="rgb(0,0.5,0.8)" />
+
+  <Text class="title"
+        fontSize="28"
+        font="Arial Bold"
+        color="rgba(0.4,0.7,0.8,1)"
+        shadow="rgba(0,0,0,0.5)" />
+
 </Defaults>
 
-<TableLayout id="startPanel" class="noCellBackground" height="150" width="420"
-  rectAlignment="MiddleCenter" offsetXY="0 0" active="false">
-  <Row class="headerRow">
-    <Cell>
-      <Text class="title" fontSize="20">
-        Seat all players, then press Start Game
-      </Text>
-    </Cell>
-  </Row>
-  <Row class="viewport">
-    <Cell dontUseTableCellBackground="true">
-      <TableLayout cellPadding="7" padding="20" cellSpacing="5"
-        cellBackgroundImage="Sprites/Outline_Sharp"
-        cellBackgroundColor="rgba(1,1,0,0.125)"
-        autoCalculateHeight="1" columnWidths="120 120 120">
-        <Row preferredHeight="40">
-          <Cell dontUseTableCellBackground="true">
-          </Cell>
-          <Cell dontUseTableCellBackground="true">
-            <Button class="iconButton" id="normal" onClick="startGameBtn"
-              fontSize="14" text="Start Game"/>
-          </Cell>
-          <Cell dontUseTableCellBackground="true">
-          </Cell>
-        </Row>
-      </TableLayout>
-    </Cell>
-  </Row>
-</TableLayout>
+<Panel id="startPanel" height="150" width="420">
+  <VerticalLayout>
+    <Panel class="title">
+      <Text class="title"> Seat all players first</Text>
+    </Panel>
+  
+    <VerticalLayout class="buttonList">
+      <Button onClick="startGameBtn">Start Game</Button>
+    </VerticalLayout>
+  </VerticalLayout>
+</Panel>
 
 
 </XmlLayout>

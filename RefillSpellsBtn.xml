@@ -32,7 +32,7 @@
 <Panel id="button_panel" active="false">
 
   <Button id="refill_alterations_btn_id" 
-          onClick="Global/refillAlterationsBtn"
+          onClick="Global/refillSpellsBtn"
           text="Refill" />
 
 </Panel>
