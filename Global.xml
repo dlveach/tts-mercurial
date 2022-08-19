@@ -33,7 +33,7 @@
 
 <Panel id="startPanel" height="150" width="420">
   <VerticalLayout>
-    <Panel class="title">
+    <Panel class="title"> 
       <Text class="title"> Seat all players first</Text>
     </Panel>
   

@@ -11,13 +11,8 @@
 
   <Panel  class="button_panel"
           active="false"
-          allowDragging="false"
-          returnToOriginalPositionWhenReleased="false"
-          rectAlignment="LowerCenter"
           rotation="180 0 0"
-          height="20" width="80"
-          color="rgba(0,0,0,0)"
-          scale="1 1" />
+          height="20" width="40"  />
           
   <Button font="Arial Bold"
           fontSize="20"
@@ -28,7 +23,7 @@
 
   <Button class="hidden"
           color="rgba(0,0,0,0)" 
-          width="70" height="60" />
+          width="70" height="50" />
 
   <Text class="restore" 
         fontSize="25" 
@@ -55,22 +50,54 @@
         color="#099139"
         alignment="MiddleCenter"  />
 
+  <Text class="score" 
+        fontSize="25" 
+        color="#aaa9ad"
+        alignment="MiddleCenter"  />
+
 </Defaults>
 
-<Panel  id="total_restore_panel" 
+<Panel  id="score_panel" 
         height="30" width="30"
-        position="30 -221 -20" 
+        position="900 -42 -20" 
         scale = "1.4 1.4">
-  <Text id="total_restore_text_id" 
+  <Text id="score_text_id" 
+        class="score" 
+        text="0" />
+</Panel>
+
+<Panel  id="gross_restore_panel" 
+        height="30" width="30"
+        position="-38 -221 -20" 
+        scale = "1.4 1.4">
+  <Text id="gross_restore_text_id" 
         class="restore" 
         text="0" />
 </Panel>
 
-<Panel id="total_ruin_panel" 
+<Panel  id="net_restore_panel" 
         height="30" width="30"
-        position="30 -157 -20" 
+        position="56 -221 -20" 
         scale = "1.4 1.4">
-  <Text id="total_ruin_text_id" 
+  <Text id="net_restore_text_id" 
+        class="restore" 
+        text="0" />
+</Panel>
+
+<Panel id="gross_ruin_panel" 
+        height="30" width="30"
+        position="-38 -157 -20" 
+        scale = "1.4 1.4">
+  <Text id="gross_ruin_text_id" 
+        class="ruin" 
+        text="0" />
+</Panel>
+
+<Panel id="net_ruin_panel" 
+        height="30" width="30"
+        position="56 -157 -20" 
+        scale = "1.4 1.4">
+  <Text id="net_ruin_text_id" 
         class="ruin" 
         text="0" />
 </Panel>
@@ -122,7 +149,7 @@
 
 <Panel  class="button_panel"
         id="next_player_pnl" 
-        position="-240 0 -20"
+        position="-240 105 -20"
         height="20" width="80" >
 
   <Button id="next_player_btn_id" 
@@ -143,7 +170,7 @@
 
 <Panel  class="button_panel" 
         id="update_spell_pnl" 
-        position="-105 -180 -20" >
+        position="-180 -190 -20" >
 
   <Button class="hidden"
           id="update_spell_btn_id" 

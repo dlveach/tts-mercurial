@@ -8,7 +8,7 @@ env.test.test_players = {"Yellow", "White"}
 env.test.auto_switch = true
 env.test.in_dev = true
 env.test.trace = true
-env.test.debug = true
+env.test.debug = false
 env.test.force_fresh_save = true
 env.game = {}
 env.game.player_table_order = {"White", "Yellow", "Green", "Blue"}
@@ -32,9 +32,9 @@ C.guids.player_boards.elementalist = "e47526"
 C.guids.player_boards.archanist = "625f56"
 C.guids.player_boards.enchanter = "69525a"
 C.guids.player_boards.chaosmancer = "d453e1"
-C.guids.spell_deck = "85f568"
+C.guids.spell_deck = "6742cd"
 C.guids.alterations_deck = "2d1923"
-C.guids.heroics_deck = "edf655"
+C.guids.heroics_deck = "25e4a6"
 C.guids.artifacts_deck = "675a94"
 C.guids.mana_bag = "a39f6e"
 C.guids.acuity_bag = "5561d3"
@@ -79,13 +79,13 @@ function onLoad(saved_data)
   log("Mercurial version " .. env.version .. " loading")
   local dice_bag = getObjectFromGUID(C.guids.dice_bag)
   dice_bag.interactable = false
-  dice_bag.setInvisibleTo(env.game.player_table_order)
+  dice_bag.setInvisibleTo(Player.getColors())
   for i=1,4 do
     local bar = getObjectFromGUID(C.guids.color_bars[i])
     if bar ~= nil then
       bar.interactable = false
       bar.UI.setAttribute("block_text_id", "text", "")
-      bar.setInvisibleTo(env.game.player_table_order)
+      bar.setInvisibleTo(Player.getColors())
     end
   end
   GD = {}
@@ -119,9 +119,9 @@ function onLoad(saved_data)
     getObjectFromGUID(C.guids.artifacts_deck).shuffle()
     UI_setAttribute("startPanel", "active", true)
     local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
-    setInvisibleTo(btn.getGUID(), env.game.player_table_order)
+    setInvisibleTo(btn.getGUID(), Player.getColors())
     btn = getObjectFromGUID(C.guids.fill_spells_btn)
-    setInvisibleTo(btn.getGUID(), env.game.player_table_order)
+    setInvisibleTo(btn.getGUID(), Player.getColors())
     
   end
   math.randomseed(os.time())
@@ -231,9 +231,9 @@ end
     Calls back to player board to finish setup if successful. ]]
 function setPlayerClass(params)  
   if env.test.trace then log("Global: setPlayerClass()") end
-  assert(params.player)
-  assert(params.guid)
-  assert(params.position)
+  assert(params.player, "parameter 'player' missing")
+  assert(params.guid, "parameter 'guid' missing")
+  assert(params.position, "parameter 'position' missing")
   local position = params.position
   local pcol = params.player
   if not(contains(GD.game.player_order, pcol)) then
@@ -362,11 +362,11 @@ function placeHeroic(location, iteration)
     mana_bag.takeObject({ callback_function = function(obj) obj.setPositionSmooth(pos, false, false) end })
   elseif iteration == 3 then
     pos.y = 2
-    pos.z = pos.z - 1
+    pos.z = pos.z - 0.5
     acuity_bag.takeObject({ callback_function = function(obj) obj.setPositionSmooth(pos, false, false) end })
   elseif iteration == 4 then
     pos.y = 3
-    pos.z = pos.z + 1
+    pos.z = pos.z + 0.5
     acuity_bag.takeObject({ callback_function = function(obj) obj.setPositionSmooth(pos, false, false) end })
   end
   iteration = iteration + 1
@@ -708,6 +708,20 @@ function onObjectDrop(player_color, obj)
   end
 end
 
+--[[ Handle objects picked up in game.  Only certain object tags supported.  --]]
+function onObjectPickUp(player_color, obj)
+  if GD.game.started then
+    if obj.hasTag("Spell") then
+      -- Clear any decals and buttons on a spell card when picked up
+      if obj.getDecals() ~= nil then
+        obj.setDecals({})
+      end
+      if obj.getButtons() ~= nil then
+        obj.clearButtons()
+      end
+    end
+  end
+end
 
 --[[ ******** UTILITY ******** --]]
 
