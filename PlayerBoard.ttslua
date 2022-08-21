@@ -73,6 +73,8 @@ acuity_ruin_zone_local_pos = { 8.798397, -2.351135, -1.924995 }
 acuity_ruin_zone_size = {["x"]=3.420197,["y"]=5.1,["z"]=1.508913}
 spells_zone_local_pos = { 2.326385, -2.351134, 3.205592}
 spells_zone_size = {["x"]=15.35225,["y"]=5.1,["z"]=6.884419}
+spell_arcana_zone_local_pos = { 9.71008, -2.351135, 0.969723 }
+spell_arcana_zone_size = {["x"]=1.64942,["y"]=5.1,["z"]=2.898976}
 
 card_decal_pos = {0,0.364,-1.124}
 card_decal_rot = {90,180,0}
@@ -138,7 +140,12 @@ function onLoad(saved_data)
     GD.board.scoring = {}
     GD.board.scoring.heroics = {}
     GD.board.scoring.spells = {}
-    GD.board.scoring.prestige = 0
+    GD.board.scoring.arcanas = {}
+    GD.board.scoring.values = {}
+    GD.board.scoring.values.heroics = 0
+    GD.board.scoring.values.sigils = 0
+    GD.board.scoring.values.prestige = 0
+    GD.board.scoring.values.arcanas = 0
 
   end
   loading = false
@@ -259,7 +266,7 @@ function createZones()
   if getObjectFromGUID(GD.board.acuity_ruin_zone) == nil then
     spawnObject(p) 
   end
-  --zpell cards zone
+  --spell cards zone
   local spells_zone_pos = self.positionToWorld(spells_zone_local_pos)
   p.position          = spells_zone_pos
   p.scale             = spells_zone_size
@@ -268,6 +275,17 @@ function createZones()
     GD.board.spells_zone = obj.getGUID()
     end
   if getObjectFromGUID(GD.board.spells_zone) == nil then
+    spawnObject(p) 
+  end
+  --spell and arcana cards zone
+  local spell_arcana_zone_pos = self.positionToWorld(spell_arcana_zone_local_pos)
+  p.position          = spell_arcana_zone_pos
+  p.scale             = spell_arcana_zone_size
+  p.callback_function = function(obj)
+    obj.setPosition(spell_arcana_zone_pos)
+    GD.board.spell_arcana_zone = obj.getGUID()
+    end
+  if getObjectFromGUID(GD.board.spell_arcana_zone) == nil then
     spawnObject(p) 
   end
 end
@@ -384,10 +402,9 @@ function cleanupBtn(player, mouse, id)
   UI_setAttribute("acuity_restore_text_id", "text", "0")
   UI_setAttribute("acuity_ruin_text_id", "text", "0")
   UI_setAttribute("score_text_id", "text", "0")
-  
 end
 
---[[ Document --]]
+--[[ Player dropped something on this board. --]]
 function onCollisionEnter(hit_info)
   if loading then return end
   --if env.test.trace then log(self.getName() .. ":onCollisionEnter()") end
@@ -397,12 +414,7 @@ function onCollisionEnter(hit_info)
       log(self.getName()..":onCollisionEnter() ERROR: No drop zone")
     else
       for _,obj in pairs(zone.getObjects()) do
-        if obj.getGUID() == hit_info.collision_object.getGUID() then           
-          --[[if GD.board.active == false then
-            broadcastToAll(self.getName() .. " is not the active player board.")
-          elseif not(obj.hasTag("Spell")) then 
-            placeObject(obj) 
-          end ]]          
+        if obj.getGUID() == hit_info.collision_object.getGUID() then
           action = "drop"
           if not(obj.hasTag("Spell")) then 
             placeObject(obj) 
@@ -492,14 +504,16 @@ function placeObject(obj)
     end
   elseif obj.hasTag("Arcana") then
     local pos = Vector(self.positionToWorld(spell_discards_local_pos))
+    local rot = obj.getRotation()
+    rot.y = rot.y + 90
     pos.y = 3
     obj.setPositionSmooth(pos, false, true)
+    obj.setRotation(rot)
   elseif obj.hasTag("Heroic") then
 
-    log("--- TODO: Heroc drop.  Place in next empty Heroic position.")
+    --TODO: use the getCardByTag(pos, tag) function
     local index = 0
     for i=1,5 do
-      log("looking at position "..i)
       p.origin = Vector(self.positionToWorld(won_heroics_local_pos[i+1]))
       log(p.origin)
       p.debug = true
@@ -511,14 +525,12 @@ function placeObject(obj)
           if o.hasTag("Heroic") then empty = false end
         end
         if empty then
-          log("found empty heroic at pos "..i)
           index = i
           break
         end
       end      
     end
     if index == 0 then index = 5 end
-    log("Placing heroic at pos "..index)
     local pos = self.positionToWorld(won_heroics_local_pos[index])
     pos.y = 2
     obj.setPosition(pos)
@@ -815,6 +827,13 @@ function updateSpellPower()
     end
   end
 
+    --calculate totals
+  total_restore = total_restore + GD.board.power.restore.dice
+  total_restore = total_restore + GD.board.power.restore.acuity
+  total_restore = total_restore + GD.board.power.restore.cards
+  total_ruin = total_ruin + GD.board.power.ruin.dice
+  total_ruin = total_ruin + GD.board.power.ruin.acuity
+  total_ruin = total_ruin + GD.board.power.ruin.cards
   --handle any enchantment card effects, in order of position
   for i=1,3 do
     local card = getCardByTag(enchantment_spells_local_pos[i], "Spell")
@@ -824,11 +843,15 @@ function updateSpellPower()
       if env.test.debug then log(data) end
       if data.enchant ~= nil then
         if data.enchant.type == "restore_to_ruin" then
-          GD.board.power.ruin.cards = GD.board.power.ruin.cards + (GD.board.power.restore.cards * data.enchant.multiplier)
-          GD.board.power.restore.cards = 0
+          total_ruin = total_ruin + (total_restore * data.enchant.multiplier)
+          total_restore = 0
+          --GD.board.power.ruin.cards = GD.board.power.ruin.cards + (GD.board.power.restore.cards * data.enchant.multiplier)
+          --GD.board.power.restore.cards = 0
         elseif data.enchant.type == "ruin_to_restore" then
-          GD.board.power.restore.cards = GD.board.power.restore.cards + (GD.board.power.ruin.cards * data.enchant.multiplier)
-          GD.board.power.ruin.cards = 0
+          total_restore = total_restore + (total_ruin * data.enchant.multiplier)
+          total_ruin = 0
+          --GD.board.power.restore.cards = GD.board.power.restore.cards + (GD.board.power.ruin.cards * data.enchant.multiplier)
+          --GD.board.power.ruin.cards = 0
         else
           log(self.getName().." ERROR: unexpected enchantment type")
         end
@@ -838,14 +861,7 @@ function updateSpellPower()
       end
     end
   end
-
-  --calculate totals and update UI
-  total_restore = total_restore + GD.board.power.restore.dice
-  total_restore = total_restore + GD.board.power.restore.acuity
-  total_restore = total_restore + GD.board.power.restore.cards
-  total_ruin = total_ruin + GD.board.power.ruin.dice
-  total_ruin = total_ruin + GD.board.power.ruin.acuity
-  total_ruin = total_ruin + GD.board.power.ruin.cards
+  --check for equilibrium or calculate net if not
   local net_restore = total_restore - total_ruin
   local net_ruin = total_ruin - total_restore
   if total_restore > 0 and total_restore == total_ruin then 
@@ -869,6 +885,7 @@ function updateSpellPower()
     if net_restore < 0 then net_restore = 0 end
     if net_ruin < 0 then net_ruin = 0 end
   end
+  --update UI
   UI_setAttribute("gross_restore_text_id", "text", tostring(total_restore))
   UI_setAttribute("gross_ruin_text_id", "text", tostring(total_ruin))
   UI_setAttribute("net_restore_text_id", "text", tostring(net_restore))
@@ -1195,15 +1212,14 @@ function hasAether()
   return false
 end
 
-
+--[[ Calculate current score adn update display --]]
 function updateScore()
-
+  if env.test.trace then log(self.getName() .. ": updateScore()") end
   local sigils = { red = 0, blue = 0, green = 0, yellow = 0 }
   local heroics_score = 0
   local prestige_score = 0
   local arcanas_score = 0
   local sigil_score = 0
-
   --Herocis scoring
   for g,j in pairs(GD.board.scoring.heroics) do
     local d = JSON.decode(j)
@@ -1218,6 +1234,7 @@ function updateScore()
     end 
   end
   log("Heroics score: "..heroics_score)
+  GD.board.scoring.values.heroics = heroics_score
 
   --Add sigil for player class board
   if board_sigil == "wild" then 
@@ -1255,6 +1272,7 @@ function updateScore()
     end
   end
   log("Sigil score: "..sigil_score)
+  GD.board.scoring.values.sigils = sigil_score
 
   --Prestige token scoring
   local prestige_zone = getObjectFromGUID(GD.board.prestige_zone)
@@ -1264,14 +1282,87 @@ function updateScore()
     end
   end
   log("Prestige score: "..prestige_score)
+  GD.board.scoring.values.prestige = prestige_score
 
-  --TODO: Arcana scoring
-  log("-- TODO: Arcana score")
-    --TODO: don't forget about arcana bonus for 3 or 4 player game!
+  --Arcana scoring
+  local spells = {}
+  local arcanas = {}
+  local z = getObjectFromGUID(GD.board.spell_arcana_zone)
+  for _,o in pairs(z.getObjects()) do
+    if o.hasTag("Spell") then
+      if o.tag == "Deck" then
+        for _,c in pairs(o.getObjects()) do
+          spells[c.guid] = JSON.decode(c.gm_notes)
+          GD.board.scoring.spells[c.guid] = c.gm_notes
+        end
+      else
+        spells[o.getGUID()] = JSON.decode(o.getGMNotes())
+        GD.board.scoring.spells[o.getGUID()] = o.getGMNotes()
+      end
+    elseif o.hasTag("Arcana") then
+      table.insert(arcanas, o)
+      GD.board.scoring.arcanas[o.getGUID()] = o.getName()
+    else
+      log("WARN: ignoring object "..o.getGUID().." in spell/arcana pile.")
+    end
+  end
+  log("found "..sizeOf(spells).." spell cards")
+  log("found "..#arcanas.." arcana cards")
+  local arcana_data
+  for _,arcana in pairs(arcanas) do
+    if arcana.is_face_down then
+      arcana_data = C.arcanas[arcana.getGUID()].face_down.reward
+    else
+      arcana_data = C.arcanas[arcana.getGUID()].face_up.reward
+    end
+    log("Scoring arcana: ")
+    log(arcana_data)
+    local count = 0
+    if arcana_data.spell_type == "aether_mod" then
+      for _,s in pairs(spells) do
+        if s.aether_mod then 
+          count = count + 1
+        end
+      end        
+    elseif arcana_data.spell_type == "not_aether" then
+      for _,s in pairs(spells) do
+        if not(s.aether_mod) then 
+          count = count + 1
+        end
+      end        
+    elseif arcana_data.spell_type == "slot_count" then
+      for _,s in pairs(spells) do
+        if s.slots >= 4 then 
+          count = count + 1
+        end
+      end        
+    else
+      for _,s in pairs(spells) do
+        if arcana_data.spell_type == "any" or 
+        contains(s.dice, arcana_data.spell_type) then
+          count = count + 1
+        end
+      end
+    end
+    log("Number spells matching arcana "..arcana.getName().." condition = "..count)
+    local n = math.modf(count/arcana_data.count)
+    log(arcana.getName().." score is "..(n * arcana_data.vp))
+    arcanas_score = arcanas_score + (n * arcana_data.vp)
+  end
+  --Add in arcana bonus for number of players == 3 or 4
+  local player_count = Global.call("getPlayerCount", {})
+  if player_count == 3 then
+    log("Arcana player count bonus = "..#arcanas)
+    arcanas_score = arcanas_score + #arcanas
+  elseif player_count == 4 then
+    log("Arcana player count bonus = "..(#arcanas * 2))
+    arcanas_score = arcanas_score + (#arcanas * 2)
+  end
+  log("total arcana score including player count bonus: "..arcanas_score)
+  GD.board.scoring.values.arcanas = arcanas_score
 
   local score = heroics_score + sigil_score + prestige_score + arcanas_score
   UI_setAttribute("score_text_id", "text", tostring(score))
-
 end
 
 

@@ -32,7 +32,7 @@ C.guids.player_boards.elementalist = "e47526"
 C.guids.player_boards.archanist = "625f56"
 C.guids.player_boards.enchanter = "69525a"
 C.guids.player_boards.chaosmancer = "d453e1"
-C.guids.spell_deck = "6742cd"
+C.guids.spell_deck = "9e01c6"
 C.guids.alterations_deck = "2d1923"
 C.guids.heroics_deck = "25e4a6"
 C.guids.artifacts_deck = "675a94"
@@ -40,13 +40,69 @@ C.guids.mana_bag = "a39f6e"
 C.guids.acuity_bag = "5561d3"
 C.guids.prestige_bag = "d5b6a6"
 C.guids.dice_bag = "bf3a6e"
-C.guids.arcana_tile_1 = "8f529c"
-C.guids.arcana_tile_2 = "5f944b"
-C.guids.arcana_tile_3 = "a94aad"
 C.guids.myst_rune_1 = "3444cf"
 C.guids.myst_rune_2 = "8b61f9"
 C.guids.fill_alterations_btn = "c19ef3"
 C.guids.fill_spells_btn = "6e7155"
+
+--[[ TODO: add arcana data for scoring --]]
+C.arcanas = {}
+
+C.arcanas["8f529c"] = {
+  face_up = {
+    name = "Fire Lizard",
+    reward = {
+      vp = 1,
+      spell_type = "fire",
+      count = 2
+    }
+  },
+  face_down = {
+    name = "Water Dragon",
+    reward = {
+      vp = 1,
+      spell_type = "water",
+      count = 2
+    }
+  }
+}
+C.arcanas["5f944b"] = {
+  face_up = {
+    name = "Mystic Cat",
+    reward = {
+      vp = 1,
+      spell_type = "any",
+      count = 4
+    }
+  },
+  face_down = {
+    name = "Phoenix",
+    reward = {
+      vp = 1,
+      spell_type = "slot_count",
+      slot_count = 4,
+      count = 2
+    }
+  }
+}
+C.arcanas["a94aad"] = {
+  face_up = {
+    name = "Aether Griffon",
+    reward = {
+      vp = 1,
+      spell_type = "aether_mod",
+      count = 2
+    }
+  },
+  face_down = {
+    name = "Myst Owl",
+    reward = {
+      vp = 1,
+      spell_type = "not_aether",
+      count = 3
+    }
+  }
+}
 
 C.pos = {}
 C.rot = {}
@@ -314,10 +370,24 @@ function finalSetup()
     myst_rune.setPositionSmooth(C.pos.myst_rune)
     myst_rune.setRotation(C.rot.myst_rune)
   end
+
   -- Random flip arcanas
-  if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_1).flip() end
-  if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_2).flip() end
-  if (math.random(1, 10) > 5) then getObjectFromGUID(C.guids.arcana_tile_3).flip() end
+  for g,data in pairs(C.arcanas) do
+    log("random flip arcana "..g)
+    local arcana = getObjectFromGUID(g)
+    if (math.random(1, 10) > 5) then arcana.flip() end
+    Wait.condition(
+      function()
+        if arcana.is_face_down then 
+          arcana.setName(data.face_down.name)
+        else 
+          arcana.setName(data.face_up.name)
+        end
+      end,
+      function() return arcana.resting end
+    )
+  end
+
   -- Give extra acuity to players in turn order 
   local player = GD.game.start_player 
   local count = 1
@@ -679,6 +749,11 @@ end
 --[[ Special case needed by Mystcaller board only. ]]
 function getMystRuneGuid()
   return GD.game.myst_rune
+end
+
+--[[ Used by player boards during scoring --]]
+function getPlayerCount()
+  return #GD.game.player_order
 end
 
 --[[ Return player class board guid. --]]
