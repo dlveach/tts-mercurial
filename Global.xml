@@ -1,40 +1,9 @@
-<XmlLayout xmlns="http://www.w3schools.com"
-   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:noNamespaceSchemaLocation="../../../Configuration/XmlLayout.xsd"
-   showAnimation="Grow" hideAnimation="FadeOut">
+<Include src="tts-mercurial/XML_defaults.xml"/>
 
-<Defaults>
-
-  <Panel class="title" 
-         color="rgb(0.1,0.7,0.7)" 
-         preferredHeight="25"
-         image="Sprites/Layout/Title" />
-
-  <Button font="Arial Bold"
-          fontSize="20"
-          image="Sprites/Layout/Button"
-          colors="rgb(0.1,0.3,0.4|rgb(0.1,0.5,0.7)|rgb(0.1,0.5,0.7" 
-          textColor="rgb(0,1,1)"
-          textShadow="rgba(0,0,0,0.5)"/>          
-
-  <VerticalLayout class="buttonList"
-                  spacing="16"
-                  padding="20"
-                  image="Sprites/Layout/Viewport"
-                  color="rgb(0,0.5,0.8)" />
-
-  <Text class="title"
-        fontSize="28"
-        font="Arial Bold"
-        color="rgba(0.4,0.7,0.8,1)"
-        shadow="rgba(0,0,0,0.5)" />
-
-</Defaults>
-
-<Panel id="startPanel" height="150" width="420">
+<Panel id="startPanel" height="160" width="220">
   <VerticalLayout>
     <Panel class="title"> 
-      <Text class="title"> Seat all players first</Text>
+      <Text class="title"> Seat all players</Text>
     </Panel>
   
     <VerticalLayout class="buttonList">

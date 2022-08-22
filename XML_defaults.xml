@@ -1,0 +1,89 @@
+<XmlLayout xmlns="XmlLayout"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="XmlLayout UI/XmlLayout/Configuration/XmlLayout.xsd">
+
+<Defaults>
+
+  <Panel  class="class_board_text"
+          active="false"
+          rectAlignment="middleCenter"
+          rotation="180 0 0"  />
+
+  <Panel  class="class_board_button"
+          active="false"
+          rotation="180 0 0"
+          height="20" width="40"  />          
+        
+  <Panel  class="title"
+          color="rgb(0.8,0.4,0)"
+          preferredHeight="16"
+          image="Sprites/Layout/Title" />
+
+  <VerticalLayout class="buttonList"
+                  spacing="16"
+                  padding="30"
+                  image="Sprites/Layout/Viewport"
+                  color="rgb(0.4,0.1,0)" />
+
+  <Button hoverClass="hover"
+          pressClass="press"
+          selectClass="select"
+          color="rgb(0.7,0.3,0)"
+          textColor="rgb(0.9,0.9,0)"
+          fontSize="20"
+          font="Arial Bold"
+          image="Sprites/Layout/Button"
+          textShadow="rgba(0,0,0,0.5)" />
+  <Button class="hover"
+          color="rgb(01,0.4,0)"
+          textColor="rgb(1,1,0)"
+          textShadow="rgba(0,0,0,1)"/>
+  <Button class="press"
+          color="rgb(0.4,0.1,0)"
+          textColor="rgb(1,1,0)" />
+  <Button class="select"
+          color="rgb(0.4,0.1,0)"
+          textColor="rgb(1,1,0)" />
+
+  <Button class="hidden"
+          color="rgba(0,0,0,0)" 
+          width="70" height="50" />          
+
+  <Text class="title"
+        fontSize="24"
+        font="Arial Bold"
+        color="rgb(.9,0.9,0)"
+        shadow="rgba(0,0,0,1)" />
+
+  <Text class="restore" 
+        fontSize="25" 
+        color="#08A4C1"
+        alignment="MiddleCenter"  />
+
+  <Text class="restore_small" 
+        fontSize="20" 
+        color="#08A4C1"
+        alignment="MiddleCenter"  />
+
+  <Text class="ruin" 
+        fontSize="25" 
+        color="#B81717"
+        alignment="MiddleCenter"  />
+
+  <Text class="ruin_small" 
+        fontSize="20" 
+        color="#B81717"
+        alignment="MiddleCenter"  />
+
+  <Text class="myst" 
+        fontSize="25" 
+        color="#099139"
+        alignment="MiddleCenter"  />
+
+  <Text class="score" 
+        fontSize="25" 
+        color="#aaa9ad"
+        alignment="MiddleCenter"  />
+        
+</Defaults>
+

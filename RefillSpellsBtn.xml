@@ -1,38 +1,15 @@
-<XmlLayout xmlns="http://www.w3schools.com"
-   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:noNamespaceSchemaLocation="../../../Configuration/XmlLayout.xsd"
-   showAnimation="Grow" hideAnimation="FadeOut">
+<Include src="tts-mercurial/XML_defaults.xml"/>
 
-<Defaults>
-
-  <Panel  allowDragging="false"
-          returnToOriginalPositionWhenReleased="false"
-          rectAlignment="LowerCenter"
-          position="0 -50 -100"
-          rotation="0 0 0"
-          height="100" width="120"
-          color="rgba(0,0,0,0)"
-          scale="1 1.4" />
-
-  <Button font="Arial Bold"
-          fontSize="32"
-          image="Sprites/Layout/Button"
-          colors="rgb(0.1,0.3,0.4|rgb(0.1,0.5,0.7)|rgb(0.1,0.5,0.7" 
-          textColor="rgb(0,1,1)"
-          textShadow="rgba(0,0,0,0.5)"/>          
-
-  <VerticalLayout class="buttonList"
-                  spacing="16"
-                  padding="20"
-                  image="Sprites/Layout/Viewport"
-                  color="rgb(0,0.5,0.8)" />
-
-</Defaults>
-
-<Panel id="button_panel" active="false">
+<Panel  id="button_panel" 
+        active="false"
+        rectAlignment="LowerCenter"
+        height="100" width="120"
+        position="0 -50 -100"
+        scale="1 1.5">
 
   <Button id="refill_alterations_btn_id" 
           onClick="Global/refillSpellsBtn"
+          fontSize="34"
           text="Refill" />
 
 </Panel>
