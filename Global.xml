@@ -1,16 +1,149 @@
-<Include src="tts-mercurial/XML_defaults.xml"/>
+<XmlLayout xmlns="XmlLayout"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="XmlLayout UI/XmlLayout/Configuration/XmlLayout.xsd">
 
-<Panel id="startPanel" height="160" width="220">
-  <VerticalLayout>
-    <Panel class="title"> 
-      <Text class="title"> Seat all players</Text>
-    </Panel>
-  
-    <VerticalLayout class="buttonList">
-      <Button onClick="startGameBtn">Start Game</Button>
+  <Include src="tts-mercurial/XML_defaults.xml"/>
+
+  <!-- Start Panel -->
+  <Panel id="startPanel" active="true" height="160" width="220">
+    <VerticalLayout>
+      <Panel class="title"> 
+        <Text class="title"> Seat all players</Text>
+      </Panel>    
+      <VerticalLayout class="buttonList">
+        <Button onClick="startGameBtn">Start Game</Button>
+      </VerticalLayout>
     </VerticalLayout>
-  </VerticalLayout>
-</Panel>
+  </Panel>
 
+  <!-- Final Scoring table -->
+  <Panel id="score_panel" active="false" width="900" height="360">
+      <TableLayout class="table_class">
+          <Row id="table_1_title_row" class="title_row">
+              <Cell class="header_cell" columnSpan="7">
+                  <Text id="table_1_title_text" class="table_title_text" text="Final Scoring" />
+              </Cell>
+          </Row>
+          <Row id="score_table_header" class="table_header_row">
+              <Cell class="header_cell">
+                  <Text id="score_table_header_text_1" class="table_header_text" text="Player" />
+              </Cell> 
+              <Cell class="header_cell">
+                  <Text id="score_table_header_text_2" class="table_header_text" text="Class" />
+              </Cell> 
+              <Cell class="header_cell">
+                  <Text id="score_table_header_text_3" class="table_header_text" text="Heroics" />
+              </Cell> 
+              <Cell class="header_cell">
+                  <Text id="score_table_header_text_4" class="table_header_text" text="Sigils" />
+              </Cell> 
+              <Cell class="header_cell">
+                  <Text id="score_table_header_text_5" class="table_header_text" text="Prestige" />
+              </Cell> 
+              <Cell class="header_cell">
+                  <Text id="score_table_header_text_6" class="table_header_text" text="Arcanas" />
+              </Cell> 
+              <Cell class="header_cell">
+                  <Text id="score_table_header_text_7" class="table_header_text" text="Total" />
+              </Cell> 
+          </Row>
+          <Row id="score_table_row_1" active="true" class="table_data_row">
+              <Cell class="table_cell">
+                  <Text id="score_table_row_1_text_1" class="table_data_text" text="color"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_1_text_2" class="table_data_text" text="class"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_1_text_3" class="table_data_text" text="0"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_1_text_4" class="table_data_text" text="0"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_1_text_5" class="table_data_text" text="0"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_1_text_6" class="table_data_text" text="0"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_1_text_7" class="table_data_text" text="0"/>
+              </Cell>
+          </Row>
+
+          <Row id="score_table_row_2" active="true" class="table_data_row">
+              <Cell class="table_cell">
+                  <Text id="score_table_row_2_text_1" class="table_data_text" text="color"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_2_text_2" class="table_data_text" text="class"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_2_text_3" class="table_data_text" text="0"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_2_text_4" class="table_data_text" text="0"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_2_text_5" class="table_data_text" text="0"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_2_text_6" class="table_data_text" text="0"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_2_text_7" class="table_data_text" text="0"/>
+              </Cell>
+          </Row>
+
+          <Row id="score_table_row_3" active="true" class="table_data_row">
+              <Cell class="table_cell">
+                  <Text id="score_table_row_3_text_1" class="table_data_text" text="color"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_3_text_2" class="table_data_text" text="class"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_3_text_3" class="table_data_text" text="0"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_3_text_4" class="table_data_text" text="0"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_3_text_5" class="table_data_text" text="0"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_3_text_6" class="table_data_text" text="0"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_3_text_7" class="table_data_text" text="0"/>
+              </Cell>
+          </Row>
+
+          <Row id="score_table_row_4" active="true" class="table_data_row">
+              <Cell class="table_cell">
+                  <Text id="score_table_row_4_text_1" class="table_data_text" text="color"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_4_text_2" class="table_data_text" text="class"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_4_text_3" class="table_data_text" text="0"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_4_text_4" class="table_data_text" text="0"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_4_text_5" class="table_data_text" text="0"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_4_text_6" class="table_data_text" text="0"/>
+              </Cell>
+              <Cell class="table_cell">
+                  <Text id="score_table_row_4_text_7" class="table_data_text" text="0"/>
+              </Cell>
+          </Row>
+
+      </TableLayout>
+  </Panel>
 
 </XmlLayout>

@@ -1,15 +1,15 @@
 
 
 env = {}
-env.version = "0.1"
+env.version = "1.0"
 env.test= {}
 --env.test.test_players = {"Green", "Blue", "Yellow", "White"}
-env.test.test_players = {"Yellow", "White"}
-env.test.auto_switch = true
-env.test.in_dev = true
+--env.test.test_players = {"Yellow", "White"}
+env.test.auto_switch = false
+env.test.in_dev = false
 env.test.trace = true
 env.test.debug = false
-env.test.force_fresh_save = true
+env.test.force_fresh_save = false
 env.game = {}
 env.game.player_table_order = {"White", "Yellow", "Green", "Blue"}
 env.game.verbose = true
@@ -44,10 +44,8 @@ C.guids.myst_rune_1 = "3444cf"
 C.guids.myst_rune_2 = "8b61f9"
 C.guids.fill_alterations_btn = "c19ef3"
 C.guids.fill_spells_btn = "6e7155"
-
---[[ TODO: add arcana data for scoring --]]
+--[[ arcana data for scoring --]]
 C.arcanas = {}
-
 C.arcanas["8f529c"] = {
   face_up = {
     name = "Fire Lizard",
@@ -103,7 +101,6 @@ C.arcanas["a94aad"] = {
     }
   }
 }
-
 C.pos = {}
 C.rot = {}
 C.pos.spells = {}
@@ -408,8 +405,18 @@ function finalSetup()
   local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
   board.call("enableActivePlayer")
   if env.game.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
-  --local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
-  --btn.UI.setAttribute("button_panel", "active", "true")
+  
+  --Configure final scoring table for number of players
+  local num_players = #GD.game.player_order
+  for i=1,4 do
+    if i > num_players then
+      UI_setAttribute("score_table_row_"..tostring(i), "active", "false") 
+    end
+  end
+  local table_size = 360 - ((4 - num_players) * 55)
+  UI_setAttribute("score_panel", "height", tostring(table_size))
+
+  --done with final setup
   GD.game.started = true
 end
 
@@ -796,6 +803,83 @@ function onObjectPickUp(player_color, obj)
       end
     end
   end
+end
+
+--[[ Final game scoring.
+  tiebreaker: first #arcanas, then #spells --]]
+function finalScore()
+  if env.test.trace then log("Global: finalScore()") end
+  local scores = {}
+  for color,pinfo in pairs(GD.game.players) do
+    local pdata = {}
+    pdata.player = color
+    pdata.class = pinfo.class
+    local board = getObjectFromGUID(pinfo.board_guid)
+    board.call("updateScore", {})
+    local bd=board.getTable("GD")
+    local values = bd.board.scoring.values
+    pdata.total = 0
+    pdata.heroics = values.heroics
+    pdata.total = pdata.total + values.heroics
+    pdata.sigils = values.sigils
+    pdata.total = pdata.total + values.sigils
+    pdata.prestige = values.prestige
+    pdata.total = pdata.total + values.prestige
+    pdata.arcanas = values.arcanas
+    pdata.total = pdata.total + values.arcanas
+    pdata.num_arcanas = sizeOf(bd.board.scoring.arcanas)
+    pdata.num_spells = sizeOf(bd.board.scoring.spells)
+    local new_data = simpleDeepCopy(pdata)
+    if #scores == 0 then
+      table.insert(scores, new_data)
+    else
+      local found = false
+      for i=1,#scores do
+        if new_data.total > scores[i].total then
+          table.insert(scores, i, new_data)
+          found = true
+          break
+        elseif new_data.total == scores[i].total then
+          --first tie breaker
+          if new_data.num_arcanas > scores[i].num_arcanas then
+            print(new_data.player.." wins 1st tie breaker with "..scores[i].player.." on #arcanas")
+            table.insert(scores, i, new_data)
+            found = true
+            break
+          elseif new_data.num_arcanas == scores[i].num_arcanas then
+            --second tie breaker
+            if new_data.num_spells > scores[i].num_spells then
+              print(new_data.player.." wins 2nd tie breaker with "..scores[i].player.." on #spells")
+              table.insert(scores, i, new_data)
+              found = true
+              break
+            else
+              print(new_data.player.." and "..scores[i].player.." still tied after all tie breakers.")
+            end
+          end
+        end
+      end
+      if not(found) then
+        table.insert(scores, #scores + 1, new_data)
+      end
+    end
+  end
+  --update the score display and show it
+  log("score:")
+  log(scores)
+  local i = 1
+  for _,data in ipairs(scores) do
+    UI_setAttribute("score_table_row_"..tostring(i).."_text_1", "text", data.player)
+    UI_setAttribute("score_table_row_"..tostring(i).."_text_2", "text", data.class)
+    UI_setAttribute("score_table_row_"..tostring(i).."_text_3", "text", data.heroics)
+    UI_setAttribute("score_table_row_"..tostring(i).."_text_4", "text", data.sigils)
+    UI_setAttribute("score_table_row_"..tostring(i).."_text_5", "text", data.prestige)
+    UI_setAttribute("score_table_row_"..tostring(i).."_text_6", "text", data.arcanas)
+    UI_setAttribute("score_table_row_"..tostring(i).."_text_7", "text", data.total)
+    i = i + 1
+  end
+  broadcastToAll(scores[1].player.." wins the game!!!")
+  UI_setAttribute("score_panel", "active", true)
 end
 
 --[[ ******** UTILITY ******** --]]

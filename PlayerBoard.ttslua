@@ -146,7 +146,6 @@ function onLoad(saved_data)
     GD.board.scoring.values.sigils = 0
     GD.board.scoring.values.prestige = 0
     GD.board.scoring.values.arcanas = 0
-
   end
   loading = false
 end

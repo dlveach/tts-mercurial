@@ -1,7 +1,3 @@
-<XmlLayout xmlns="XmlLayout"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:schemaLocation="XmlLayout UI/XmlLayout/Configuration/XmlLayout.xsd">
-
 <Defaults>
 
   <Panel  class="class_board_text"
@@ -84,6 +80,54 @@
         fontSize="25" 
         color="#aaa9ad"
         alignment="MiddleCenter"  />
+        
+    <!-- Score table styles -->
+    <TableLayout class="table_class"
+        image="Sprites/Layout/Viewport"
+        color="rgb(0.4,0.1,0)"
+        padding="10 10 10 10"
+        cellSpacing="5"
+        cellPadding="0"
+        columnWidths="140 150 0 0 0 0 0"/>
+
+    <Row class="table_data_row"
+        preferredHeight="50" />
+
+    <Row class="table_header_row"
+        preferredHeight="50" />
+
+    <Row class="title_row"
+        dontUseTableRowBackground="true"
+        image="Sprites/Layout/Title"
+        color="rgb(0.7,0.3,0)"
+        preferredHeight="60" />
+
+    <Cell class="table_cell"
+        dontUseTableCellBackground="true"
+        image="Sprites/Layout/Viewport"
+        color="rgb(0.7,0.3,0)" />
+
+    <Cell class="header_cell"
+        dontUseTableCellBackground="true"
+        color="rgba(0,0,0,0)" />
+
+    <Text class="table_title_text"
+        fontSize="28"
+        font="Arial Bold"
+        color="rgb(.9,0.9,0)"
+        shadow="rgba(0,0,0,1)" />
+
+    <Text class="table_data_text"
+        fontSize="20"
+        font="Arial Bold"
+        color="rgb(0.9,0.9,0"
+        shadow="rgb(0,0,0)" />
+
+    <Text class="table_header_text"
+        fontSize="20"
+        font="Arial Bold"
+        color="rgb(1,1,0"
+        shadow="rgb(0,0,0)" />
         
 </Defaults>
 
