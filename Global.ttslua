@@ -8,7 +8,7 @@ env.test= {}
 env.test.auto_switch = false
 env.test.in_dev = false
 env.test.trace = true
-env.test.debug = false
+env.test.debug = true
 env.test.force_fresh_save = false
 env.game = {}
 env.game.player_table_order = {"White", "Yellow", "Green", "Blue"}
@@ -38,7 +38,7 @@ C.guids.heroics_deck = "25e4a6"
 C.guids.artifacts_deck = "675a94"
 C.guids.mana_bag = "a39f6e"
 C.guids.acuity_bag = "5561d3"
-C.guids.prestige_bag = "d5b6a6"
+C.guids.prestige_bag = "9db97c"
 C.guids.dice_bag = "bf3a6e"
 C.guids.myst_rune_1 = "3444cf"
 C.guids.myst_rune_2 = "8b61f9"
@@ -275,7 +275,7 @@ function startGameBtn()
     class_board.setLock(false)
   end
   GD.game.assigned_boards_count = 0
-  broadcastToAll("In reverse player order choose and place one mage class to comlpete setup.")
+  broadcastToAll("In reverse player order choose and place one mage class to complete setup.")
 end
 
 --[[ Called from player board on class select.
@@ -395,7 +395,7 @@ function finalSetup()
       player_color = GD.game.player_order[player]
       if env.game.verbose then print("Dealing " .. count .. " extra acuity to player " .. count+1 .. " - " .. player_color) end
       local board = getObjectFromGUID(GD.game.players[player_color].board_guid)
-      board.call("dealAcuity", {["amount"]=count})
+      board.call("dealItems", {["item_type"]="acuity",["amount"]=count})
       count = count + 1
     end, 
     .5, 

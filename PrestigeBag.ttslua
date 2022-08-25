@@ -1,0 +1,18 @@
+function onLoad()
+  env = Global.getTable("env")
+  self.setName("Prestige Bag")
+end
+
+function onNumberTyped(player_color, number)
+  if env.test.debug then log(self.getName()..": "..player_color.." typed "..number) end
+  if number > 0 and number < 10 then
+    local g = Global.call("getPlayerClassBoardGUID", {["player_color"]=player_color})
+    local board = getObjectFromGUID(g)
+    if board ~= nil then
+      board.call("dealItems", {["item_type"]="prestige",["amount"]=number})
+    else
+      log(self.getName().." ERROR: player board nil for guid "..g)
+    end
+  end
+  return true
+end

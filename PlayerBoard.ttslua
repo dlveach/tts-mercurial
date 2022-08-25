@@ -470,7 +470,9 @@ function placeObject(obj)
           index = index + 1
           if index > 10 then
             looking = false
-            log("ERROR: mana index > 10")
+            if env.test.debug then log(self.getName().." mana index > 10, destroy acuity") end
+            if env.game.verbose then print(self.getName().." Mana is full, throwing one away.") end
+            obj.destroy()            
           end
         end
       else
@@ -497,7 +499,9 @@ function placeObject(obj)
           index = index + 1
           if index > 10 then
             looking = false
-            log("ERROR: acuity index > 10")
+            if env.test.debug then log(self.getName().." acuity index > 10, destroy acuity") end
+            if env.game.verbose then print(self.getName().." Acuity is full, throwing one away.") end
+            obj.destroy()
           end
         end
       else
@@ -660,15 +664,36 @@ function setPlayer(params)
   end
 end
 
---[[ Called from Global during player setup.  ]]
-function dealAcuity(params)
+--[[ Called from Global during player setup or when player types a number over a bag. ]]
+function dealItems(params)
   if env.test.trace then log(self.getName() .. ": dealAcuity()") end
+  assert(params.item_type)
   assert(params.amount)
-  local acuity_bag = getObjectFromGUID(C.guids.acuity_bag)
-  log(self.getName().." placing " .. params.amount .. " extra acuity on " .. self.getName())
+  local bag
+  local function endTrigger() end
+  if params.item_type == "acuity" then
+    bag = getObjectFromGUID(C.guids.acuity_bag)
+    endTrigger = function() updateSpellPower() end
+  elseif params.item_type == "mana" then
+    bag = getObjectFromGUID(C.guids.mana_bag)
+  elseif params.item_type == "prestige" then
+    bag = getObjectFromGUID(C.guids.prestige_bag)
+    endTrigger = function() updateScore() end
+  else
+    log(self.getName().." ERROR: unknown item type, cannot deal.")
+    return
+  end
+  if env.test.debug then log(self.getName().." placing "..params.amount .." "..params.item_type) end
+  local count = 0
   local function deal()
-    acuity_bag.takeObject({
-      callback_function = function(obj) placeObject(obj) end
+      bag.takeObject({
+      callback_function = function(obj) 
+        placeObject(obj) 
+        count = count + 1
+        if count == params.amount then
+          Wait.time(endTrigger, 1)
+        end
+      end
     })
   end
   Wait.time(function() deal() end, .25, params.amount)
