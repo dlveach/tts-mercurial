@@ -228,6 +228,7 @@ function createZones()
   p.callback_function = function(obj)
     obj.setPosition(dice_pos)
     GD.board.dice_zone = obj.getGUID()
+    obj.addTag("Dice")
     end
   if getObjectFromGUID(GD.board.dice_zone) == nil then
     spawnObject(p) 
@@ -413,6 +414,7 @@ function cleanupBtn(player, mouse, id)
   UI_setAttribute("acuity_restore_text_id", "text", "0")
   UI_setAttribute("acuity_ruin_text_id", "text", "0")
   UI_setAttribute("score_text_id", "text", "0")
+  UI_setAttribute("roll_dice_pnl", "active", "true")
 end
 
 --[[ Player dropped something on this board. --]]
@@ -631,6 +633,7 @@ function setPlayer(params)
   UI_setAttribute("acuity_ruin_panel", "active", "true")
   UI_setAttribute("update_spell_pnl", "active", "true")
   UI_setAttribute("score_panel", "active", "true")
+  UI_setAttribute("roll_dice_pnl", "active", "true")
   --Starting dice
   local dice_bag = getObjectFromGUID(C.guids.dice_bag)
   local function dice()
@@ -702,7 +705,6 @@ function enableActivePlayer()
   if env.test.trace then log(self.getName() .. ": enableActivePlayer()") end
   UI_setAttribute("next_player_pnl", "active", "true")
   UI_setAttribute("cleanup_pnl", "active", "true")
-  --UI_setAttribute("update_spell_pnl", "active", "true")
   local color_bar = getObjectFromGUID(C.guids.color_bars[GD.board.player_position])
   color_bar.setInvisibleTo({})
   color_bar.UI.setAttribute("block_panel", "active", "true")
@@ -1414,6 +1416,103 @@ function updateScore()
   UI_setAttribute("score_text_id", "text", tostring(score))
 end
 
+--[[ Handler for the roll dice button.  --]]
+--TODO: add xml UI for this, hide button after rolling, show button when cleanup button is hit
+function rollAllDiceBtn(player, mouse, id)
+  if player.color == GD.board.player_color then
+    if env.test.trace then log(self.getName().." rollAllDice()") end
+    UI_setAttribute("roll_dice_pnl", "active", "false")
+    local z = getObjectFromGUID(GD.board.dice_zone)
+    if z ~= nil then
+      for _,d in pairs(z.getObjects()) do d.roll() end
+      Wait.condition(
+        function() updateSpellPower() end,
+        function() 
+          local resting = true
+          for _,d in pairs(z.getObjects()) do resting = resting and d.resting end
+          return resting
+        end
+      )
+    else
+      log(self.getName().." ERROR: no dice zone for guid "..GD.board.dice_zone)
+    end
+  end
+end
+
+--[[ Called from Global when a player randomizes (rolls) one or more die by
+  selecting them and hitting the 'r' button or uses the roll context menu.
+  Wait on all dice player's dice area to be at rest, then update the spell.
+--]]
+waiting_on_dice = false
+function waitOnDiceRoll()
+  if waiting_on_dice then return end
+  if env.test.trace then log(self.getName().." waitOnDiceRoll()") end
+  waiting_on_dice = true
+  local z = getObjectFromGUID(GD.board.dice_zone)
+  if z ~= nil then
+    Wait.condition(
+      function() 
+        waiting_on_dice = false        
+        if env.test.verbose then log(self.getName().." all dice resting, update spell") end
+        updateSpellPower() 
+      end,
+      function() 
+        local resting = true
+        for _,d in pairs(z.getObjects()) do resting = resting and d.resting end
+        return resting
+      end
+    )
+  else
+    log(self.getName().." ERROR: no dice zone for guid "..GD.board.dice_zone)
+  end
+end
+
+--[[ Called from Global when player drops a die.  Ignored if not in player spell or dice zones. --]]
+function diceDrop(params)
+  if env.test.trace then log(self.getName().." diceDrop()") end
+  assert(params.guid)
+  if waiting_on_dice then return end
+  local found = false
+  local zone
+  local z = getObjectFromGUID(GD.board.dice_zone)
+  for _,o in pairs(z.getObjects()) do
+    if o.getGUID() == params.guid then
+      found = true
+      zone = z
+      break
+    end
+  end
+  if not(found) then
+    z = getObjectFromGUID(GD.board.spells_zone)
+    for _,o in pairs(z.getObjects()) do
+      if o.getGUID() == params.guid then
+        found = true
+        zone = z
+        break
+      end
+    end
+  end
+  if found then
+    waiting_on_dice = true
+    local die = getObjectFromGUID(params.guid)
+    if die ~= nil then
+      Wait.condition(
+        function() 
+          waiting_on_dice = false
+          if env.test.verbose then log(self.getName().." all dice resting, update spell") end
+          updateSpellPower() 
+        end,
+        function()
+          local resting = true
+          for _,d in pairs(zone.getObjects()) do resting = resting and d.resting end
+          return resting
+        end
+      )
+    else
+      log(self.getName().." ERROR: diceDrop(): object for guid "..params.guid.." is nil")
+    end
+  end
+end
 
 --[[ ***** DEVELOPMENT ONLY UTILS --]]
 

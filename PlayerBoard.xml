@@ -134,4 +134,13 @@
           onClick="updateSpellPowerBtn" />
 </Panel>
 
+<Panel  class="class_board_button"
+        id="roll_dice_pnl" 
+        position="550 270 -20" >        
+  <Button id="roll_dice_btn_id" 
+          width="150" height="50" 
+          onClick="rollAllDiceBtn"
+          text="Roll Dice" />
+</Panel>
+
 </XmlLayout>

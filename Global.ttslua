@@ -4,7 +4,7 @@ env = {}
 env.version = "1.0"
 env.test= {}
 --env.test.test_players = {"Green", "Blue", "Yellow", "White"}
---env.test.test_players = {"Yellow", "White"}
+env.test.test_players = {"Yellow", "White"}
 env.test.auto_switch = false
 env.test.in_dev = false
 env.test.trace = true
@@ -775,17 +775,33 @@ function getPlayerClassBoardGUID(params)
   end
 end
 
+--[[ Used only when player types a number on a die to change it.  Trigger update spell power for player. --]]
+function onObjectNumberTyped(o, pcol, n)
+  if o.hasTag("Dice") and n >= 1 and n <= 6 then
+    local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
+    Wait.time(function() board.call("updateSpellPower", {}) end, 0.5)
+  end
+end
+
+--[[ Used only to trigger a wait on dice by the appropriate player board. --]]
+function onObjectRandomize(o, pcol)
+  if o.hasTag("Dice") then
+    local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
+    board.call("waitOnDiceRoll", {})
+  end
+end
+
 --[[ Handle objects dropped in game.  Only certain object tags supported.  --]]
 function onObjectDrop(player_color, obj)
   if GD.game.started then
-    if obj.hasTag("Spell") then
-      local g = GD.game.players[player_color].board_guid
-      local board = getObjectFromGUID(g)
-      board.call("spellDrop", {["guid"]=obj.getGUID()})
-    elseif obj.hasTag("Acuity") then
-      local g = GD.game.players[player_color].board_guid
-      local board = getObjectFromGUID(g)
-      board.call("acuityDrop", {["guid"]=obj.getGUID()})
+    local fn_name = ""
+    if obj.hasTag("Spell") then fn_name = "spellDrop"
+    elseif obj.hasTag("Acuity") then fn_name = "acuityDrop"
+    elseif obj.hasTag("Dice") then fn_name = "diceDrop"
+    end
+    if fn_name ~= "" then
+      local board = getObjectFromGUID(GD.game.players[player_color].board_guid)
+      board.call(fn_name, {["guid"]=obj.getGUID()})
     end
   end
 end
