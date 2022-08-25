@@ -98,8 +98,6 @@ card_decals = {
   }
 }
 
-dice_translation = {"ruin","ruin","","","restore","restore"}
-
 env = {}
 C = {}
 GD = {}
