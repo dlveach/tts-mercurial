@@ -5,7 +5,8 @@
   <Include src="tts-mercurial/XML_defaults.xml"/>
 
   <!-- Start Panel -->
-  <Panel id="startPanel" active="true" height="160" width="220">
+  <Panel id="startPanel" active="true" height="160" width="220" 
+        showAnimation="Grow" hideAnimation="Shrink">
     <VerticalLayout>
       <Panel class="title"> 
         <Text class="title"> Seat all players</Text>
@@ -17,7 +18,8 @@
   </Panel>
 
   <!-- Final Scoring table -->
-  <Panel id="score_panel" active="false" width="900" height="360">
+  <Panel id="score_panel" active="false" width="900" height="360"
+        showAnimation="Grow" hideAnimation="Shrink">
       <TableLayout class="table_class">
           <Row id="table_1_title_row" class="title_row">
               <Cell class="header_cell" columnSpan="7">

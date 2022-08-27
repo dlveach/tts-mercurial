@@ -4,7 +4,7 @@ env = {}
 env.version = "1.0"
 env.test= {}
 --env.test.test_players = {"Green", "Blue", "Yellow", "White"}
-env.test.test_players = {"Yellow", "White"}
+--env.test.test_players = {"Yellow", "White"}
 env.test.auto_switch = false
 env.test.in_dev = false
 env.test.trace = true
@@ -48,7 +48,7 @@ C.guids.fill_spells_btn = "6e7155"
 C.arcanas = {}
 C.arcanas["8f529c"] = {
   face_up = {
-    name = "Fire Lizard",
+    name = "Lizard",
     reward = {
       vp = 1,
       spell_type = "fire",
@@ -56,7 +56,7 @@ C.arcanas["8f529c"] = {
     }
   },
   face_down = {
-    name = "Water Dragon",
+    name = "Dragon",
     reward = {
       vp = 1,
       spell_type = "water",
@@ -66,7 +66,7 @@ C.arcanas["8f529c"] = {
 }
 C.arcanas["5f944b"] = {
   face_up = {
-    name = "Mystic Cat",
+    name = "Cat",
     reward = {
       vp = 1,
       spell_type = "any",
@@ -74,7 +74,7 @@ C.arcanas["5f944b"] = {
     }
   },
   face_down = {
-    name = "Phoenix",
+    name = "Stallion",
     reward = {
       vp = 1,
       spell_type = "slot_count",
@@ -85,7 +85,7 @@ C.arcanas["5f944b"] = {
 }
 C.arcanas["a94aad"] = {
   face_up = {
-    name = "Aether Griffon",
+    name = "Phoenix",
     reward = {
       vp = 1,
       spell_type = "aether_mod",
@@ -93,7 +93,7 @@ C.arcanas["a94aad"] = {
     }
   },
   face_down = {
-    name = "Myst Owl",
+    name = "Owl",
     reward = {
       vp = 1,
       spell_type = "not_aether",
@@ -204,6 +204,20 @@ function UI_setAttribute(id, field, value)
   UI.setAttribute(id, field, value)
   GD.states.UI[id..":"..field] = value
 end
+
+--[[ Wrapper function for hiding UI elements with animations. --]]
+function UI_hide(id)
+  UI.hide(id)
+  --give it time to animate then set UI attribute for game save/load
+  Wait.time(function() UI_setAttribute(id, "active", false) end, 1)
+end
+
+--[[ Wrapper function for showing UI elements with animations. --]]
+function UI_show(id)
+  UI.show(id)
+  --give it time to animate then set UI attribute for game save/load
+  Wait.time(function() UI_setAttribute(id, "active", true) end, 1)
+end
   
 --[[ Save game state ]]
 function onSave()
@@ -234,7 +248,7 @@ end
 --[[ Button handler for "Start Game".  Setup player order and
     enable class board selection. ]]
 function startGameBtn()
-  UI_setAttribute("startPanel", "active", false)
+  UI_hide("startPanel")
   GD.game.player_order = {}
   GD.game.players = {}
   local seated = getSeatedPlayers()
@@ -895,7 +909,7 @@ function finalScore()
     i = i + 1
   end
   broadcastToAll(scores[1].player.." wins the game!!!")
-  UI_setAttribute("score_panel", "active", true)
+  UI_show("score_panel")
 end
 
 --[[ ******** UTILITY ******** --]]
