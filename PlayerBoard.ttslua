@@ -78,6 +78,9 @@ spell_arcana_zone_size = {["x"]=1.64942,["y"]=5.1,["z"]=2.898976}
 heroics_zone_local_pos = { 8.056143, -2.351134, 1.961139 }
 heroics_zone_size = {["x"]=1.68,["y"]=5.1,["z"]=6.59}
 
+mana_acuity_zone_local_pos = {x=0.9717337,y=-2.351134,z=-0.3036352}
+mana_acuity_zone_size = {x=2.998749,y=5.1,z=2.524589}
+
 card_decal_pos = {0,0.364,-1.124}
 card_decal_rot = {90,180,0}
 card_decal_scale = {0.97,0.81,11.54}
@@ -136,6 +139,13 @@ function onLoad(saved_data)
     GD.board.power.restore.acuity = 0
     GD.board.power.restore.cards = 0
     GD.board.power.myst = 0
+    --sigils stuff
+    GD.board.sigils = {}
+    GD.board.sigils.yellow = 0
+    GD.board.sigils.green = 0
+    GD.board.sigils.red = 0
+    GD.board.sigils.blue = 0
+    GD.board.sigils.wild = 0
     --scoring stuff (TODO)
     GD.board.scoring = {}
     GD.board.scoring.heroics = {}
@@ -176,7 +186,7 @@ function restoreBoardState()
   end
 
   --TODO: buttons on cards do not survive save/laod.  Recreate.
-    --  Workaround is just pickup the card and drop it.  
+    --  Workaround is just pickup the card and drop it.
     --  Decals DO save and restore.
 
 end
@@ -189,7 +199,7 @@ end
     getObjectFromGUID(guid).setInvisibleTo(colors)
     GD.states.obj_vis[guid] = colors
   end
-  
+
 --[[  Wrapper function for saving UI attributes for game restore. ]]
 function UI_setAttribute(id, field, value)
   if env.test.trace and env.game.verbose then log(self.getName() .. ": UI_setAttribute()") end
@@ -199,14 +209,14 @@ function UI_setAttribute(id, field, value)
   GD.states.UI[id..":"..field] = value
 end
 
---[[ Create script zones for this player board.  
+--[[ Create script zones for this player board.
     Not sure they survive save/load so there is a
     check to see if they are there.  --]]
 function createZones()
   if env.test.trace then log(self.getName() .. ": createZones()") end
 
   local p = {
-    type              = 'ScriptingTrigger', 
+    type              = 'ScriptingTrigger',
     sound             = false,
     snap_to_grid      = false,
   }
@@ -219,7 +229,18 @@ function createZones()
     GD.board.class_board_drop_zone = obj.getGUID()
     end
   if getObjectFromGUID(GD.board.class_board_drop_zone) == nil then
-    spawnObject(p) 
+    spawnObject(p)
+  end
+  --mana and acuity zones
+  local mana_acuity_pos = self.positionToWorld(mana_acuity_zone_local_pos)
+  p.position          = drop_pos
+  p.scale             = {3.00, 5.1, 2.52}
+  p.callback_function = function(obj)
+    obj.setPosition(mana_acuity_pos)
+    GD.board.class_board_mana_acuity_zone = obj.getGUID()
+    end
+  if getObjectFromGUID(GD.board.class_board_mana_acuity_zone) == nil then
+    spawnObject(p)
   end
   --dice zone
   local dice_pos = self.positionToWorld(dice_zone_local_pos)
@@ -231,7 +252,7 @@ function createZones()
     obj.addTag("Dice")
     end
   if getObjectFromGUID(GD.board.dice_zone) == nil then
-    spawnObject(p) 
+    spawnObject(p)
   end
   --prestige zone
   local prestige_pos = self.positionToWorld(prestige_zone_local_pos)
@@ -242,7 +263,7 @@ function createZones()
     GD.board.prestige_zone = obj.getGUID()
     end
   if getObjectFromGUID(GD.board.prestige_zone) == nil then
-    spawnObject(p) 
+    spawnObject(p)
   end
   --acuity restore zone
   local acuity_restore_pos = self.positionToWorld(acuity_restore_zone_local_pos)
@@ -253,7 +274,7 @@ function createZones()
     GD.board.acuity_restore_zone = obj.getGUID()
     end
   if getObjectFromGUID(GD.board.acuity_restore_zone) == nil then
-    spawnObject(p) 
+    spawnObject(p)
   end
   --acuity ruin zone
   local acuity_ruin_pos = self.positionToWorld(acuity_ruin_zone_local_pos)
@@ -264,7 +285,7 @@ function createZones()
     GD.board.acuity_ruin_zone = obj.getGUID()
     end
   if getObjectFromGUID(GD.board.acuity_ruin_zone) == nil then
-    spawnObject(p) 
+    spawnObject(p)
   end
   --spell cards zone
   local spells_zone_pos = self.positionToWorld(spells_zone_local_pos)
@@ -275,7 +296,7 @@ function createZones()
     GD.board.spells_zone = obj.getGUID()
     end
   if getObjectFromGUID(GD.board.spells_zone) == nil then
-    spawnObject(p) 
+    spawnObject(p)
   end
   --spell and arcana cards zone
   local spell_arcana_zone_pos = self.positionToWorld(spell_arcana_zone_local_pos)
@@ -286,7 +307,7 @@ function createZones()
     GD.board.spell_arcana_zone = obj.getGUID()
     end
   if getObjectFromGUID(GD.board.spell_arcana_zone) == nil then
-    spawnObject(p) 
+    spawnObject(p)
   end
   --heroics zone
   local heroics_zone_pos = self.positionToWorld(heroics_zone_local_pos)
@@ -298,7 +319,7 @@ function createZones()
     obj.addTag("Heroic")
     end
   if getObjectFromGUID(GD.board.heroics_zone) == nil then
-    spawnObject(p) 
+    spawnObject(p)
   end
 end
 
@@ -315,7 +336,7 @@ function nextPlayerBtn(player, mouse, id)
   if env.test.trace then log(self.getName() .. ": nextPlayerBtn()") end
   if player.color == GD.board.player_color then
     UI_setAttribute("next_player_pnl", "active", "false")
-    UI_setAttribute("cleanup_pnl", "active", "false")    
+    UI_setAttribute("cleanup_pnl", "active", "false")
     local color_bar = getObjectFromGUID(C.guids.color_bars[GD.board.player_position])
     color_bar.setInvisibleTo(Player.getColors())
     color_bar.UI.setAttribute("block_panel", "active", "false")
@@ -335,14 +356,14 @@ function cleanupBtn(player, mouse, id)
   end
   local dice = {}
   local spells = {}
-  local mana = {}    
+  local mana = {}
   local zone = getObjectFromGUID(GD.board.spells_zone)
   assert(zone, self.getName().." ERROR cleanupBtn() no board spell zone.")
   local stuff = zone.getObjects()
   for _,o in pairs(stuff) do
-    if o.hasTag("Dice") then table.insert(dice, o) 
+    if o.hasTag("Dice") then table.insert(dice, o)
     elseif o.hasTag("Mana") then table.insert(mana, o)
-    elseif o.hasTag("Spell") then 
+    elseif o.hasTag("Spell") then
       table.insert(spells, o)
       o.setDecals({})
       o.clearButtons()
@@ -418,6 +439,7 @@ function cleanupBtn(player, mouse, id)
 end
 
 --[[ Player dropped something on this board. --]]
+objects_to_place = {}
 function onCollisionEnter(hit_info)
   if loading then return end
   --if env.test.trace then log(self.getName() .. ":onCollisionEnter()") end
@@ -429,17 +451,34 @@ function onCollisionEnter(hit_info)
       for _,obj in pairs(zone.getObjects()) do
         if obj.getGUID() == hit_info.collision_object.getGUID() then
           action = "drop"
-          if not(obj.hasTag("Spell")) then 
-            placeObject(obj) 
+          if not(obj.hasTag("Spell")) then
+            -- placeObject(obj)
+            if objects_to_place[obj.getGUID()] == nil then objects_to_place[obj.getGUID()] = obj end
           end
         end
       end
+      placeObjects(objects_to_place)
     end
   end
 end
 
+function placeObjects(list)
+  -- log("placeObjects")
+  -- log(list)
+  if sizeOf(list) == 0 then return end
+  for g,o in pairs(list) do
+    if o then
+      placeObject(o)
+      list[g] = nil
+      break;
+    end
+  end
+  Wait.frames(function() placeObjects(list) end, 30)
+end
+
 --[[ Document --]]
 function placeObject(obj)
+  -- if env.test.trace then log(self.getName() .. ":placeObject() "..tostring(obj)) end
   if env.test.trace then log(self.getName() .. ":placeObject()") end
   local p = {
     origin       = {},
@@ -447,67 +486,77 @@ function placeObject(obj)
     type         = 2,
     size         = {0.25,0.25,0.25},
     max_distance = 1,
-    debug        = false,    
+    debug        = false,
   }
   --TODO: refactor common code
   if obj.hasTag("Mana") then
-    local index = 1
-    local looking = true
-    while looking do
-      p.origin = self.positionToWorld(mana_local_pos[index])
-      local hits = Physics.cast(p)
-      local empty = true
-      if hits ~= nil then
-        for _,h in pairs(hits) do
-          local o = h.hit_object
-          if o.hasTag("Mana") then empty = false end
-        end
-        if empty then
-          looking = false
-          obj.setPosition(self.positionToWorld(mana_local_pos[index]))
-          obj.setRotation({0,0,0})
-        else
-          index = index + 1
-          if index > 10 then
-            looking = false
-            if env.test.debug then log(self.getName().." mana index > 10, destroy acuity") end
-            if env.game.verbose then print(self.getName().." Mana is full, throwing one away.") end
-            obj.destroy()            
+    local mana_acuity_zone = getObjectFromGUID(GD.board.class_board_mana_acuity_zone)
+    mana_acuity_zone.setTags({"Mana"})
+    local mana = mana_acuity_zone.getObjects()
+    -- log("mana count in zone is "..tostring(#mana))
+    if #mana == 10 then
+      if env.test.debug then log(self.getName().." mana full, destroy Mana") end
+      if env.game.verbose then print(self.getName().." Mana is full, throwing one away.") end
+      obj.destroy()
+    else
+      local index = 1
+      local looking = true
+      while looking do
+        p.origin = self.positionToWorld(mana_local_pos[index])
+        local hits = Physics.cast(p)
+        -- log(hits)
+        local empty = true
+        if hits ~= nil then
+          for _,h in pairs(hits) do
+            if h.hit_object.hasTag("Mana") then empty = false end
           end
+          if empty then
+            looking = false
+            obj.setPosition(self.positionToWorld(mana_local_pos[index]))
+            obj.setRotation({0,0,0})
+          else
+            index = index + 1
+            if index > 10 then looking = false end
+          end
+        else
+          log("ERROR: got no hits for mana index "..index) --shouldn't ever happen, table and tile will hit
         end
-      else
-        log("ERROR: got no hits for mana index "..index) --shouldn't ever happen, table and tile will hit
       end
     end
   elseif obj.hasTag("Acuity") then
-    local index = 1
-    local looking = true
-    while looking do
-      p.origin = self.positionToWorld(acuity_local_pos[index])
-      local hits = Physics.cast(p)
-      local empty = true
-      if hits ~= nil then
-        for _,h in pairs(hits) do
-          local o = h.hit_object
-          if o.hasTag("Acuity") then empty = false end
-        end
-        if empty then
-          looking = false
-          obj.setPosition(self.positionToWorld(acuity_local_pos[index]))
-          obj.setRotation({0,0,0})
-        else
-          index = index + 1
-          if index > 10 then
-            looking = false
-            if env.test.debug then log(self.getName().." acuity index > 10, destroy acuity") end
-            if env.game.verbose then print(self.getName().." Acuity is full, throwing one away.") end
-            obj.destroy()
+    local mana_acuity_zone = getObjectFromGUID(GD.board.class_board_mana_acuity_zone)
+    mana_acuity_zone.setTags({"Acuity"})
+    local acuity = mana_acuity_zone.getObjects()
+    -- log("acuity count in zone is "..tostring(#acuity))
+    if #acuity == 10 then
+      if env.test.debug then log(self.getName().." acuity full, destroy Acuity") end
+      if env.game.verbose then print(self.getName().." Acuity is full, throwing one away.") end
+      obj.destroy()
+    else
+      local index = 1
+      local looking = true
+      while looking do
+        p.origin = self.positionToWorld(acuity_local_pos[index])
+        local hits = Physics.cast(p)
+        local empty = true
+        if hits ~= nil then
+          for _,h in pairs(hits) do
+            local o = h.hit_object
+            if o.hasTag("Acuity") then empty = false end
           end
+          if empty then
+            looking = false
+            obj.setPosition(self.positionToWorld(acuity_local_pos[index]))
+            obj.setRotation({0,0,0})
+          else
+            index = index + 1
+            if index > 10 then looking = false end
+          end
+        else
+          log("ERROR: got no hits for acuity index "..index) --shouldn't ever happen, table and tile will hit
         end
-      else
-        log("ERROR: got no hits for acuity index "..index) --shouldn't ever happen, table and tile will hit
       end
-    end  
+    end
   elseif obj.hasTag("Dice") then
     local pos = scatter(self.positionToWorld(dice_zone_local_pos), {1.25,0,1.5}, {0.1,0,0.1})
     obj.setPositionSmooth(pos, false, true)
@@ -546,6 +595,7 @@ function placeObject(obj)
       function() return obj.isDestroyed() or obj.resting end )
   elseif obj.hasTag("Alteration") or obj.hasTag("Artifact") then
     obj.deal(1, GD.board.player_color)
+    Wait.time(function() updateScore() end, 1)
   elseif obj.hasTag("Prestige") then
     local pos = self.positionToWorld(prestige_zone_local_pos)
     obj.setPositionSmooth(pos, false, true)
@@ -554,7 +604,7 @@ function placeObject(obj)
   end
 end
 
---[[ Handler for player selecting (dropping) this board.  
+--[[ Handler for player selecting (dropping) this board.
     Call Global to check conditions and assign playerboard & position to player. ]]
 function onDrop(player_color)
   if env.test.trace then log(self.getName().." onDrop()") end
@@ -577,7 +627,7 @@ function onDrop(player_color)
           local board_guid = self.getGUID()
           Wait.condition(
             function() Global.call("setPlayerClass",{
-              ["player"]=player_color, 
+              ["player"]=player_color,
               ["guid"]=board_guid,
               ["position"]=i,
             }) end,
@@ -603,6 +653,7 @@ function setPlayer(params)
   self.interactable = false
   GD.board.player_color = params.player
   GD.board.player_position = params.position
+  createZones()
   UI_setAttribute("class_select_pnl", "active", "false")
   local deck = getObjectFromGUID(start_deck)
   card_count = #deck.getObjects()
@@ -634,13 +685,18 @@ function setPlayer(params)
   UI_setAttribute("update_spell_pnl", "active", "true")
   UI_setAttribute("score_panel", "active", "true")
   UI_setAttribute("roll_dice_pnl", "active", "true")
+  UI_setAttribute("yellow_sigils_panel", "active", "true")
+  UI_setAttribute("green_sigils_panel", "active", "true")
+  UI_setAttribute("red_sigils_panel", "active", "true")
+  UI_setAttribute("blue_sigils_panel", "active", "true")
+  UI_setAttribute("wild_sigils_panel", "active", "true")
   --Starting dice
   local dice_bag = getObjectFromGUID(C.guids.dice_bag)
   local function dice()
     dice_bag.takeObject({
-      callback_function = function(obj) 
+      callback_function = function(obj)
         obj.setValue(math.random(1,6))
-        placeObject(obj) 
+        placeObject(obj)
       end
     })
   end
@@ -663,6 +719,8 @@ function setPlayer(params)
     end
     Wait.time(function() acuity() end, .25, start_acuity)
   end
+  GD.board.sigils[board_sigil] = 1
+  UI_setAttribute(board_sigil.."_sigils_text","text","1")
 end
 
 --[[ Called from Global during player setup or when player types a number over a bag. ]]
@@ -688,8 +746,8 @@ function dealItems(params)
   local count = 0
   local function deal()
       bag.takeObject({
-      callback_function = function(obj) 
-        placeObject(obj) 
+      callback_function = function(obj)
+        placeObject(obj)
         count = count + 1
         if count == params.amount then
           Wait.time(endTrigger, 1)
@@ -720,13 +778,13 @@ function setupBoard()
       getObjectFromGUID(start_deck).destruct()
       self.destruct()
   else
-    createZones()
+    -- createZones()
     GD.board.initialized = true
     GD.board.active = false
     local color_bar = getObjectFromGUID(C.guids.color_bars[GD.board.player_position])
     color_bar.setInvisibleTo(Player.getColors())
     color_bar.UI.setAttribute("block_panel", "active", "false")
-  end  
+  end
 end
 
 --[[ Return a table with unallocated dice values. --]]
@@ -755,7 +813,7 @@ function getUnusedAcuityCount()
     type         = 2,
     size         = {0.25,0.25,0.25},
     max_distance = 1,
-    debug        = false,    
+    debug        = false,
   }
   local count = 0
   for i=1,10 do
@@ -864,23 +922,20 @@ function updateSpellPower()
   total_ruin = total_ruin + GD.board.power.ruin.acuity
   total_ruin = total_ruin + GD.board.power.ruin.cards
   --handle any enchantment card effects, in order of position
+  local spells = Global.getTable("spells")
   for i=1,3 do
     local card = getCardByTag(enchantment_spells_local_pos[i], "Spell")
     if card ~= nil then
       if env.test.debug then log("Process enchantment for card "..card.getGUID()) end
-      local data = JSON.decode(card.getGMNotes())
+      local data = spells[tonumber(card.getGMNotes())]
       if env.test.debug then log(data) end
       if data.enchant ~= nil then
-        if data.enchant.type == "restore_to_ruin" then
-          total_ruin = total_ruin + (total_restore * data.enchant.multiplier)
+        if data.enchant.ruin > 0 then
+          total_ruin = total_ruin + (total_restore * data.enchant.ruin)
           total_restore = 0
-          --GD.board.power.ruin.cards = GD.board.power.ruin.cards + (GD.board.power.restore.cards * data.enchant.multiplier)
-          --GD.board.power.restore.cards = 0
-        elseif data.enchant.type == "ruin_to_restore" then
-          total_restore = total_restore + (total_ruin * data.enchant.multiplier)
+        elseif data.enchant.restore > 0 then
+          total_restore = total_restore + (total_ruin * data.enchant.restore)
           total_ruin = 0
-          --GD.board.power.restore.cards = GD.board.power.restore.cards + (GD.board.power.ruin.cards * data.enchant.multiplier)
-          --GD.board.power.ruin.cards = 0
         else
           log(self.getName().." ERROR: unexpected enchantment type")
         end
@@ -893,8 +948,8 @@ function updateSpellPower()
   --check for equilibrium or calculate net if not
   local net_restore = total_restore - total_ruin
   local net_ruin = total_ruin - total_restore
-  if total_restore > 0 and total_restore == total_ruin then 
-    total_myst = total_restore 
+  if total_restore > 0 and total_restore == total_ruin then
+    total_myst = total_restore
     --transform net restore/ruin from myst
     if total_myst >=6 and total_myst <=7 then
       net_restore = 15
@@ -910,7 +965,7 @@ function updateSpellPower()
       net_ruin = 24
     end
     GD.board.power.myst = total_myst
-  else    
+  else
     if net_restore < 0 then net_restore = 0 end
     if net_ruin < 0 then net_ruin = 0 end
   end
@@ -922,23 +977,25 @@ function updateSpellPower()
   UI_setAttribute("total_myst_text_id", "text", tostring(total_myst))
 end
 
---[[ Called from global on spell card drop by player for this board. 
+--[[ Called from global on spell card drop by player for this board.
 Triggers spell power update if dropped in board's spell card zone. --]]
 function spellDrop(params)
   if env.test.trace then log(self.getName() .. ": spellDrop()") end
   local card_guid = params.guid
   local card = getObjectFromGUID(card_guid)
-  if card == nil then 
+  if card == nil then
     --card could be in a deck already??? unlikely but log it for debug
     log(self.getName().." spellDrop() WARN: Player dropped card "..card_guid.." but object is nil now.")
-    return 
-  end 
-  local data = JSON.decode(card.getGMNotes())
+    return
+  end
+  local spells = Global.getTable("spells")
+  local data = spells[tonumber(card.getGMNotes())]
+  assert(data, "ERROR: "..self.getName()..": spellDrop(): no data found for card, "..card.getGUID())
   local z = getObjectFromGUID(GD.board.spells_zone)
   for _,o in pairs(z.getObjects()) do
     if o.getGUID() == card_guid then
       Wait.condition(
-        function() 
+        function()
           if data ~= nil and not(card.isDestroyed()) then --avoid cases of link spells in a deck
             if data.option then
               if card.memo ~= nil then
@@ -963,7 +1020,7 @@ function spellDrop(params)
               createCardButton(card)
             end
           end
-          updateSpellPower() 
+          updateSpellPower()
         end,
         function() return( card.isDestroyed() or card.resting) end)
       return
@@ -1037,23 +1094,23 @@ function acuityDrop(params)
     end
   end
 end
-  
---[[ Process the GM notes on a given spell card and 
+
+--[[ Process a given spell card and
 return the restore power and ruin power of the card. --]]
 function getSpellPower(card)
-  if env.test.trace then log(self.getName() .. ": updateSpellPower()") end
+  if env.test.trace then log(self.getName() .. ": getSpellPower()") end
   assert(card, self.getName().." getSpellPower(): card object is missing")
   if env.test.debug then log(card) end
-  if not(card.hasTag("Spell")) then 
-    if env.test.debug then log("Not a spell card") end
-    return 
+  if not(card.hasTag("Spell")) then
+    if env.test.debug then log(self.getName() .. ": getSpellPower(): Not a spell card, "..card.getGUID()) end
+    return
   end
-  local gm_note = card.getGMNotes()
-  local data = JSON.decode(gm_note)
+  local spells = Global.getTable("spells")
+  local data = spells[tonumber(card.getGMNotes())]
   if env.test.debug then log("data:") end
   if env.test.debug then log(data) end
   if data == nil then
-    if env.test.debug then log("ERROR: no GM Notes data for card "..card.getGUID()) end
+    if env.test.debug then log("ERROR: no data for card "..card.getGUID()) end
     return
   end
   local restore = 0
@@ -1078,38 +1135,34 @@ function getSpellPower(card)
     if env.test.debug then log("spell is a card count spell") end
     local count = getSpellCount()
     if env.test.debug then log("card count is "..count) end
-    if data.count.restore ~= nil then
-      if env.test.debug then log("counting restore") end
-      restore = data.count.restore * count
-      if env.test.debug then log("result is "..restore) end
-      if data.count.aether ~= nil then
-        if env.test.debug then log("checking aether mod") end
-        if hasAether() then          
-          if env.test.debug then log("modifying for aether") end
-          restore = data.count.aether * count
-          if env.test.debug then log("result is "..restore) end
-        end
+    if data.aether ~= nil and hasAether() then
+      if env.test.debug then log("counting aether * cards") end
+      if data.aether.restore ~= nil and data.aether.restore > 0 then
+        restore = data.aether.restore * count
+      elseif data.aether.ruin ~= nil and data.aether.ruin > 0 then
+        ruin = data.aether.ruin * count
+      else
+        log(self.getName()..": ERROR invalid spell card aether count data, "..card.getGUID())
       end
-    elseif data.count.ruin ~= nil then
-      if env.test.debug then log("counting ruin") end
-      ruin = data.count.ruin * count
-      if env.test.debug then log("result is "..ruin) end
-      if data.count.aether ~= nil then
-        if env.test.debug then log("checking aether mod") end
-        if hasAether() then
-          ruin = data.count.aether * count
-          if env.test.debug then log("result is "..ruin) end
-        end
+    else
+      if env.test.debug then log("counting count * cards") end
+      if data.count.restore ~= nil and data.count.restore > 0 then
+        restore = data.count.restore * count
+      elseif data.count.ruin ~= nil and data.count.ruin > 0 then
+        ruin = data.count.ruin * count
+      else
+        log(self.getName()..": ERROR invalid spell card count data, "..card.getGUID())
       end
     end
 
   --if this is an acuity count spell, get ruin or restore based on acuity on cast board
   elseif data.acuity ~= nil then
     if env.test.debug then log("Spell is acuity count spell") end
-    if data.acuity == "restore" then
-      restore = getUnusedAcuityCount()
-    elseif data.acuity == "ruin" then
-      ruin = getUnusedAcuityCount()
+    local count = getUnusedAcuityCount()
+    if data.acuity.restore > 0 then
+      restore = count
+    elseif data.acuity.ruin > 0 then
+      ruin = count
     end
   end
   if env.test.debug then log("core spell restore power: "..restore) end
@@ -1120,13 +1173,14 @@ function getSpellPower(card)
   for i=1,5 do
     local c = getCardByTag(spells_local_pos[i], "Spell")
     if c ~= nil then
-      if c.getGUID() == card.getGUID() then 
+      if c.getGUID() == card.getGUID() then
         pos = i
         break;
       end
     end
   end
   if env.test.debug then log("Checking for link spell(s) modifiers") end
+  local spells = Global.getTable("spells")
   if pos>0 then
     local link_spells = getCardByTag(link_spells_local_pos[pos], "Spell")
     if link_spells ~= nil then
@@ -1134,7 +1188,7 @@ function getSpellPower(card)
       if link_spells.tag == "Deck" then
         if env.test.debug then log("More than one link spell") end
         for _,o in pairs(link_spells.getObjects()) do
-          local link_data = JSON.decode(o.gm_notes)
+          local link_data = spells[tonumber(o.gm_notes)]
           if env.test.debug then log(link_data) end
           if link_data ~= nil and link_data.link ~= nil then
             --TODO: confirm this is a link card and warn if not
@@ -1142,13 +1196,13 @@ function getSpellPower(card)
               restore = restore * link_data.link.aether
               ruin = ruin * link_data.link.aether
             else
-              restore = restore * link_data.link.multiplier
-              ruin = ruin * link_data.link.multiplier
+              restore = restore * link_data.link.base
+              ruin = ruin * link_data.link.base
             end
-          end  
+          end
         end
       elseif link_spells.tag == "Card" then
-        local link_data = JSON.decode(link_spells.getGMNotes())
+        local link_data = spells[tonumber(link_spells.getGMNotes())]
         if env.test.debug then log(link_data) end
         if link_data ~= nil and link_data.link ~= nil then
             --TODO: confirm this is a link card and warn if not
@@ -1156,8 +1210,8 @@ function getSpellPower(card)
             restore = restore * link_data.link.aether
             ruin = ruin * link_data.link.aether
           else
-            restore = restore * link_data.link.multiplier
-            ruin = ruin * link_data.link.multiplier
+            restore = restore * link_data.link.base
+            ruin = ruin * link_data.link.base
           end
         end
       end
@@ -1175,13 +1229,13 @@ function t_getSpellPower(params)
   return getSpellPower(card)
 end
 
---[[ Support function.  Return a card object with specified tag at specified local location. 
+--[[ Support function.  Return a card object with specified tag at specified local location.
 NOTE: Location must be local to self, not world!
 Returns nil if nothing found.
 Parameters:
-  pos: Local to self Vector of location to search. 
+  pos: Local to self Vector of location to search.
   tag: The tag of the card object to filter on.
-  debug: Optional flag, defaults to false.  
+  debug: Optional flag, defaults to false.
 --]]
 function getCardByTag(pos, tag, debug)
   if env.test.trace then log(self.getName() .. ": getCardByTag()") end
@@ -1196,7 +1250,7 @@ function getCardByTag(pos, tag, debug)
     type         = 2,
     size         = {0.25,0.25,0.25},
     max_distance = 1,
-    debug        = debug,    
+    debug        = debug,
   }
   local hits = Physics.cast(p)
   local card = nil
@@ -1266,35 +1320,69 @@ function updateScore()
   GD.board.scoring.spells = {}
   GD.board.scoring.heroics = {}
   GD.board.scoring.arcanas = {}
+  local heroics_data = Global.getTable("heroics")
   --Herocis scoring
   local heroics_zone = getObjectFromGUID(GD.board.heroics_zone)
   if heroics_zone != nil then
     local heroics = heroics_zone.getObjects()
-    for _,h in pairs(heroics) do    
-      GD.board.scoring.heroics[h.getGUID()] = h.getGMNotes()
-      local d = JSON.decode(h.getGMNotes())
-      log("Heroic: "..h.getGUID())
-      log(d)
-      if d ~= nil then
-        heroics_score = heroics_score + d.scoring.prestige
-        for k,v in pairs(d.scoring.sigils) do
-          sigils[k] = sigils[k] + v
+    for _,h in pairs(heroics) do
+      if h.hasTag("Heroic") then
+        if env.test.debug then log("---  Heroic card id: "..h.getGMNotes()) end
+        local data = heroics_data[tonumber(h.getGMNotes())]
+        if data then
+          heroics_score = heroics_score + data.vp
+          for _,sigil in ipairs(data.sigils) do sigils[sigil] = sigils[sigil] + 1 end
+        else
+          log("ERROR: "..self.getName()..": updateScore(): no data found for Heroic card, "..h.getGUID())
         end
       else
-        log("ERROR: scoring heroic "..h.getGUID().." JSON did not decode")
-      end 
+        log("WARN: "..self.getName()..": updateScore(): ignoring unknown object found in Heroics stack, "..h.getGUID())
+      end
     end
   else
-    log("ERROR: heroics zone is nil")
+    log("ERROR: "..self.getName()..": heroics zone not found")
   end
-  log("Heroics score: "..heroics_score)
+  if env.test.debug then log("Heroics score: "..heroics_score) end
   GD.board.scoring.values.heroics = heroics_score
+  --count sigils on alteration cards in hand
+  local hand = Player[GD.board.player_color].getHandObjects(index)
+  local card_data = Global.getTable("alterations")
+  for _,c in ipairs(hand) do
+    local data = card_data[tonumber(c.getGMNotes())]
+    if data then
+      for _,sigil in ipairs(data.sigils) do
+        sigils[sigil] = sigils[sigil] + 1
+      end
+    end
+  end
+  --count sigils on alteration cards in spent pile
+  local pos = self.positionToWorld(used_alterations_local_pos)
+  local spent = findObject(pos, {"Deck", "Card"}, env.test.debug)
+  if spent then
+    if spent.tag == "Deck" then
+      for _,c in ipars(spent.getObjects()) do
+        local data = card_data[tonumber(c.gm_notes)]
+        if data then
+          for _,sigil in ipairs(data.sigils) do
+            sigils[sigil] = sigils[sigil] + 1
+          end
+        end
+      end
+    elseif spent.tag == "Card" then
+      local data = card_data[tonumber(spent.getGMNotes())]
+      if data then
+        for _,sigil in ipairs(data.sigils) do
+          sigils[sigil] = sigils[sigil] + 1
+        end
+      end
+    end
+  end
   --Add sigil for player class board
-  if board_sigil == "wild" then 
-    -- try to make a 3 of a kind first, then a pair if possible
+  if board_sigil == "wild" then
+    -- try to make a 3 of a kind first, then a pair or 3+ if possible
     local done = false
     for sigil,count in pairs(sigils) do
-      if count == 2 then 
+      if count == 2 then
         sigils[sigil] = sigils[sigil] + 1
         done = true
         break
@@ -1302,7 +1390,7 @@ function updateScore()
     end
     if not(done) then
       for sigil,count in pairs(sigils) do
-        if count == 1 then 
+        if count == 1 or count > 2 then
           sigils[sigil] = sigils[sigil] + 1
           break
         end
@@ -1314,6 +1402,8 @@ function updateScore()
   --Sigil scoring
   log(sigils)
   for sigil,count in pairs(sigils) do
+    GD.board.sigils[sigil] = count
+    UI_setAttribute(sigil.."_sigils_text", "text", tostring(count))
     c = math.modf(count/3)
     if c > 0 then
       sigil_score = sigil_score + (3 * c)
@@ -1347,8 +1437,8 @@ function updateScore()
           GD.board.scoring.spells[c.guid] = c.gm_notes
         end
       else
-        spells[o.getGUID()] = JSON.decode(o.getGMNotes())
-        GD.board.scoring.spells[o.getGUID()] = o.getGMNotes()
+        spells[o.getGUID()] = JSON.decode(o.getGMNotes())           --TODO: fix GMNotes
+        GD.board.scoring.spells[o.getGUID()] = o.getGMNotes()       --TODO: fix GMNotes
       end
     elseif o.hasTag("Arcana") then
       table.insert(arcanas, o)
@@ -1371,25 +1461,25 @@ function updateScore()
     local count = 0
     if arcana_data.spell_type == "aether_mod" then
       for _,s in pairs(spells) do
-        if s.aether_mod then 
+        if s.aether_mod then
           count = count + 1
         end
-      end        
+      end
     elseif arcana_data.spell_type == "not_aether" then
       for _,s in pairs(spells) do
-        if not(s.aether_mod) then 
+        if not(s.aether_mod) then
           count = count + 1
         end
-      end        
+      end
     elseif arcana_data.spell_type == "slot_count" then
       for _,s in pairs(spells) do
-        if s.slots >= 4 then 
+        if s.slots >= 4 then
           count = count + 1
         end
-      end        
+      end
     else
       for _,s in pairs(spells) do
-        if arcana_data.spell_type == "any" or 
+        if arcana_data.spell_type == "any" or
         contains(s.dice, arcana_data.spell_type) then
           count = count + 1
         end
@@ -1417,7 +1507,7 @@ function updateScore()
 end
 
 --[[ Handler for the roll dice button.  --]]
---TODO: add xml UI for this, hide button after rolling, show button when cleanup button is hit
+--TODO: add xml UI for this, hide button after rolling, show button when cleanup button is hit  DONE???
 function rollAllDiceBtn(player, mouse, id)
   if player.color == GD.board.player_color then
     if env.test.trace then log(self.getName().." rollAllDice()") end
@@ -1427,7 +1517,7 @@ function rollAllDiceBtn(player, mouse, id)
       for _,d in pairs(z.getObjects()) do d.roll() end
       Wait.condition(
         function() updateSpellPower() end,
-        function() 
+        function()
           local resting = true
           for _,d in pairs(z.getObjects()) do resting = resting and d.resting end
           return resting
@@ -1451,12 +1541,12 @@ function waitOnDiceRoll()
   local z = getObjectFromGUID(GD.board.dice_zone)
   if z ~= nil then
     Wait.condition(
-      function() 
-        waiting_on_dice = false        
+      function()
+        waiting_on_dice = false
         if env.test.verbose then log(self.getName().." all dice resting, update spell") end
-        updateSpellPower() 
+        updateSpellPower()
       end,
-      function() 
+      function()
         local resting = true
         for _,d in pairs(z.getObjects()) do resting = resting and d.resting end
         return resting
@@ -1497,10 +1587,10 @@ function diceDrop(params)
     local die = getObjectFromGUID(params.guid)
     if die ~= nil then
       Wait.condition(
-        function() 
+        function()
           waiting_on_dice = false
           if env.test.verbose then log(self.getName().." all dice resting, update spell") end
-          updateSpellPower() 
+          updateSpellPower()
         end,
         function()
           local resting = true
@@ -1524,7 +1614,7 @@ function setGMNote(card, data)
   card.setGMNotes(JSON.encode_pretty(variable)(data))
 end
 
-function saveLocalPosition(params)  
+function saveLocalPosition(params)
   local o = getObjectFromGUID(params.guid)
   local world_pos = o.getPosition()
   local local_pos = self.positionToLocal(world_pos)

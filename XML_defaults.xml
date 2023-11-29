@@ -8,8 +8,8 @@
   <Panel  class="class_board_button"
           active="false"
           rotation="180 0 0"
-          height="10" width="15"  />          
-        
+          height="10" width="15"  />
+
   <Panel  class="title"
           color="rgb(0.8,0.4,0)"
           preferredHeight="16"
@@ -42,8 +42,8 @@
           textColor="rgb(1,1,0)" />
 
   <Button class="hidden"
-          color="rgba(0,0,0,0)" 
-          width="70" height="50" />          
+          color="rgba(0,0,0,0)"
+          width="70" height="50" />
 
   <Text class="title"
         fontSize="24"
@@ -51,36 +51,41 @@
         color="rgb(.9,0.9,0)"
         shadow="rgba(0,0,0,1)" />
 
-  <Text class="restore" 
-        fontSize="25" 
+  <Text class="restore"
+        fontSize="25"
         color="#08A4C1"
         alignment="MiddleCenter"  />
 
-  <Text class="restore_small" 
-        fontSize="20" 
+  <Text class="restore_small"
+        fontSize="20"
         color="#08A4C1"
         alignment="MiddleCenter"  />
 
-  <Text class="ruin" 
-        fontSize="25" 
+  <Text class="ruin"
+        fontSize="25"
         color="#B81717"
         alignment="MiddleCenter"  />
 
-  <Text class="ruin_small" 
-        fontSize="20" 
+  <Text class="ruin_small"
+        fontSize="20"
         color="#B81717"
         alignment="MiddleCenter"  />
 
-  <Text class="myst" 
-        fontSize="25" 
+  <Text class="myst"
+        fontSize="25"
         color="#099139"
         alignment="MiddleCenter"  />
 
-  <Text class="score" 
-        fontSize="25" 
+  <Text class="score"
+        fontSize="25"
         color="#aaa9ad"
         alignment="MiddleCenter"  />
-        
+
+  <Text class="sigils"
+        fontSize="25"
+        color="rgb(0.74,0.74,0.31)"
+        alignment="MiddleCenter"  />
+
     <!-- Score table styles -->
     <TableLayout class="table_class"
         image="Sprites/Layout/Viewport"
@@ -128,6 +133,5 @@
         font="Arial Bold"
         color="rgb(1,1,0"
         shadow="rgb(0,0,0)" />
-        
-</Defaults>
 
+</Defaults>

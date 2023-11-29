@@ -1,0 +1,122 @@
+C = {}
+C.guids = {}
+C.guids.board_zones = {}
+C.guids.board_zones[1] = "60521c"
+C.guids.board_zones[2] = "bfde3d"
+C.guids.board_zones[3] = "147962"
+C.guids.board_zones[4] = "e02b04"
+C.guids.color_bars = {}
+C.guids.color_bars[1] = "4e97a8"
+C.guids.color_bars[2] = "fcab5e"
+C.guids.color_bars[3] = "3a88ad"
+C.guids.color_bars[4] = "277168"
+C.guids.player_boards = {}
+C.guids.player_boards.mystcaller = "be09eb"
+C.guids.player_boards.elementalist = "e47526"
+C.guids.player_boards.archanist = "625f56"
+C.guids.player_boards.enchanter = "69525a"
+C.guids.player_boards.chaosmancer = "d453e1"
+C.guids.spells_deck = "922556"
+C.spells_deck_position = {x=8.1198, y=1.2505, z=-9.6790}
+C.guids.alterations_deck = "4c5ccc"
+C.alterations_deck_pos = {x=8.1403, y=1.1013, z=-3.7780}
+C.guids.heroics_deck = "c147d7"
+C.heroics_deck_pos = {x=8.1396, y=1.0675, z=2.3360}
+C.guids.artifacts_deck = "63a072"
+C.guids.mana_bag = "a39f6e"
+C.guids.acuity_bag = "5561d3"
+C.guids.prestige_bag = "9db97c"
+C.guids.dice_bag = "bf3a6e"
+C.guids.myst_rune_1 = "3444cf"
+C.guids.myst_rune_2 = "8b61f9"
+C.guids.fill_alterations_btn = "c19ef3"
+C.guids.fill_spells_btn = "6e7155"
+C.default_cast_params = {
+  direction    = {0,1,0},
+  type         = 2,
+  size         = {0.5,1,0.5},
+  max_distance = 0,
+  debug        = false,
+}
+--[[ arcana data for scoring --]]
+C.arcanas = {}
+C.arcanas["8f529c"] = {
+  face_up = {
+    name = "Lizard",
+    reward = {
+      vp = 1,
+      spell_type = "fire",
+      count = 2
+    }
+  },
+  face_down = {
+    name = "Dragon",
+    reward = {
+      vp = 1,
+      spell_type = "water",
+      count = 2
+    }
+  }
+}
+C.arcanas["5f944b"] = {
+  face_up = {
+    name = "Cat",
+    reward = {
+      vp = 1,
+      spell_type = "any",
+      count = 4
+    }
+  },
+  face_down = {
+    name = "Stallion",
+    reward = {
+      vp = 1,
+      spell_type = "slot_count",
+      slot_count = 4,
+      count = 2
+    }
+  }
+}
+C.arcanas["a94aad"] = {
+  face_up = {
+    name = "Phoenix",
+    reward = {
+      vp = 1,
+      spell_type = "aether_mod",
+      count = 2
+    }
+  },
+  face_down = {
+    name = "Owl",
+    reward = {
+      vp = 1,
+      spell_type = "not_aether",
+      count = 3
+    }
+  }
+}
+C.pos = {}
+C.rot = {}
+C.pos.spells = {}
+C.pos.spells[1] = { -3.855699, 0.973605, -9.672857 }
+C.pos.spells[2] = { -1.83932, 0.973605, -9.686527 }
+C.pos.spells[3] = { 0.153882, 0.973605, -9.663352 }
+C.pos.spells[4] = { 2.135497, 0.973605, -9.674938 }
+C.pos.spells[5] = { 4.140288, 0.973605, -9.663352 }
+C.pos.spells[6] = { 6.133489, 0.973605, -9.674938 }
+C.pos.alterations = {}
+C.pos.alterations[1] = { -3.839974, 0.973605, -3.746139 }
+C.pos.alterations[2] = { -1.83932, 0.973605, -3.776452 }
+C.pos.alterations[3] = { 0.16547, 0.973605, -3.788041 }
+C.pos.alterations[4] = { 2.147085, 0.973605, -3.78804 }
+C.pos.alterations[5] = { 4.151876, 0.973605, -3.788041 }
+C.pos.alterations[6] = { 6.145079, 0.973605, -3.788041 }
+C.pos.heroics = {}
+C.pos.heroics[1] = { -3.834427, 0.973605, 2.330439 }
+C.pos.heroics[2] = { -1.863333, 0.973605, 2.319841 }
+C.pos.heroics[3] = { 0.150151, 0.973605, 2.330439 }
+C.pos.heroics[4] = { 2.131843, 0.973605, 2.330439 }
+C.pos.heroics[5] = { 4.145326, 0.973605, 2.309244 }
+C.pos.heroics[6] = { 6.158812, 0.973605, 2.319841 }
+C.pos.myst_rune = { 8.773835, 0.96, 6.248213 }
+C.rot.myst_rune = { 0, 270, 0 }

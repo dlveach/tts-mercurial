@@ -2,15 +2,15 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="XmlLayout UI/XmlLayout/Configuration/XmlLayout.xsd">
 
-  <Include src="tts-mercurial/XML_defaults.xml"/>
+  <Include src="XML_defaults.xml"/>
 
   <!-- Start Panel -->
-  <Panel id="startPanel" active="true" height="160" width="220" 
+  <Panel id="startPanel" active="true" height="160" width="220"
         showAnimation="Grow" hideAnimation="Shrink">
     <VerticalLayout>
-      <Panel class="title"> 
+      <Panel class="title">
         <Text class="title"> Seat all players</Text>
-      </Panel>    
+      </Panel>
       <VerticalLayout class="buttonList">
         <Button onClick="startGameBtn">Start Game</Button>
       </VerticalLayout>
@@ -29,25 +29,25 @@
           <Row id="score_table_header" class="table_header_row">
               <Cell class="header_cell">
                   <Text id="score_table_header_text_1" class="table_header_text" text="Player" />
-              </Cell> 
+              </Cell>
               <Cell class="header_cell">
                   <Text id="score_table_header_text_2" class="table_header_text" text="Class" />
-              </Cell> 
+              </Cell>
               <Cell class="header_cell">
                   <Text id="score_table_header_text_3" class="table_header_text" text="Heroics" />
-              </Cell> 
+              </Cell>
               <Cell class="header_cell">
                   <Text id="score_table_header_text_4" class="table_header_text" text="Sigils" />
-              </Cell> 
+              </Cell>
               <Cell class="header_cell">
                   <Text id="score_table_header_text_5" class="table_header_text" text="Prestige" />
-              </Cell> 
+              </Cell>
               <Cell class="header_cell">
                   <Text id="score_table_header_text_6" class="table_header_text" text="Arcanas" />
-              </Cell> 
+              </Cell>
               <Cell class="header_cell">
                   <Text id="score_table_header_text_7" class="table_header_text" text="Total" />
-              </Cell> 
+              </Cell>
           </Row>
           <Row id="score_table_row_1" active="true" class="table_data_row">
               <Cell class="table_cell">

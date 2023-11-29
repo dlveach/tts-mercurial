@@ -2,16 +2,16 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="XmlLayout UI/XmlLayout/Configuration/XmlLayout.xsd">
 
-<Include src="tts-mercurial/XML_defaults.xml"/>
+<Include src="XML_defaults.xml"/>
 
-<Panel  id="button_panel" 
+<Panel  id="button_panel"
         active="false"
         rectAlignment="LowerCenter"
         height="100" width="120"
         position="0 -50 -100"
         scale="1 1.5">
 
-  <Button id="refill_alterations_btn_id" 
+  <Button id="refill_alterations_btn_id"
           onClick="Global/refillSpellsBtn"
           fontSize="34"
           text="Refill" />
