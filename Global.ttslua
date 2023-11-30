@@ -2,12 +2,18 @@
 
 Work items for converstion of beta to production version:
 
-  - TODO: (mvp) implement spell recyle button
   - TODO: start options in UI start game panel
   - TODO: auto play alteration card if no discard power on it (starting cards and artifacts)
-  - TESTING: save/load/rewind
   - TODO: tooltip text for alteration cards
+  - TESTING: save/load/rewind
+
+Future possible stuff for greater enhancement
   - TODO: HUD display???
+  --TODO: track take & play actions??? (use "Take" buttons on cards, enforce limits & requirements)
+  --TODO: automate spell cast???
+        - calcuate winnings and display "Take" buttons on Heroics/Arcanas/Prestige
+        - dialog for Myst if equilibrium attained.
+  --TODO: automate assinging resources to spell cards???
 
 ****************************************************************************** ]]
 
@@ -31,9 +37,11 @@ env.game.card_tooltips = true
 function onLoad(saved_data)
   log("Mercurial version " .. env.version)
   log("Loading ...")
-  local dice_bag = getObjectFromGUID(C.guids.dice_bag)
-  dice_bag.interactable = false
-  dice_bag.setInvisibleTo(Player.getColors())
+  if not(env.test.in_dev) then
+    local dice_bag = getObjectFromGUID(C.guids.dice_bag)
+    dice_bag.interactable = false
+    dice_bag.setInvisibleTo(Player.getColors())
+  end
   for i=1,4 do
     local bar = getObjectFromGUID(C.guids.color_bars[i])
     if bar ~= nil then
@@ -71,10 +79,7 @@ function onLoad(saved_data)
       --TODO??
     end
     UI_setAttribute("startPanel", "active", true)
-    local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
-    setInvisibleTo(btn.getGUID(), Player.getColors())
-    btn = getObjectFromGUID(C.guids.fill_spells_btn)
-    setInvisibleTo(btn.getGUID(), Player.getColors())
+    setInvisibleTo(C.guids.recycle_spell_btn, Player.getColors())
   end
   math.randomseed(os.time())
   log("Loading complete.")
@@ -135,6 +140,10 @@ function restoreGameState()
     local id = Split(key, ':')[1]
     local field = Split(key, ':')[2]
     UI.setAttribute(id, field, value)
+  end
+  if GD.game.started then
+    local btn = getObjectFromGUID(C.guids.recycle_spell_btn)
+    btn.UI.setAttribute("recycle_spell_panel","active","true")
   end
 end
 
@@ -322,6 +331,9 @@ function finalSetup()
     p.position = C.pos.spells[i]
     deck.takeObject(p)
   end
+  setInvisibleTo(C.guids.recycle_spell_btn, {})
+  local btn = getObjectFromGUID(C.guids.recycle_spell_btn)
+  btn.UI.setAttribute("recycle_spell_panel","active","true")
   deck = getObjectFromGUID(GD.game.alterations_deck_guid)
   for i=1,6 do
     p.position = C.pos.alterations[i]
@@ -793,6 +805,43 @@ function alterationActionBtn(player, button, id)
     return
   end
   if success then UI_setAttribute("alterationDiscardPanel","active","false") end
+end
+
+--[[ Handler for Recycle Leftmost Spell button. ]]
+function recycleSpellBtn(player, button, id)
+  if env.test.trace then log("Global: recycleSpellBtn() "..tostring(player.color)) end
+  if player.color ~= GD.game.player_order[GD.game.current_player] then return end
+  -- get leftmost spell card
+  local card = findObject(C.pos.spells[1], {"Card"}, {1,1,1}, env.test.debug)
+  if not(card) then
+    broadcastToColor("No spell card in position 1 to recycle.", player.color)
+    return
+  end
+  -- flip face down
+  if not(card.is_face_down) then card.flip() end
+  -- put on bottom of spell deck
+  local deck = getSpellsDeck()
+  if deck then
+    if deck.tag == "Deck" then
+      Wait.condition(function() deck.putObject(card) end, function() return card.resting end)
+    elseif deck.tag == "Card" then
+      Wait.condition(function()
+          local pos = deck.getPosition()
+          deck.setPosition(Vector(pos.x, pos.y + 3, pos.z))
+          card.setPosition(pos)
+        end,
+        function() return card.resting end)
+      GD.game.spells_deck_guid = getSpellDeck().getGUID()
+    else
+      log("Global: Error: recycleSpellBtn() unknown spell deck object")
+    end
+  else
+    card.setPosition(C.spells_deck_position)
+    GD.game.spells_deck_guid = card.getGUID()
+  end
+  -- give player one acuity
+  local board = getObjectFromGUID(GD.game.players[player.color].board_guid)
+  board.call("dealItems", {["item_type"]="acuity",["amount"]=1})
 end
 
 --[[ Handle objects picked up in game.  Only certain object tags supported.  --]]

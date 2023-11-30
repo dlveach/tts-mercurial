@@ -4,17 +4,16 @@
 
 <Include src="XML_defaults.xml"/>
 
-<Panel  id="button_panel"
+<Panel  id="recycle_spell_panel"
         active="false"
-        rectAlignment="LowerCenter"
-        height="100" width="120"
+        height="200" width="200"
         position="0 -50 -100"
         scale="1 1.5">
 
-<Button id="refill_alterations_btn_id"
-        onClick="Global/refillAlterationsBtn"
-        fontSize="34"
-        text="Refill" />
+  <Button id="recycle_spell_btn"
+          onClick="Global/recycleSpellBtn"
+          fontSize="34"
+          text="Recycle Leftmost Spell" />
 
 </Panel>
 
