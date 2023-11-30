@@ -2,18 +2,19 @@
 
 TODO: items for converstion of beta to production version
 
-  - fix spell GM notes data.  Convert to LUT.
-  - LUT for all spell, alteration, heroic cards.  Artifact cards too?
-  - track sigil count from alteration cards as well as heroics and player board.
-  - display sigil counts on player board?
+  - Impliment discard alteration card power
+  - TESTING: save/load/rewind
+  - TESTING: get rid of reload watcher timer????
+  - tooltip text for alteration cards
+  - implement spell recyle button
 
 ****************************************************************************** ]]
 
 env = {}
 env.version = "1.0"
 env.test= {}
---env.test.test_players = {"Green", "Blue", "Yellow", "Red"}
--- env.test.test_players = {"Yellow", "Red", "Green"}
+-- env.test.test_players = {"Green", "Blue", "Yellow", "Red"}
+-- env.test.test_players = {"Yellow", "Red", "Blue"}
 env.test.test_players = {"Green", "Blue"}
 env.test.auto_switch = true
 env.test.in_dev = false
@@ -72,12 +73,12 @@ function onLoad(saved_data)
   end
   math.randomseed(os.time())
   --start the refill alterations watcher          --TODO: why is refill not automatic at player end of turn?
-  Timer.create({
-    identifier     = "Alterations_watcher",
-    function_name  = "checkFillBtns",
-    delay          = 2,
-    repetitions    = 0,
-  })
+  -- Timer.create({
+  --   identifier     = "Alterations_watcher",
+  --   function_name  = "checkFillBtns",
+  --   delay          = 2,
+  --   repetitions    = 0,
+  -- })
 end
 
 --[[ Wrapper function for saving obj visiblity for game restore. ]]
@@ -141,23 +142,42 @@ end
 --[[ Button handler for "Start Game".  Setup player order and
     enable class board selection. ]]
 function startGameBtn()
-  UI_hide("startPanel")
-  GD.game.player_order = {}
-  GD.game.players = {}
   local seated = getSeatedPlayers()
   if(env.test.test_players) then
     seated = env.test.test_players
   end
-  --getSeatedPlayers() is random, use table order
-  for _,pcol in ipairs(env.game.player_table_order) do
+  if env.test.debug then log("Seated players: "); log(seated) end
+  local colors_ok = true;
+  for _,c in ipairs(seated) do
+    if not(contains(env.game.player_table_order,c)) then
+      broadcastToAll("Seated player color "..c.." not present at this table.  Please choose another color.")
+      colors_ok = false
+    end
+  end
+  if not(colors_ok) then return end
+  UI_hide("startPanel")
+  --get random start player and assign player order in table clockwise order
+  GD.game.player_count = #seated
+  local start_color = seated[math.random(1, GD.game.player_count)]
+  GD.game.player_order = {}
+  GD.game.players = {}
+  local order = ""
+  local p = indexOf(env.game.player_table_order, start_color)
+  for i=1, #env.game.player_table_order do
+    local pcol = env.game.player_table_order[p]
     if contains(seated, pcol) then
       GD.game.players[pcol] = {}
       table.insert(GD.game.player_order, pcol)
+      if order == "" then order = pcol
+      else order = order .. ", " .. pcol end
     end
+    p = p + 1
+    if p > #env.game.player_table_order then p = 1 end --wrap around end
   end
-  GD.game.player_count = #GD.game.player_order
-  GD.game.start_player = math.random(1, #GD.game.player_order)
-  GD.game.current_player = GD.game.start_player
+  GD.game.start_player = indexOf(GD.game.player_order, start_color)
+  if env.game.verbose then print("Player order is " .. order) end
+  if env.test.debug then log("Player order is " .. order) end
+  --set up the table
   if (math.random(1, 10) > 5) then
     GD.game.myst_rune = C.guids.myst_rune_1
   else
@@ -167,16 +187,6 @@ function startGameBtn()
   getObjectFromGUID(C.guids.spells_deck).shuffle()
   getObjectFromGUID(C.guids.alterations_deck).shuffle()
   getObjectFromGUID(C.guids.artifacts_deck).shuffle()
-  if env.game.verbose then
-    local order = GD.game.player_order[GD.game.start_player]
-    local p = GD.game.start_player
-    for i=1, #GD.game.player_order - 1 do
-      p = p + 1
-      if p > #GD.game.player_order then p = 1 end
-      order = order .. ", " .. GD.game.player_order[p]
-    end
-    print("Player order is " .. order)
-  end
   -- Enable class select buttons
   for class, guid in pairs(C.guids.player_boards) do
     local class_board = getObjectFromGUID(guid)
@@ -186,7 +196,46 @@ function startGameBtn()
     class_board.setLock(false)
   end
   GD.game.assigned_boards_count = 0
-  broadcastToAll("In reverse player order choose and place one mage class to complete setup.")
+  GD.game.current_player = #GD.game.player_order
+  if env.test.debug then log("Active player is "..GD.game.player_order[GD.game.current_player]) end
+  if env.game.verbose then print("Active player is "..GD.game.player_order[GD.game.current_player]) end
+  --display cast selection UI
+  for i=1,4 do
+    UI_setAttribute("selectClass_"..tostring(i).."_panel","color","rgba(0,0,0,0)")
+    UI_setAttribute("selectClass_"..tostring(i).."_text","text","")
+    UI_setAttribute("selectClassLocation_"..tostring(i).."_text","text","")
+  end
+  local i = 1
+  for p=#GD.game.player_order,1,-1 do
+    local pcol = GD.game.player_order[p]
+    UI_setAttribute("selectClass_"..tostring(i).."_panel","color",pcol)
+    UI_setAttribute("selectClass_"..tostring(i).."_text","text",pcol)
+    UI_setAttribute("selectClassLocation_"..tostring(i).."_text","text",tostring(i))
+    i=i+1
+  end
+  UI_setAttribute("selectClassBoardPanel","active","true")
+  if env.test.auto_switch then autoSwitch(GD.game.player_order[GD.game.current_player]) end
+
+end
+
+--[[TESTING ONLY: Facilitate testing.  Switch test player color to game active player color.]]
+function autoSwitch(pcol)
+  if env.test.trace then log("Global: autoSwitch() "..tostring(pcol)) end
+  local players = Player.getPlayers()
+  if #players == 1 then
+    if env.test.debug then log("Test player current color: "..tostring(players[1].color)) end
+    if pcol then
+      if players[1].color ~= pcol then
+        if env.test.debug then log("Switching color to pcol: "..tostring(pcol)) end
+        players[1].changeColor(pcol)
+      end
+    else
+      if players[1].color ~= GD.game.player_order[GD.game.current_player] then
+        if env.test.debug then log("Switching color to: "..GD.game.player_order[GD.game.current_player]) end
+        players[1].changeColor(GD.game.player_order[GD.game.current_player])
+      end
+    end
+  end
 end
 
 --[[ Called from player board on class select.
@@ -200,28 +249,52 @@ function setPlayerClass(params)
   assert(params.position, "parameter 'position' missing")
   local position = params.position
   local pcol = params.player
+  local error = false;
   if not(contains(GD.game.player_order, pcol)) then
     broadcastToAll("Player " .. pcol .. " is not a player in this game.")
-    return
+    error = true
+  elseif pcol ~= GD.game.player_order[GD.game.current_player] then
+    broadcastToColor("Player " .. pcol .. " is not the current player.", pcol)
+    error = true
   elseif GD.game.players[pcol].class then
     broadcastToColor("Player " .. pcol .. " cannot select a second class.", pcol)
-    return
+    error = true
   elseif GD.game.positions[position] ~= "" then
     broadcastToAll("Player position "..position.." already taken.")
+    error = true
+  end
+  if error then
+    getObjectFromGUID(params.guid).setPosition(Vector(params.home_position))
     return
   else
     local class_board = getObjectFromGUID(params.guid)
-    assert(class_board)
+    assert(class_board, "ERROR: Global: setPlayerClass(): Missing board object")
     if env.game.verbose then print("Player " .. pcol .. " selected class " .. class_board.getName()) end
     GD.game.positions[position] = pcol
     GD.game.players[pcol].class = class_board.getName()
     GD.game.players[pcol].board_guid = class_board.getGUID()
+    GD.game.players[pcol].alteration_cards = {}
     --complete player assignment in board
     class_board.call("setPlayer", {["player"]=pcol, ["position"]=position})
     GD.game.assigned_boards_count = GD.game.assigned_boards_count + 1
+    --update display for cast selection UI
+    UI_setAttribute("selectClass_"..tostring(GD.game.assigned_boards_count).."_panel","color","Grey")
+    UI_setAttribute("selectClass_"..tostring(GD.game.assigned_boards_count).."_text","text","Done")
   end
   --If all players assigned to boards, do final setup
-  if GD.game.assigned_boards_count == GD.game.player_count then finalSetup() end
+  if GD.game.assigned_boards_count == GD.game.player_count then
+    UI_setAttribute("selectClassBoardPanel","active","false")
+    finalSetup()
+  else
+    local next = GD.game.current_player - 1
+    if next == 0 then
+      next = #GD.game.player_order  --TODO: is this necessary?  Always finishes on 1st player in order?
+      log("WARN: wrapping in player order")
+    end
+    GD.game.current_player = next
+    if env.game.verbose then print("Active player is "..GD.game.player_order[GD.game.current_player]) end
+    if env.test.auto_switch then autoSwitch(GD.game.player_order[GD.game.current_player]) end
+  end
 end
 
 --[[ Final game setup after all players have selected a class. ]]
@@ -447,74 +520,74 @@ end
 --[[ Timer watchdog functions.  Timer started in onLoad().
     If any Alteration or Spell positions are empty, show fill button.
     Otherwise hide buttons.  --]]
-function checkFillBtns()
-  checkFillSpells()
-  checkFillAlterations()
-end
-function checkFillAlterations()
-  if not(GD.game.started) then return end
-  --log("checkFillAlterations()")
-  local p = {
-    origin       = {},
-    direction    = {0,1,0},
-    type         = 3,
-    size         = {1,2,2},
-    max_distance = 0,
-    debug        = false,
-  }
-  local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
-  for i=1,6 do
-    p.origin =  C.pos.alterations[i]
-    local hits = Physics.cast(p)
-    local empty = true
-    if hits ~= nil then
-      for _,hit in ipairs(hits) do
-        if hit.hit_object.tag ~= "Surface" then
-          if hit.hit_object.hasTag("Alteration") then
-            empty = false
-          end
-        end
-      end
-    end
-    if empty then
-      btn.UI.setAttribute("button_panel", "active", "true")
-      return
-    end
-  end
-  btn.UI.setAttribute("button_panel", "active", "false")
-end
-function checkFillSpells()
-  if not(GD.game.started) then return end
-  --log("checkFillSpells()")
-  local p = {
-    origin       = {},
-    direction    = {0,1,0},
-    type         = 3,
-    size         = {1,2,2},
-    max_distance = 0,
-    debug        = false,
-  }
-  local btn = getObjectFromGUID(C.guids.fill_spells_btn)
-  for i=1,6 do
-    p.origin =  C.pos.spells[i]
-    local hits = Physics.cast(p)
-    local empty = true
-    if hits ~= nil then
-      for _,hit in ipairs(hits) do
-        if hit.hit_object.tag ~= "Surface" then
-          if hit.hit_object.hasTag("Spell") then
-            empty = false
-          end
-        end
-      end
-    end
-    if empty then
-      btn.UI.setAttribute("button_panel", "active", "true")
-      return
-    end
-  end
-  btn.UI.setAttribute("button_panel", "active", "false")
-end
+-- function checkFillBtns()
+--   checkFillSpells()
+--   checkFillAlterations()
+-- end
+-- function checkFillAlterations()
+--   if not(GD.game.started) then return end
+--   --log("checkFillAlterations()")
+--   local p = {
+--     origin       = {},
+--     direction    = {0,1,0},
+--     type         = 3,
+--     size         = {1,2,2},
+--     max_distance = 0,
+--     debug        = false,
+--   }
+--   local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
+--   for i=1,6 do
+--     p.origin =  C.pos.alterations[i]
+--     local hits = Physics.cast(p)
+--     local empty = true
+--     if hits ~= nil then
+--       for _,hit in ipairs(hits) do
+--         if hit.hit_object.tag ~= "Surface" then
+--           if hit.hit_object.hasTag("Alteration") then
+--             empty = false
+--           end
+--         end
+--       end
+--     end
+--     if empty then
+--       btn.UI.setAttribute("button_panel", "active", "true")
+--       return
+--     end
+--   end
+--   btn.UI.setAttribute("button_panel", "active", "false")
+-- end
+-- function checkFillSpells()
+--   if not(GD.game.started) then return end
+--   --log("checkFillSpells()")
+--   local p = {
+--     origin       = {},
+--     direction    = {0,1,0},
+--     type         = 3,
+--     size         = {1,2,2},
+--     max_distance = 0,
+--     debug        = false,
+--   }
+--   local btn = getObjectFromGUID(C.guids.fill_spells_btn)
+--   for i=1,6 do
+--     p.origin =  C.pos.spells[i]
+--     local hits = Physics.cast(p)
+--     local empty = true
+--     if hits ~= nil then
+--       for _,hit in ipairs(hits) do
+--         if hit.hit_object.tag ~= "Surface" then
+--           if hit.hit_object.hasTag("Spell") then
+--             empty = false
+--           end
+--         end
+--       end
+--     end
+--     if empty then
+--       btn.UI.setAttribute("button_panel", "active", "true")
+--       return
+--     end
+--   end
+--   btn.UI.setAttribute("button_panel", "active", "false")
+-- end
 
 --[[ Handler for fill alterations button.   --]]
 function refillAlterationsBtn(player, button, id)
@@ -548,6 +621,7 @@ function refillAlterations()
   local spots = {}
   local acuity = {}
   local empty_spots = 0
+  local rightmost_empty = 0
   for i=1,6 do
     acuity[i] = {}
     p.origin =  C.pos.alterations[i]
@@ -568,17 +642,26 @@ function refillAlterations()
     if empty then
       spots[i] = "-"
       empty_spots = empty_spots + 1
+      rightmost_empty = i
     end
   end
-  --add acuity to left most spot if not empty and a card taken
-  if spots[1] ~= "-" and empty_spots > 0 then
-    local bag = getObjectFromGUID(C.guids.acuity_bag)
-    local pos = Vector(C.pos.alterations[1])
-    pos.y = pos.y + 3
-    pos = scatter(pos, {1,0,1.5})
-    bag.takeObject({ callback_function = function(obj) obj.setPositionSmooth(pos, false, false) end })
+  if env.test.debug then log("Rightmost empty is "..tostring(rightmost_empty)) end
+  --add acuity to all cards left the right most alteration card taken
+  local function fillAcuity()
+    if env.test.debug then log("fillAcuity()") end
+    local n = rightmost_empty-1
+    if n >= 1 then
+      local bag = getObjectFromGUID(C.guids.acuity_bag)
+      for i=1,n do
+        local pos = Vector(C.pos.alterations[i])
+        pos.y = pos.y + 3
+        pos = scatter(pos, {0.4,0,0.4}, {0.1,0,0.1})
+        bag.takeObject({ callback_function = function(obj) obj.setPositionSmooth(pos, false, false) end })
+      end
+    end
   end
-  --recursively shift cards left into empty spots and fill last spot
+
+  --recursively shift cards left into empty spots and fill right most empty spot(s)
   local function shift(empty_spots)
     for i=1,6 do
       if spots[i] == "-" then
@@ -594,7 +677,6 @@ function refillAlterations()
               local delta_x = C.pos.alterations[j][1] - C.pos.alterations[j-1][1]
               local o_pos = o.getPosition()
               o_pos.x = o_pos.x - delta_x
-              log(o_pos)
               o.setPositionSmooth(o_pos, false, true)
               table.insert(acuity[j-1], g)
             end
@@ -611,7 +693,9 @@ function refillAlterations()
     })
     spots[6] = card.getGUID()
     empty_spots = empty_spots - 1
-    if empty_spots > 0 then
+    if empty_spots == 0 then
+      fillAcuity()
+    else
       Wait.time(function() shift(empty_spots) end, .5)
     end
   end
@@ -671,6 +755,7 @@ function setNextPlayer()
   local pcol = GD.game.player_order[GD.game.current_player]
   local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
   board.call("enableActivePlayer")
+  if env.test.auto_switch then autoSwitch(GD.game.player_order[GD.game.current_player]) end
   if env.game.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
 end
 
@@ -712,6 +797,22 @@ function onObjectRandomize(o, pcol)
   end
 end
 
+--[[ Check Alteration cards as they entern player's hand.  Assign ownership if they are not owned. ]]
+function onObjectEnterZone(zone, obj)
+  if zone.tag == "Hand" then
+    if obj.hasTag("Alteration") then
+      local pcol = zone.getData()["FogColor"]
+      if not(contains(GD.game.players[pcol].alteration_cards, obj.getGUID())) then
+        table.insert(GD.game.players[pcol].alteration_cards, obj.getGUID())
+        if env.test.debug then log("Alteration card "..obj.getGUID().." first entered hand zone and assigned to player "..pcol) end
+        if #alterations[tonumber(obj.getGMNotes())].sigils > 0 then
+          getObjectFromGUID(GD.game.players[pcol].board_guid).call("updateScore")
+        end
+      end
+    end
+  end
+end
+
 --[[ Handle objects dropped in game.  Only certain object tags supported.  --]]
 function onObjectDrop(player_color, obj)
   if GD.game.started then
@@ -719,12 +820,50 @@ function onObjectDrop(player_color, obj)
     if obj.hasTag("Spell") then fn_name = "spellDrop"
     elseif obj.hasTag("Acuity") then fn_name = "acuityDrop"
     elseif obj.hasTag("Dice") then fn_name = "diceDrop"
+    elseif obj.hasTag("Alteration") then
+      if contains(GD.game.players[player_color].alteration_cards, obj.getGUID()) then
+        if alterations[tonumber(obj.getGMNotes())].discard then
+          UI_setAttribute("alteration_discard_btn","interactable", "true")
+        else
+          UI_setAttribute("alteration_discard_btn","interactable", "false")
+        end
+        UI.setAttribute("alterationDiscardPanel","hidden",obj.getGUID())
+        UI_setAttribute("alterationDiscardPanel","active","true")
+      end
+      return
     end
     if fn_name ~= "" then
+      if env.test.trace then log("Global: onObjectDrop() -> "..fn_name) end
       local board = getObjectFromGUID(GD.game.players[player_color].board_guid)
       board.call(fn_name, {["guid"]=obj.getGUID()})
     end
   end
+end
+
+--[[ Handler for the alteration card action dialog. ]]
+function alterationActionBtn(player, button, id)
+  if env.test.trace then log("Global: alterationActionBtn() "..tostring(player)..", "..tostring(id)) end
+  if player.color ~= GD.game.player_order[GD.game.current_player] then return end
+  local action = Split(id,'_')[2]
+  log("action: "..action)
+  local g = UI.getAttribute("alterationDiscardPanel","hidden")
+  log("card guid: "..g)
+  if action == "play" then
+
+    log("------------ TODO: play ---------------")
+
+  elseif action == "discard" then
+
+    log("------------ TODO: discard ---------------")
+
+  elseif action == "cancel" then
+    local card = getObjectFromGUID(g)
+    card.deal(1, player.color)
+  else
+    log("ERROR: Global: alterationActionBtn(): unknown action")
+    return
+  end
+  UI_setAttribute("alterationDiscardPanel","active","false")
 end
 
 --[[ Handle objects picked up in game.  Only certain object tags supported.  --]]

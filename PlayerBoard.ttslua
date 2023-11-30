@@ -595,7 +595,7 @@ function placeObject(obj)
       function() return obj.isDestroyed() or obj.resting end )
   elseif obj.hasTag("Alteration") or obj.hasTag("Artifact") then
     obj.deal(1, GD.board.player_color)
-    Wait.time(function() updateScore() end, 1)
+    -- Wait.time(function() updateScore() end, 1)  --This is now done when card enters hand zone
   elseif obj.hasTag("Prestige") then
     local pos = self.positionToWorld(prestige_zone_local_pos)
     obj.setPositionSmooth(pos, false, true)
@@ -627,9 +627,10 @@ function onDrop(player_color)
           local board_guid = self.getGUID()
           Wait.condition(
             function() Global.call("setPlayerClass",{
-              ["player"]=player_color,
-              ["guid"]=board_guid,
-              ["position"]=i,
+              player = player_color,
+              guid = board_guid,
+              position = i,
+              home_position = home_position,
             }) end,
             function() return self.resting end
           )

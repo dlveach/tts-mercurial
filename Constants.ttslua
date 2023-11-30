@@ -22,7 +22,7 @@ C.guids.alterations_deck = "4c5ccc"
 C.alterations_deck_pos = {x=8.1403, y=1.1013, z=-3.7780}
 C.guids.heroics_deck = "c147d7"
 C.heroics_deck_pos = {x=8.1396, y=1.0675, z=2.3360}
-C.guids.artifacts_deck = "63a072"
+C.guids.artifacts_deck = "5e6187"
 C.guids.mana_bag = "a39f6e"
 C.guids.acuity_bag = "5561d3"
 C.guids.prestige_bag = "9db97c"

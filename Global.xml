@@ -5,8 +5,9 @@
   <Include src="XML_defaults.xml"/>
 
   <!-- Start Panel -->
-  <Panel id="startPanel" active="true" height="160" width="220"
-        showAnimation="Grow" hideAnimation="Shrink">
+  <Panel id="startPanel" active="false"
+    height="160" width="220"
+    showAnimation="Grow" hideAnimation="Shrink">
     <VerticalLayout>
       <Panel class="title">
         <Text class="title"> Seat all players</Text>
@@ -17,10 +18,74 @@
     </VerticalLayout>
   </Panel>
 
+  <!-- Alteration card discard dialog -->
+  <Panel id="alterationDiscardPanel" active="false"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
+    offsetXY="0 200"
+    height="140" width="400">
+    <VerticalLayout image="Sprites/Layout/Viewport" color="#301616">
+      <Panel class="title">
+        <Text class="title">Choose Alteration Card Action:</Text>
+      </Panel>
+      <HorizontalLayout padding="10">
+        <Button id="alteration_play_btn" onClick="alterationActionBtn">Play</Button>
+        <Button id="alteration_discard_btn" onClick="alterationActionBtn">Discard</Button>
+        <Button id="alteration_cancel_btn" onClick="alterationActionBtn">Cancel</Button>
+      </HorizontalLayout>
+    </VerticalLayout>
+  </Panel>
+
+  <!-- Select Class Board Panel -->
+  <Panel id="selectClassBoardPanel" active="false"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
+    offsetXY="0 300"
+    height="180" width="600"
+    showAnimation="Grow" hideAnimation="Shrink">
+    <TableLayout class="base_table">
+      <Row preferredHeight="60"  class="base_table_row" color="rgba(0,0,0,0)">
+        <Cell columnSpan="4">
+          <Panel class="title">
+            <Text class="title"> Select and place class board in following order:</Text>
+          </Panel>
+        </Cell>
+      </Row>
+      <Row preferredHeight="80" class="base_table_row">
+        <Cell padding="20 10 20 0">
+          <Panel id="selectClass_1_panel" color="Blue" image="Sprites/Layout/Viewport">
+            <Text id="selectClass_1_text" class="title" color="White" text="Blue"/>
+          </Panel>
+        </Cell>
+        <Cell padding="10 10 20 0">
+          <Panel id="selectClass_2_panel" color="Red" image="Sprites/Layout/Viewport">
+            <Text id="selectClass_2_text" class="title" color="White" text="Red"/>
+          </Panel>
+        </Cell>
+        <Cell padding="10 10 20 0">
+          <Panel id="selectClass_3_panel" color="Yellow" image="Sprites/Layout/Viewport">
+            <Text id="selectClass_3_text" class="title" color="White" text="Yellow"/>
+          </Panel>
+        </Cell>
+        <Cell padding="10 20 20 0">
+          <Panel id="selectClass_4_panel" color="Green" image="Sprites/Layout/Viewport">
+            <Text id="selectClass_4_text" class="title" color="White" text="Green"/>
+          </Panel>
+        </Cell>
+      </Row>
+      <Row preferredHeight="40"  class="base_table_row">
+        <Cell><Text id="selectClassLocation_1_text" class="title" text="1"/></Cell>
+        <Cell><Text id="selectClassLocation_2_text" class="title" text="2"/></Cell>
+        <Cell><Text id="selectClassLocation_3_text" class="title" text="3"/></Cell>
+        <Cell><Text id="selectClassLocation_4_text" class="title" text="4"/></Cell>
+      </Row>
+    </TableLayout>
+  </Panel>
+
   <!-- Final Scoring table -->
   <Panel id="score_panel" active="false" width="900" height="360"
         showAnimation="Grow" hideAnimation="Shrink">
-      <TableLayout class="table_class">
+      <TableLayout class="score_table">
           <Row id="table_1_title_row" class="title_row">
               <Cell class="header_cell" columnSpan="7">
                   <Text id="table_1_title_text" class="table_title_text" text="Final Scoring" />

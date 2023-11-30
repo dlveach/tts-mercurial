@@ -86,8 +86,23 @@
         color="rgb(0.74,0.74,0.31)"
         alignment="MiddleCenter"  />
 
+  <TableLayout class="base_table"
+      image="Sprites/Layout/Viewport"
+      useGlobalCellPadding="false"
+      color="rgba(0,0,0,0)" />
+
+  <Row class="base_table_row"
+    dontUseTableRowBackground="true"
+    color="#301616" />
+
+    <!-- Cell dontUseTableCellBackground false during dev to show lines -->
+    <Cell
+      dontUseTableCellBackground="true"
+      color="rgba(0,0,0,0)"
+      padding="0 0 0 0" />
+
     <!-- Score table styles -->
-    <TableLayout class="table_class"
+    <TableLayout class="score_table"
         image="Sprites/Layout/Viewport"
         color="rgb(0.4,0.1,0)"
         padding="10 10 10 10"
