@@ -1605,6 +1605,46 @@ function diceDrop(params)
   end
 end
 
+--[[ Process a played Alteration card. ]]
+function playAlteration(params)
+  assert(params, self.getName()..": ERROR: playAlteration(): missing params")
+  if env.test.trace then log("playAlteration() "..tostring(params.action)..", "..tostring(params.guid)) end
+  local card = getObjectFromGUID(params.guid)
+  assert(card, self.getName()..": ERROR: playAlteration(): missing card object, "..params.guid)
+  if action == "play" then
+    --TODO: future play alteration card requirements check
+    if not(card.is_face_down) then card.flip() end
+    local pos = Vector(used_alterations_local_pos)
+    pos.y = pos.y + 3
+    card.setPosition(pos)
+  elseif action == "discard" then
+    if getAcuityCount() < 1 then
+      broadcastToColor("Not enough Acuity", GD.board.player_color)
+      return false
+    end
+    local deck = Global.call("getAlterationDeck")
+    if not(deck) then
+      if not(card.is_face_down) then card.flip() end
+      card.setPosition(used_alterations_local_pos)
+    elseif deck.tag == "Deck" then
+      if not(card.is_face_down) then card.flip() end
+      Wait.condition(function() deck.putObject(card) end, function() return card.resting end)
+    else
+      if not(card.is_face_down) then card.flip() end
+      Wait.condition(function()
+        local pos = Vector(used_alterations_local_pos)
+        pos.y = pos.y + 3
+        deck.setPosition(pos)
+        card.setPosition(used_alterations_local_pos)
+      end, function() return card.resting end)
+    end
+  else
+    log(self.getName()..": ERROR: playAlteration(): unknown action")
+    return false
+  end
+  return true
+end
+
 --[[ ***** DEVELOPMENT ONLY UTILS --]]
 
 function setGMNote(card, data)

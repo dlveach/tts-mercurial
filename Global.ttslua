@@ -1,17 +1,18 @@
 --[[ *************************************************************************
 
-TODO: items for converstion of beta to production version
+Work items for converstion of beta to production version:
 
-  - Impliment discard alteration card power
+  - TODO: (mvp) implement spell recyle button
+  - TODO: start options in UI start game panel
+  - TODO: auto play alteration card if no discard power on it (starting cards and artifacts)
   - TESTING: save/load/rewind
-  - TESTING: get rid of reload watcher timer????
-  - tooltip text for alteration cards
-  - implement spell recyle button
+  - TODO: tooltip text for alteration cards
+  - TODO: HUD display???
 
 ****************************************************************************** ]]
 
 env = {}
-env.version = "1.0"
+env.version = "1.0 production release"
 env.test= {}
 -- env.test.test_players = {"Green", "Blue", "Yellow", "Red"}
 -- env.test.test_players = {"Yellow", "Red", "Blue"}
@@ -22,13 +23,14 @@ env.test.trace = true
 env.test.debug = true
 env.test.force_fresh_save = true
 env.game = {}
-env.game.player_table_order = {"Red", "Blue", "Green", "Yellow"}
--- env.game.player_table_order = {"Red", "Yellow", "Green", "Blue"}
+env.game.player_table_order = {"Red", "Blue", "Green", "Yellow"}  --clockwise
 env.game.verbose = true
+env.game.card_tooltips = true
 
 --[[ Game is loading. ]]
 function onLoad(saved_data)
-  log("Mercurial version " .. env.version .. " loading")
+  log("Mercurial version " .. env.version)
+  log("Loading ...")
   local dice_bag = getObjectFromGUID(C.guids.dice_bag)
   dice_bag.interactable = false
   dice_bag.setInvisibleTo(Player.getColors())
@@ -59,6 +61,9 @@ function onLoad(saved_data)
     GD.game.artifacts_deck_guid = C.guids.artifacts_deck
     GD.game.players = {}
     GD.game.positions = {}
+    GD.env = {}
+    GD.env.verbose = env.game.verbose
+    GD.env.card_tooltips = env.game.card_tooltips
     for i=1,4 do
       GD.game.positions[i] = ""
     end
@@ -72,13 +77,7 @@ function onLoad(saved_data)
     setInvisibleTo(btn.getGUID(), Player.getColors())
   end
   math.randomseed(os.time())
-  --start the refill alterations watcher          --TODO: why is refill not automatic at player end of turn?
-  -- Timer.create({
-  --   identifier     = "Alterations_watcher",
-  --   function_name  = "checkFillBtns",
-  --   delay          = 2,
-  --   repetitions    = 0,
-  -- })
+  log("Loading complete.")
 end
 
 --[[ Wrapper function for saving obj visiblity for game restore. ]]
@@ -92,7 +91,7 @@ end
 
 --[[  Wrapper function for saving UI attributes for game restore. ]]
 function UI_setAttribute(id, field, value)
-  if env.test.trace and env.game.verbose then log("UI_setAttribute()") end
+  if env.test.trace and GD.env.verbose then log("UI_setAttribute()") end
   assert(type(id) == "string", "id must be a string")
   assert(type(field) == "string", "field must be a string")
   UI.setAttribute(id, field, value)
@@ -175,7 +174,7 @@ function startGameBtn()
     if p > #env.game.player_table_order then p = 1 end --wrap around end
   end
   GD.game.start_player = indexOf(GD.game.player_order, start_color)
-  if env.game.verbose then print("Player order is " .. order) end
+  if GD.env.verbose then print("Player order is " .. order) end
   if env.test.debug then log("Player order is " .. order) end
   --set up the table
   if (math.random(1, 10) > 5) then
@@ -184,9 +183,9 @@ function startGameBtn()
     GD.game.myst_rune = C.guids.myst_rune_2
   end
   getObjectFromGUID(GD.game.heroics_deck_guid).shuffle()
-  getObjectFromGUID(C.guids.spells_deck).shuffle()
-  getObjectFromGUID(C.guids.alterations_deck).shuffle()
-  getObjectFromGUID(C.guids.artifacts_deck).shuffle()
+  getObjectFromGUID(GD.game.spells_deck_guid).shuffle()
+  getObjectFromGUID(GD.game.alterations_deck_guid).shuffle()
+  getObjectFromGUID(GD.game.artifacts_deck_guid).shuffle()
   -- Enable class select buttons
   for class, guid in pairs(C.guids.player_boards) do
     local class_board = getObjectFromGUID(guid)
@@ -198,7 +197,7 @@ function startGameBtn()
   GD.game.assigned_boards_count = 0
   GD.game.current_player = #GD.game.player_order
   if env.test.debug then log("Active player is "..GD.game.player_order[GD.game.current_player]) end
-  if env.game.verbose then print("Active player is "..GD.game.player_order[GD.game.current_player]) end
+  if GD.env.verbose then print("Active player is "..GD.game.player_order[GD.game.current_player]) end
   --display cast selection UI
   for i=1,4 do
     UI_setAttribute("selectClass_"..tostring(i).."_panel","color","rgba(0,0,0,0)")
@@ -269,7 +268,7 @@ function setPlayerClass(params)
   else
     local class_board = getObjectFromGUID(params.guid)
     assert(class_board, "ERROR: Global: setPlayerClass(): Missing board object")
-    if env.game.verbose then print("Player " .. pcol .. " selected class " .. class_board.getName()) end
+    if GD.env.verbose then print("Player " .. pcol .. " selected class " .. class_board.getName()) end
     GD.game.positions[position] = pcol
     GD.game.players[pcol].class = class_board.getName()
     GD.game.players[pcol].board_guid = class_board.getGUID()
@@ -292,7 +291,7 @@ function setPlayerClass(params)
       log("WARN: wrapping in player order")
     end
     GD.game.current_player = next
-    if env.game.verbose then print("Active player is "..GD.game.player_order[GD.game.current_player]) end
+    if GD.env.verbose then print("Active player is "..GD.game.player_order[GD.game.current_player]) end
     if env.test.auto_switch then autoSwitch(GD.game.player_order[GD.game.current_player]) end
   end
 end
@@ -318,12 +317,12 @@ function finalSetup()
     ["top"] = true,
     ["smooth"] = true
   }
-  local deck = getObjectFromGUID(C.guids.spells_deck)
+  local deck = getObjectFromGUID(GD.game.spells_deck_guid)
   for i=1,6 do
     p.position = C.pos.spells[i]
     deck.takeObject(p)
   end
-  deck = getObjectFromGUID(C.guids.alterations_deck)
+  deck = getObjectFromGUID(GD.game.alterations_deck_guid)
   for i=1,6 do
     p.position = C.pos.alterations[i]
     deck.takeObject(p)
@@ -377,7 +376,7 @@ function finalSetup()
       player = player + 1
       if player > GD.game.player_count then player = 1 end --wrap around
       player_color = GD.game.player_order[player]
-      if env.game.verbose then print("Dealing " .. count .. " extra acuity to player " .. count+1 .. " - " .. player_color) end
+      if GD.env.verbose then print("Dealing " .. count .. " extra acuity to player " .. count+1 .. " - " .. player_color) end
       local board = getObjectFromGUID(GD.game.players[player_color].board_guid)
       board.call("dealItems", {["item_type"]="acuity",["amount"]=count})
       count = count + 1
@@ -388,7 +387,7 @@ function finalSetup()
   local pcol = GD.game.player_order[GD.game.current_player]
   local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
   board.call("enableActivePlayer")
-  if env.game.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
+  if GD.env.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
 
   --Configure final scoring table for number of players
   local num_players = #GD.game.player_order
@@ -506,6 +505,8 @@ function refillSpells()
         log("ERROR: Global: refillSpells() unknown spell deck object")
       end
       spots[6] = card.getGUID()
+    else
+      log("WARN: spells deck is empty!")  --not sure this can ever happen, but warn anyway.
     end
     empty_spots = empty_spots - 1
     if empty_spots > 0 then
@@ -517,96 +518,9 @@ function refillSpells()
   end
 end
 
---[[ Timer watchdog functions.  Timer started in onLoad().
-    If any Alteration or Spell positions are empty, show fill button.
-    Otherwise hide buttons.  --]]
--- function checkFillBtns()
---   checkFillSpells()
---   checkFillAlterations()
--- end
--- function checkFillAlterations()
---   if not(GD.game.started) then return end
---   --log("checkFillAlterations()")
---   local p = {
---     origin       = {},
---     direction    = {0,1,0},
---     type         = 3,
---     size         = {1,2,2},
---     max_distance = 0,
---     debug        = false,
---   }
---   local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
---   for i=1,6 do
---     p.origin =  C.pos.alterations[i]
---     local hits = Physics.cast(p)
---     local empty = true
---     if hits ~= nil then
---       for _,hit in ipairs(hits) do
---         if hit.hit_object.tag ~= "Surface" then
---           if hit.hit_object.hasTag("Alteration") then
---             empty = false
---           end
---         end
---       end
---     end
---     if empty then
---       btn.UI.setAttribute("button_panel", "active", "true")
---       return
---     end
---   end
---   btn.UI.setAttribute("button_panel", "active", "false")
--- end
--- function checkFillSpells()
---   if not(GD.game.started) then return end
---   --log("checkFillSpells()")
---   local p = {
---     origin       = {},
---     direction    = {0,1,0},
---     type         = 3,
---     size         = {1,2,2},
---     max_distance = 0,
---     debug        = false,
---   }
---   local btn = getObjectFromGUID(C.guids.fill_spells_btn)
---   for i=1,6 do
---     p.origin =  C.pos.spells[i]
---     local hits = Physics.cast(p)
---     local empty = true
---     if hits ~= nil then
---       for _,hit in ipairs(hits) do
---         if hit.hit_object.tag ~= "Surface" then
---           if hit.hit_object.hasTag("Spell") then
---             empty = false
---           end
---         end
---       end
---     end
---     if empty then
---       btn.UI.setAttribute("button_panel", "active", "true")
---       return
---     end
---   end
---   btn.UI.setAttribute("button_panel", "active", "false")
--- end
-
---[[ Handler for fill alterations button.   --]]
-function refillAlterationsBtn(player, button, id)
-  if env.test.trace then log("Global: refillAlterationsBtn() pressed by "..player.color) end
-  local btn = getObjectFromGUID(C.guids.fill_alterations_btn)
-  btn.UI.setAttribute("button_panel", "active", "false")
-  refillAlterations()
-end
-
---[[ Handler for fill spells button.   --]]
-function refillSpellsBtn(player, button, id)
-  if env.test.trace then log("Global: refillSpellsBtn() pressed by "..player.color) end
-  local btn = getObjectFromGUID(C.guids.fill_spells_btn)
-  btn.UI.setAttribute("button_panel", "active", "false")
-  refillSpells()
-end
-
---[[ Shift spell cards left to fill empty spaces, placing new cards in rightmost spot.
-    Move any acuity with cards.  If leftmost card was not taken, add acuity to it. --]]
+--[[ Place acuity on remaining cards to left of rightmost empty spot.
+    Then shift cards left to fill empty spaces, placing new cards in rightmost spot.
+    Move acuity with the cards. --]]
 function refillAlterations()
   if env.test.trace then log("Global: refillAlterations()") end
   local p = {
@@ -617,7 +531,12 @@ function refillAlterations()
     max_distance = 0,
     debug        = true,
   }
-  local deck = getObjectFromGUID(C.guids.alterations_deck)
+  local deck = getAlterationsDeck()
+  if not(deck) then
+    log("--TODO: Global:refillAlterations() handle empty alteration deck!")
+    return
+  end
+  --Set up current condition (find cards, empty spots and current acuity on cards)
   local spots = {}
   local acuity = {}
   local empty_spots = 0
@@ -646,21 +565,26 @@ function refillAlterations()
     end
   end
   if env.test.debug then log("Rightmost empty is "..tostring(rightmost_empty)) end
-  --add acuity to all cards left the right most alteration card taken
-  local function fillAcuity()
-    if env.test.debug then log("fillAcuity()") end
-    local n = rightmost_empty-1
-    if n >= 1 then
-      local bag = getObjectFromGUID(C.guids.acuity_bag)
-      for i=1,n do
+
+  --add acuity to remaining cards left of rightmost empty BEFORE shifting, update current acuity table
+  local n = rightmost_empty-1
+  local new_acuity = {}
+  if n >= 1 then
+    local bag = getObjectFromGUID(C.guids.acuity_bag)
+    for i=1,n do
+      if spots[i] ~= "-" then
         local pos = Vector(C.pos.alterations[i])
         pos.y = pos.y + 3
         pos = scatter(pos, {0.4,0,0.4}, {0.1,0,0.1})
-        bag.takeObject({ callback_function = function(obj) obj.setPositionSmooth(pos, false, false) end })
+        local o = bag.takeObject({
+          callback_function = function(obj)
+            obj.setPositionSmooth(pos, false, false)
+          end })
+        table.insert(new_acuity, o)
+        table.insert(acuity[i], o.getGUID())
       end
     end
   end
-
   --recursively shift cards left into empty spots and fill right most empty spot(s)
   local function shift(empty_spots)
     for i=1,6 do
@@ -693,14 +617,25 @@ function refillAlterations()
     })
     spots[6] = card.getGUID()
     empty_spots = empty_spots - 1
-    if empty_spots == 0 then
-      fillAcuity()
-    else
+    if empty_spots > 0 then
       Wait.time(function() shift(empty_spots) end, .5)
     end
   end
+
+  --After placing any new acuity, start shifting cards left to fill empty spaces.
   if empty_spots > 0 then
-    shift(empty_spots)
+    if #new_acuity > 0 then
+      --New acuity placed so wait until all are resting before shifting
+      Wait.condition(function() shift(empty_spots) end,
+        function()
+          for _,o in ipairs(new_acuity) do
+            if not(o.resting) then return false end
+          end
+          return true
+        end)
+    else
+      shift(empty_spots)
+    end
   end
 end
 
@@ -756,7 +691,7 @@ function setNextPlayer()
   local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
   board.call("enableActivePlayer")
   if env.test.auto_switch then autoSwitch(GD.game.player_order[GD.game.current_player]) end
-  if env.game.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
+  if GD.env.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
 end
 
 --[[ Special case needed by Mystcaller board only. ]]
@@ -834,28 +769,22 @@ function onObjectDrop(player_color, obj)
     end
     if fn_name ~= "" then
       if env.test.trace then log("Global: onObjectDrop() -> "..fn_name) end
-      local board = getObjectFromGUID(GD.game.players[player_color].board_guid)
-      board.call(fn_name, {["guid"]=obj.getGUID()})
+      local player_board = getObjectFromGUID(GD.game.players[player_color].board_guid)
+      player_board.call(fn_name, {["guid"]=obj.getGUID()})
     end
   end
 end
 
 --[[ Handler for the alteration card action dialog. ]]
 function alterationActionBtn(player, button, id)
-  if env.test.trace then log("Global: alterationActionBtn() "..tostring(player)..", "..tostring(id)) end
+  if env.test.trace then log("Global: alterationActionBtn() "..tostring(player.color)..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local action = Split(id,'_')[2]
-  log("action: "..action)
+  local success = true
   local g = UI.getAttribute("alterationDiscardPanel","hidden")
-  log("card guid: "..g)
-  if action == "play" then
-
-    log("------------ TODO: play ---------------")
-
-  elseif action == "discard" then
-
-    log("------------ TODO: discard ---------------")
-
+  if action == "play" or action == "discard" then
+    local player_board = getObjectFromGUID(GD.game.players[player.color].board_guid)
+    success = player_board.call("playAlteration", {guid=g,action=action})
   elseif action == "cancel" then
     local card = getObjectFromGUID(g)
     card.deal(1, player.color)
@@ -863,7 +792,7 @@ function alterationActionBtn(player, button, id)
     log("ERROR: Global: alterationActionBtn(): unknown action")
     return
   end
-  UI_setAttribute("alterationDiscardPanel","active","false")
+  if success then UI_setAttribute("alterationDiscardPanel","active","false") end
 end
 
 --[[ Handle objects picked up in game.  Only certain object tags supported.  --]]
@@ -911,42 +840,49 @@ end
 --[[ Locate Alterations deck.
   Update to new GUID if deck guid changed (or only one card)
   Return deck object if found (will be single card if only one left).
-  Log error and return nil if no more heroics.]]
+  Log error and return nil if no card or deck.]]
 function getAlterationsDeck()
   if env.test.trace then log("Global: getAlterationsDeck()") end
   local deck = getObjectFromGUID(GD.game.alterations_deck_guid)
   if deck then return deck end
-  -- No deck object so use cast to find it
-  local p = simpleDeepCopy(C.default_cast_params)
-  p.origin = C.alterations_deck_pos
-  local hits = Physics.cast({p})
-  if hits then
-    for _,hit in pairs(hits) do
-      if hit.hit_object.tag == "Deck" then
-        GD.game.alterations_deck_guid = hit.hit_object.getGUID()
-        return hit.hit_object
-      elseif hit.hit_object.tag == "Card" then
-        log("ERROR: Global: getAlterationsDeck(): returning last card")
-        return hit.hit_object
-      end
-    end
-  end
-  log("ERROR: Global: getAlterationsDeck(): No deck found")
-  return nil
+  -- No deck object so find it
+  local deck = findObject(C.alterations_deck_pos, {"Deck","Card"}, env.test.debug)
+  if not(deck) then log("WARN: Global: getAlterationsDeck(): No deck found")
+  else GD.game.alterations_deck_guid = deck.getGUID() end
+  return deck
 end
+  -- local p = simpleDeepCopy(C.default_cast_params)
+  -- p.origin = C.alterations_deck_pos
+  -- local hits = Physics.cast({p})
+  -- if hits then
+  --   for _,hit in pairs(hits) do
+  --     if hit.hit_object.tag == "Deck" then
+  --       GD.game.alterations_deck_guid = hit.hit_object.getGUID()
+  --       return hit.hit_object
+  --     elseif hit.hit_object.tag == "Card" then
+  --       log("ERROR: Global: getAlterationsDeck(): returning last card")
+  --       return hit.hit_object
+  --     end
+  --   end
+  -- end
+  -- log("ERROR: Global: getAlterationsDeck(): No deck found")
+  -- return nil
+-- end
 
 --[[ Place an alteration card on the bottom of the deck.
   If the card does not have a discard power, return false.
   Otherwise return true if successful. ]]
-function DiscardAlteration(card)
-  if env.test.trace then log("Global: DiscardAlteration() "..tostring(card)) end
-  assert(card, "ERROR: Global: DiscardAlteration(): missing card object")
+-- function DiscardAlteration(card)
+--   if env.test.trace then log("Global: DiscardAlteration() "..tostring(card)) end
+--   assert(card, "ERROR: Global: DiscardAlteration(): missing card object")
+--
+--   --TODO:
+--     --check for card discard power, return false if not
+--     --if valid discard, place on bottom of alteration deck.
 
-  --TODO:
-    --check for card discard power, return false if not
-    --if valid discard, place on bottom of alteration deck.
-
-end
+      --NOTE: moved to PlayerBoard.ttslua
+--
+-- end
 
 --[[ Locate Spells deck.
   Update to new GUID if deck guid changed (or only one card)
@@ -956,24 +892,29 @@ function getSpellsDeck()
   if env.test.trace then log("Global: getSpellsDeck()") end
   local deck = getObjectFromGUID(GD.game.spells_deck_guid)
   if deck then return deck end
-  -- No deck object so use cast to find it
-  local p = simpleDeepCopy(C.default_cast_params)
-  p.origin = C.spells_deck_pos
-  local hits = Physics.cast({p})
-  if hits then
-    for _,hit in pairs(hits) do
-      if hit.hit_object.tag == "Deck" then
-        GD.game.spells_deck_guid = hit.hit_object.getGUID()
-        return hit.hit_object
-      elseif hit.hit_object.tag == "Card" then
-        log("ERROR: Global: getSpellsDeck(): returning last card")
-        return hit.hit_object
-      end
-    end
-  end
-  log("ERROR: Global: getSpellsDeck(): No deck found")
-  return nil
+  -- No deck object so find it
+  local deck = findObject(C.spells_deck_pos, {"Deck","Card"}, env.test.debug)
+  if not(deck) then log("WARN: Global: getSpellsDeck(): No deck found")
+  else GD.game.spells_deck_guid = deck.getGUID() end
+  return deck
 end
+--   local p = simpleDeepCopy(C.default_cast_params)
+--   p.origin = C.spells_deck_pos
+--   local hits = Physics.cast({p})
+--   if hits then
+--     for _,hit in pairs(hits) do
+--       if hit.hit_object.tag == "Deck" then
+--         GD.game.spells_deck_guid = hit.hit_object.getGUID()
+--         return hit.hit_object
+--       elseif hit.hit_object.tag == "Card" then
+--         log("ERROR: Global: getSpellsDeck(): returning last card")
+--         return hit.hit_object
+--       end
+--     end
+--   end
+--   log("ERROR: Global: getSpellsDeck(): No deck found")
+--   return nil
+-- end
 
 --[[ Final game scoring.
   tiebreaker: first #arcanas, then #spells --]]

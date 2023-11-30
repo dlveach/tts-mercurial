@@ -6,14 +6,16 @@
 
   <!-- Start Panel -->
   <Panel id="startPanel" active="false"
-    height="160" width="220"
+    height="160" width="300"
     showAnimation="Grow" hideAnimation="Shrink">
     <VerticalLayout>
       <Panel class="title">
-        <Text class="title"> Seat all players</Text>
+        <Text class="title"> After all players seated</Text>
       </Panel>
       <VerticalLayout class="buttonList">
-        <Button onClick="startGameBtn">Start Game</Button>
+        <Panel padding="40 40 0 0">
+          <Button onClick="startGameBtn">Start Game</Button>
+        </Panel>
       </VerticalLayout>
     </VerticalLayout>
   </Panel>
