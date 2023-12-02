@@ -156,6 +156,8 @@ function onLoad(saved_data)
     GD.board.scoring.values.sigils = 0
     GD.board.scoring.values.prestige = 0
     GD.board.scoring.values.arcanas = 0
+    GD.board.scoring.total_score = 0
+    GD.board.heroics_count = 0
   end
   loading = false
 end
@@ -721,7 +723,11 @@ function setPlayer(params)
     Wait.time(function() acuity() end, .25, start_acuity)
   end
   GD.board.sigils[board_sigil] = 1
-  UI_setAttribute(board_sigil.."_sigils_text","text","1")
+  if board_sigil == "wild" then
+    UI_setAttribute(board_sigil.."_sigils_text","text","+1")
+  else
+    UI_setAttribute(board_sigil.."_sigils_text","text","1")
+  end
 end
 
 --[[ Called from Global during player setup or when player types a number over a bag. ]]
@@ -976,6 +982,7 @@ function updateSpellPower()
   UI_setAttribute("net_restore_text_id", "text", tostring(net_restore))
   UI_setAttribute("net_ruin_text_id", "text", tostring(net_ruin))
   UI_setAttribute("total_myst_text_id", "text", tostring(total_myst))
+  Global.call("updateHUD")
 end
 
 --[[ Called from global on spell card drop by player for this board.
@@ -1324,10 +1331,12 @@ function updateScore()
   local heroics_data = Global.getTable("heroics")
   --Herocis scoring
   local heroics_zone = getObjectFromGUID(GD.board.heroics_zone)
+  local heroics_count = 0
   if heroics_zone != nil then
     local heroics = heroics_zone.getObjects()
     for _,h in pairs(heroics) do
       if h.hasTag("Heroic") then
+        heroics_count = heroics_count + 1
         if env.test.debug then log("---  Heroic card id: "..h.getGMNotes()) end
         local data = heroics_data[tonumber(h.getGMNotes())]
         if data then
@@ -1345,6 +1354,7 @@ function updateScore()
   end
   if env.test.debug then log("Heroics score: "..heroics_score) end
   GD.board.scoring.values.heroics = heroics_score
+  GD.board.heroics_count = heroics_count
   --count sigils on alteration cards in hand
   local hand = Player[GD.board.player_color].getHandObjects(index)
   local card_data = Global.getTable("alterations")
@@ -1361,7 +1371,7 @@ function updateScore()
   local spent = findObject(pos, {"Deck", "Card"}, env.test.debug)
   if spent then
     if spent.tag == "Deck" then
-      for _,c in ipars(spent.getObjects()) do
+      for _,c in ipairs(spent.getObjects()) do
         local data = card_data[tonumber(c.gm_notes)]
         if data then
           for _,sigil in ipairs(data.sigils) do
@@ -1380,28 +1390,13 @@ function updateScore()
   end
   --Add sigil for player class board
   if board_sigil == "wild" then
-    -- try to make a 3 of a kind first, then a pair or 3+ if possible
-    local done = false
-    for sigil,count in pairs(sigils) do
-      if count == 2 then
-        sigils[sigil] = sigils[sigil] + 1
-        done = true
-        break
-      end
-    end
-    if not(done) then
-      for sigil,count in pairs(sigils) do
-        if count == 1 or count > 2 then
-          sigils[sigil] = sigils[sigil] + 1
-          break
-        end
-      end
-    end
+    -- Will at least make a pair, worth 1.  Otherwise adds 1 more to one set of 3 or more.  So always adds 1.
+    sigil_score = sigil_score + 1
   else
     sigils[board_sigil] = sigils[board_sigil] + 1
   end
   --Sigil scoring
-  log(sigils)
+  -- log(sigils)
   for sigil,count in pairs(sigils) do
     GD.board.sigils[sigil] = count
     UI_setAttribute(sigil.."_sigils_text", "text", tostring(count))
@@ -1415,7 +1410,7 @@ function updateScore()
       end
     end
   end
-  log("Sigil score: "..sigil_score)
+  -- log("Sigil score: "..sigil_score)
   GD.board.scoring.values.sigils = sigil_score
   --Prestige token scoring
   local prestige_zone = getObjectFromGUID(GD.board.prestige_zone)
@@ -1424,7 +1419,7 @@ function updateScore()
       prestige_score = prestige_score + 1
     end
   end
-  log("Prestige score: "..prestige_score)
+  -- log("Prestige score: "..prestige_score)
   GD.board.scoring.values.prestige = prestige_score
   --Arcana scoring
   local spells = {}
@@ -1448,8 +1443,8 @@ function updateScore()
       log("WARN: ignoring object "..o.getGUID().." in spell/arcana pile.")
     end
   end
-  log("found "..sizeOf(spells).." spell cards")
-  log("found "..#arcanas.." arcana cards")
+  -- log("found "..sizeOf(spells).." spell cards")
+  -- log("found "..#arcanas.." arcana cards")
   local arcana_data
   for _,arcana in pairs(arcanas) do
     if arcana.is_face_down then
@@ -1457,8 +1452,8 @@ function updateScore()
     else
       arcana_data = C.arcanas[arcana.getGUID()].face_up.reward
     end
-    log("Scoring arcana: ")
-    log(arcana_data)
+    -- log("Scoring arcana: ")
+    -- log(arcana_data)
     local count = 0
     if arcana_data.spell_type == "aether_mod" then
       for _,s in pairs(spells) do
@@ -1486,25 +1481,63 @@ function updateScore()
         end
       end
     end
-    log("Number spells matching arcana "..arcana.getName().." condition = "..count)
+    -- log("Number spells matching arcana "..arcana.getName().." condition = "..count)
     local n = math.modf(count/arcana_data.count)
-    log(arcana.getName().." score is "..(n * arcana_data.vp))
+    -- log(arcana.getName().." score is "..(n * arcana_data.vp))
     arcanas_score = arcanas_score + (n * arcana_data.vp)
   end
   --Add in arcana bonus for number of players == 3 or 4
   local player_count = Global.call("getPlayerCount", {})
   if player_count == 3 then
-    log("Arcana player count bonus = "..#arcanas)
+    -- log("Arcana player count bonus = "..#arcanas)
     arcanas_score = arcanas_score + #arcanas
   elseif player_count == 4 then
-    log("Arcana player count bonus = "..(#arcanas * 2))
+    -- log("Arcana player count bonus = "..(#arcanas * 2))
     arcanas_score = arcanas_score + (#arcanas * 2)
   end
-  log("total arcana score including player count bonus: "..arcanas_score)
+  -- log("total arcana score including player count bonus: "..arcanas_score)
   GD.board.scoring.values.arcanas = arcanas_score
 
+  log("-------------TODO: fix arcana scoring to final rules -------------------")
+
   local score = heroics_score + sigil_score + prestige_score + arcanas_score
+  GD.board.scoring.total_score = score
   UI_setAttribute("score_text_id", "text", tostring(score))
+  Global.call("updateHUD")
+end
+
+--[[ Return current score value.  Used by Global when updating HUD. --]]
+function getCurrentScore()
+  if env.test.trace then log(self.getName()..": getCurrentScore()") end
+  return GD.board.scoring.total_score
+end
+
+--[[ Return a table of spell powers for this player containing Ruin, Restore, Myst values. --]]
+function getCurrentSpellPower()
+  if env.test.trace then log(self.getName()..": getCurrentSpellPower()") end
+  local ruin = GD.board.power.ruin.dice + GD.board.power.ruin.acuity + GD.board.power.ruin.cards
+  local restore = GD.board.power.restore.dice + GD.board.power.restore.acuity + GD.board.power.restore.cards
+  local power = 0
+  local type = "None"
+  if ruin > restore then
+    power = ruin - restore
+    type = "Ruin"
+  elseif restore > ruin then
+    power = restore - ruin
+    type = "Restore"
+  elseif restore == ruin and restore > 0 then
+    power = GD.board.power.myst
+    type = "Myst"
+  end
+  return {power=power, type=type}
+end
+
+--[[ Return current count of heroic cards claimed.
+    Called by Global when updating HUD.
+--]]
+function getCurrentHeroics()
+  if env.test.trace then log(self.getName()..": getCurrentHeroics()") end
+  return GD.board.heroics_count
 end
 
 --[[ Handler for the roll dice button.  --]]
@@ -1558,7 +1591,9 @@ function waitOnDiceRoll()
   end
 end
 
---[[ Called from Global when player drops a die.  Ignored if not in player spell or dice zones. --]]
+--[[ Called from Global when player drops a die.
+    Ignored if not in player spell or dice zones.
+--]]
 function diceDrop(params)
   if env.test.trace then log(self.getName().." diceDrop()") end
   assert(params.guid)
@@ -1605,18 +1640,23 @@ function diceDrop(params)
   end
 end
 
---[[ Process a played Alteration card. ]]
+--[[ Process a played Alteration card.
+    Called from Global on card drop outside of hand.
+--]]
 function playAlteration(params)
   assert(params, self.getName()..": ERROR: playAlteration(): missing params")
   if env.test.trace then log("playAlteration() "..tostring(params.action)..", "..tostring(params.guid)) end
   local card = getObjectFromGUID(params.guid)
   assert(card, self.getName()..": ERROR: playAlteration(): missing card object, "..params.guid)
+  local action = params.action
+  log("action: "..tostring(action))
+  local used = self.positionToWorld(used_alterations_local_pos)
+  used.y = used.y + 3
   if action == "play" then
-    --TODO: future play alteration card requirements check
+    if not(checkRequirements(card)) then return false end
     if not(card.is_face_down) then card.flip() end
-    local pos = Vector(used_alterations_local_pos)
-    pos.y = pos.y + 3
-    card.setPosition(pos)
+    card.setPosition(used)
+    --TODO: automate play card
   elseif action == "discard" then
     if getAcuityCount() < 1 then
       broadcastToColor("Not enough Acuity", GD.board.player_color)
@@ -1625,23 +1665,32 @@ function playAlteration(params)
     local deck = Global.call("getAlterationDeck")
     if not(deck) then
       if not(card.is_face_down) then card.flip() end
-      card.setPosition(used_alterations_local_pos)
+      card.setPosition(Global.getTable("C").alteration_deck_pos)
     elseif deck.tag == "Deck" then
       if not(card.is_face_down) then card.flip() end
       Wait.condition(function() deck.putObject(card) end, function() return card.resting end)
     else
       if not(card.is_face_down) then card.flip() end
       Wait.condition(function()
-        local pos = Vector(used_alterations_local_pos)
-        pos.y = pos.y + 3
-        deck.setPosition(pos)
-        card.setPosition(used_alterations_local_pos)
+        local pos = Vector(deck.getPosition())
+        local raise = Vector(deck.getPosition())
+        raise.y = raise.y + 3
+        deck.setPosition(raise)
+        card.setPosition(pos)
       end, function() return card.resting end)
     end
   else
     log(self.getName()..": ERROR: playAlteration(): unknown action")
     return false
   end
+  return true
+end
+
+--[[ FUTURE: check requirements met to play this card. ]]
+function checkRequirements(card)
+
+  --TODO: future play alteration card requirements check here
+
   return true
 end
 

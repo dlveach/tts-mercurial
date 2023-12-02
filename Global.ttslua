@@ -2,14 +2,26 @@
 
 Work items for converstion of beta to production version:
 
+  - BUG: fix arcana scoring to final rules
+  - BUG: score display on player area doesn't update as often as it should.
+
   - TODO: start options in UI start game panel
   - TODO: auto play alteration card if no discard power on it (starting cards and artifacts)
-  - TODO: tooltip text for alteration cards
   - TESTING: save/load/rewind
 
 Future possible stuff for greater enhancement
-  - TODO: HUD display???
-  --TODO: track take & play actions??? (use "Take" buttons on cards, enforce limits & requirements)
+  --TODO: Think about a data structure to represent avaialable Alteration card positions.
+          The 6 card locations, current card guid and any Acuity guids on card.
+          Would make snap back possible and shifting much easier without using Physics.cast etc.
+          Also lock them and add a "Take" button at this time.
+  - IN WORK: HUD display???
+        - players current spell power
+        - players score
+        - player's current unallocated dice
+        - players mana & acuity?
+        - players herocs count vs max
+  --TODO: track take & play actions??? (with "Take" buttons on cards, enforce limits & requirements)
+  --TODO: Automate alteration play actions. A big one!
   --TODO: automate spell cast???
         - calcuate winnings and display "Take" buttons on Heroics/Arcanas/Prestige
         - dialog for Myst if equilibrium attained.
@@ -22,6 +34,7 @@ env.version = "1.0 production release"
 env.test= {}
 -- env.test.test_players = {"Green", "Blue", "Yellow", "Red"}
 -- env.test.test_players = {"Yellow", "Red", "Blue"}
+-- env.test.test_players = {"Green", "Blue"}
 env.test.test_players = {"Green", "Blue"}
 env.test.auto_switch = true
 env.test.in_dev = false
@@ -401,16 +414,29 @@ function finalSetup()
   board.call("enableActivePlayer")
   if GD.env.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
 
-  --Configure final scoring table for number of players
+  --Configure final scoring table and HUD for number of players
   local num_players = #GD.game.player_order
   for i=1,4 do
     if i > num_players then
       UI_setAttribute("score_table_row_"..tostring(i), "active", "false")
+      UI_setAttribute("hud_row_"..tostring(i), "active", "false")
+    else
+      UI_setAttribute("hud_row_"..tostring(i).."_player", "text", GD.game.player_order[i])
+      UI_setAttribute("hud_row_"..tostring(i).."_player", "color", GD.game.player_order[i])
     end
   end
   local table_size = 360 - ((4 - num_players) * 55)
   UI_setAttribute("score_panel", "height", tostring(table_size))
-
+  local inner_hud_panel_size = 120 + num_players * 30
+  local outer_hud_panel_size = inner_hud_panel_size + 20
+  UI_setAttribute("inner_hud_panel","height",tostring(inner_hud_panel_size))
+  UI_setAttribute("outer_hud_panel","height",tostring(outer_hud_panel_size))
+  for _,pcol in ipairs(env.game.player_table_order) do
+    for i=1,7 do
+      UI_setAttribute(pcol.."_hud_die_"..tostring(i).."_image","actve","false")
+    end
+  end
+  UI_setAttribute("outer_hud_panel","active","true")
   --done with final setup
   GD.game.started = true
 end
@@ -736,6 +762,13 @@ function onObjectNumberTyped(o, pcol, n)
   end
 end
 
+--[[ When die are randomized (re-rolled) by a player then trigger HUD update. ]]
+function onObjectRandomize(obj, player_color)
+  if obj.hasTag("Dice") then
+    Wait.condition(function() updateHUD(player_color) end, function() return obj.resting end)
+  end
+end
+
 --[[ Used only to trigger a wait on dice by the appropriate player board. --]]
 function onObjectRandomize(o, pcol)
   if o.hasTag("Dice") then
@@ -763,26 +796,27 @@ end
 --[[ Handle objects dropped in game.  Only certain object tags supported.  --]]
 function onObjectDrop(player_color, obj)
   if GD.game.started then
-    local fn_name = ""
-    if obj.hasTag("Spell") then fn_name = "spellDrop"
-    elseif obj.hasTag("Acuity") then fn_name = "acuityDrop"
-    elseif obj.hasTag("Dice") then fn_name = "diceDrop"
+    local fn
+    local params = {guid = obj.getGUID()}
+    if obj.hasTag("Spell") then fn = "spellDrop"
+    elseif obj.hasTag("Acuity") then fn = "acuityDrop"
+    elseif obj.hasTag("Dice") then fn = "diceDrop"
     elseif obj.hasTag("Alteration") then
+      if contains(Player[player_color].getHandObjects(), obj) then return end --ignore moving in hand
       if contains(GD.game.players[player_color].alteration_cards, obj.getGUID()) then
         if alterations[tonumber(obj.getGMNotes())].discard then
-          UI_setAttribute("alteration_discard_btn","interactable", "true")
+          UI.setAttribute("alterationDiscardPanel","hidden",obj.getGUID())
+          UI_setAttribute("alterationDiscardPanel","active","true")
         else
-          UI_setAttribute("alteration_discard_btn","interactable", "false")
+          params.action = "play"
+          fn = "playAlteration"
         end
-        UI.setAttribute("alterationDiscardPanel","hidden",obj.getGUID())
-        UI_setAttribute("alterationDiscardPanel","active","true")
       end
-      return
     end
-    if fn_name ~= "" then
-      if env.test.trace then log("Global: onObjectDrop() -> "..fn_name) end
+    if fn then
+      if env.test.trace then log("Global: onObjectDrop() -> "..tostring(fn)) end
       local player_board = getObjectFromGUID(GD.game.players[player_color].board_guid)
-      player_board.call(fn_name, {["guid"]=obj.getGUID()})
+      player_board.call(fn, params)
     end
   end
 end
@@ -859,10 +893,22 @@ function onObjectPickUp(player_color, obj)
   end
 end
 
+--[[ Handle cards leaving decks.  Set tooltip description if enabled. ]]
+function onObjectLeaveContainer(container, obj)
+  if GD.env.card_tooltips then
+    if container.tag == "Deck" and obj.hasTag("Alteration") then
+      local data = alterations[tonumber(obj.getGMNotes())]
+      obj.setDescription(data.desc)
+      if env.test.debug then obj.setName(data.id)
+      else obj.setName("") end
+    end
+  end
+end
+
 --[[ Locate Heroics deck.
   Update to new GUID if deck guid changed (or only one card)
   Return deck object if found (will be single card if only one left).
-  Log error and return nil if no more heroics.]]
+  Log error and return nil if no more heroics.]]                            --TODO: convert to findObject()
 function getHeroicsDeck()
   if env.test.trace then log("Global: getHeroicsDeck()") end
   local deck = getObjectFromGUID(GD.game.heroics_deck_guid)
@@ -900,38 +946,6 @@ function getAlterationsDeck()
   else GD.game.alterations_deck_guid = deck.getGUID() end
   return deck
 end
-  -- local p = simpleDeepCopy(C.default_cast_params)
-  -- p.origin = C.alterations_deck_pos
-  -- local hits = Physics.cast({p})
-  -- if hits then
-  --   for _,hit in pairs(hits) do
-  --     if hit.hit_object.tag == "Deck" then
-  --       GD.game.alterations_deck_guid = hit.hit_object.getGUID()
-  --       return hit.hit_object
-  --     elseif hit.hit_object.tag == "Card" then
-  --       log("ERROR: Global: getAlterationsDeck(): returning last card")
-  --       return hit.hit_object
-  --     end
-  --   end
-  -- end
-  -- log("ERROR: Global: getAlterationsDeck(): No deck found")
-  -- return nil
--- end
-
---[[ Place an alteration card on the bottom of the deck.
-  If the card does not have a discard power, return false.
-  Otherwise return true if successful. ]]
--- function DiscardAlteration(card)
---   if env.test.trace then log("Global: DiscardAlteration() "..tostring(card)) end
---   assert(card, "ERROR: Global: DiscardAlteration(): missing card object")
---
---   --TODO:
---     --check for card discard power, return false if not
---     --if valid discard, place on bottom of alteration deck.
-
-      --NOTE: moved to PlayerBoard.ttslua
---
--- end
 
 --[[ Locate Spells deck.
   Update to new GUID if deck guid changed (or only one card)
@@ -947,23 +961,48 @@ function getSpellsDeck()
   else GD.game.spells_deck_guid = deck.getGUID() end
   return deck
 end
---   local p = simpleDeepCopy(C.default_cast_params)
---   p.origin = C.spells_deck_pos
---   local hits = Physics.cast({p})
---   if hits then
---     for _,hit in pairs(hits) do
---       if hit.hit_object.tag == "Deck" then
---         GD.game.spells_deck_guid = hit.hit_object.getGUID()
---         return hit.hit_object
---       elseif hit.hit_object.tag == "Card" then
---         log("ERROR: Global: getSpellsDeck(): returning last card")
---         return hit.hit_object
---       end
---     end
---   end
---   log("ERROR: Global: getSpellsDeck(): No deck found")
---   return nil
--- end
+
+--[[ Update HUD UI with current data.
+    player_color: (opt) if supplied update only this players info
+--]]
+function updateHUD(player_color)
+  if env.test.trace then log("Global: updateHUD() "..tostring(player_color)) end
+  local max_heroics = 4
+  if GD.game.player_count == 3 then  max_heroics = 3
+  elseif GD.game.player_count == 4 then max_heroics = 2 end
+  local function updatePlayerHUD(i, pcol)
+    local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
+    local score = board.call("getCurrentScore")
+    local spell = board.call("getCurrentSpellPower")
+    local heroics = board.call("getCurrentHeroics")
+    UI_setAttribute("hud_row_"..tostring(i).."_spell", "text", tostring(spell.power))
+    if spell.type ~= "None" then
+      UI_setAttribute("hud_row_"..tostring(i).."_image", "image", tostring(spell.type))
+      UI_setAttribute("hud_row_"..tostring(i).."_image", "active", "true")
+    else
+      UI_setAttribute("hud_row_"..tostring(i).."_image", "active", "false")
+    end
+    UI_setAttribute("hud_row_"..tostring(i).."_heroics", "text", tostring(heroics).." / "..tostring(max_heroics))
+    UI_setAttribute("hud_row_"..tostring(i).."_score", "text", tostring(score))
+    local d = board.call("getUnallocatedDiceValues")
+    for i=1,7 do
+      local id = pcol.."_hud_die_"..tostring(i).."_image"
+      if i <= #d then
+        UI.setAttribute(id,"image",C.die_elements[d[i]])
+        UI.setClass(id, "die_image_active")
+      else
+        UI.setClass(id, "die_image_inactive")
+      end
+    end
+  end
+  if player_color ~= nil then
+    updatePlayerHUD(indexOf(GD.game.player_order, player_color), player_color)
+  else
+    for i,pcol in ipairs(GD.game.player_order) do
+      updatePlayerHUD(i, pcol)
+    end
+  end
+end
 
 --[[ Final game scoring.
   tiebreaker: first #arcanas, then #spells --]]

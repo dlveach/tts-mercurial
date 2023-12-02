@@ -136,308 +136,440 @@ alterations = {
     guid = "c33e7b",
     sigils = {"yellow","green"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 Fire to Lightning (+1 ea Yellow Sigil) then take 1 Acuity (+1 ea Green Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Yellow and Green Sigil."
   },
   {
     id = 2,
     guid = "ef91f2",
     sigils = {"blue","red"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 Earth to Fire (+1 ea Blue Sigil) then take 1 Acuity (+1 ea Red Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Blue and Red Sigil",
   },
   {
     id = 3,
     guid = "f0a4ce",
     sigils = {"red"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 or more Earth to Water (if 2 or more Red Sigils, may convert in reverse). Or flip one die. \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Red Sigil",
   },
   {
     id = 4,
     guid = "d18f2a",
     sigils = {"yellow"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 or more Water to Lightning (if 2 or more Yellow Sigils, may convert in reverse). Or flip one die. \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Yellow Sigil",
   },
   {
     id = 5,
     guid = "2f0dc2",
     sigils = {"blue"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 or more Lightning to Fire (if 2 or more Blue Sigils, may convert in reverse). Or flip one die. \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Blue Sigil",
   },
   {
     id = 6,
     guid = "bf9837",
     sigils = {"green"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 or more Fire to Earth (if 2 or more Green Sigils, may convert in reverse). Or flip one die. \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Green Sigil",
   },
   {
     id = 7,
     guid = "1609bf",
     sigils = {"green","blue"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 Water to Earth (+1 ea Green Sigil) then take 1 Acuity (+1 ea Blue Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Blue and Green Sigil",
   },
   {
     id = 8,
     guid = "d627c6",
     sigils = {"red","yellow"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 Lightning to Water (+1 ea Red Sigil) then take 1 Acuity (+1 ea Yellow Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Red and Yellow Sigil",
   },
   {
     id = 9,
     guid = "a0531a",
     sigils = {},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 or more Aether to Void then take 2 Acuity. \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides no Sigils",
   },
   {
     id = 10,
     guid = "7c6fd1",
     sigils = {"blue"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 or 2 Fire or Lightning to Void then take 2 Acuity (+1 ea Blue Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Blue Sigil",
   },
   {
     id = 11,
     guid = "d6493d",
     sigils = {"green"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 or 2 Earth or Fire to Void then take 2 Acuity (+1 ea Green Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Green Sigil",
   },
   {
     id = 12,
     guid = "e66d2a",
     sigils = {"red"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 or 2 Water or Earth to Void then take 2 Acuity (+1 ea Red Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Red Sigil",
   },
   {
     id = 13,
     guid = "2d5917",
     sigils = {"yellow"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 or 2 Lightning or Water to Void then take 2 Acuity (+1 ea Yellow Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Yellow Sigil",
   },
   {
     id = 14,
     guid = "712141",
     sigils = {"blue"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: For n Fire convert any 1 to n die to Void then take 2 Acuity (+1 ea Blue Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Blue Sigil",
   },
   {
     id = 15,
     guid = "cef25e",
     sigils = {"red"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: For n Water convert any 1 to n die to Void then take 2 Acuity (+1 ea Red Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Red Sigil",
   },
   {
     id = 16,
     guid = "dc8b06",
     sigils = {"yellow"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: For n Lightning convert any 1 to n die to Void then take 2 Acuity (+1 ea Yellow Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Yellow Sigil",
   },
   {
     id = 17,
     guid = "e4cc06",
     sigils = {"green"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: For n Earth convert any 1 to n die to Void then take 2 Acuity (+1 ea Green Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Green Sigil",
   },
   {
     id = 18,
     guid = "6977ef",
     sigils = {"yellow"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 Earth to Fire or Lightning (+1 ea Yellow Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Yellow Sigil",
   },
   {
     id = 19,
     guid = "277b49",
     sigils = {"blue"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 Water to Earth or Fire (+1 ea Blue Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Blue Sigil",
   },
   {
     id = 20,
     guid = "40afc3",
     sigils = {"green"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 Lightning to Water or Earth (+1 ea Green Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Green Sigil",
   },
   {
     id = 21,
     guid = "24fc7b",
     sigils = {"red"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 Fire to Lightning or Water (+1 ea Red Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Red Sigil",
   },
   {
     id = 22,
     guid = "e4ad0a",
     sigils = {"blue"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Discard 3 Acuity.  Convert 1 or more Earth to Lightning or Water then take 2 Acuity (+1 ea Blue Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Blue Sigil",
   },
   {
     id = 23,
     guid = "838267",
     sigils = {"green"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Discard 3 Acuity.  Convert 1 or more Water to Fire or Lightning then take 2 Acuity (+1 ea Green Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Green Sigil",
   },
   {
     id = 24,
     guid = "d47797",
     sigils = {"red"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Discard 3 Acuity.  Convert 1 or more Lightning to Earth or Fire then take 2 Acuity (+1 ea Red Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Red Sigil",
   },
   {
     id = 25,
     guid = "8e7047",
     sigils = {"yellow"},
     discard = true,
-    desc = "",
+    desc = "-- Primary Action: Discard 3 Acuity.  Convert 1 or more Fire to Water or Earth then take 2 Acuity (+1 ea Yellow Sigil). \
+-- Secondary Action: re-roll 1 or 2 dice then play one more card. \
+-- Discard Action: Spend one Acuity and discard this card for one more take action. \
+* Provides a Yellow Sigil",
   },
   {
     id = 26,
     guid = "772725",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: For n active spell cards take n Acuity (n > 0). \
+-- Secondary Action: Take one Acuity. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 27,
     guid = "f6ec78",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 Aether to any element you already posess (may be assigned).  Then all opponents take 1 Acuity. \
+-- Secondary Action: Take one Acuity. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 28,
     guid = "bc6c8f",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: Spend 3 Acuity.  Then take 5 Acuity. \
+-- Secondary Action: Take one Acuity. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 29,
     guid = "84ef91",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: Convert 1 die to Void. \
+-- Secondary Action: Take one Acuity. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 30,
     guid = "09aebb",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: If 2+ active spell cards, spend 3 Acuity and take one spell card (spell requirements must be met). \
+-- Secondary Action: Take one Acuity. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 31,
     guid = "754330",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: Spend one Acuity and flip one die.  Then all opponents take 1 Acuity. \
+-- Secondary Action: Take one Acuity. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 32,
     guid = "7db066",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: Spend one Acuity and convert on Void to Water or Earth.  Then all opponents take 1 Acuity. \
+-- Secondary Action: Take one Acuity. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 33,
     guid = "2d1105",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: Spend one Acuity and convert on Void to Fire or Lightning.  Then all opponents take 1 Acuity. \
+-- Secondary Action: Take one Acuity. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 34,
     guid = "bcad4f",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: If 2+ active spell cards, convert one die to any element you already posess (may be assigned). \
+-- Secondary Action: Take one Acuity. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 35,
     guid = "34fd97",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: Spend n+1 Acuity. Convert n Void to any element(s) you already posess (may be assigned). \
+-- Secondary Action: Activate class Aetherflow power. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 36,
     guid = "4541af",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: Take 2 Acuity then play 0 to 2 more cards. \
+-- Secondary Action: Activate class Aetherflow power. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 37,
     guid = "1b5876",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: Spend n+1 Acuity. Convert n Void to any element(s) you already posess (may be assigned). \
+-- Secondary Action: Activate class Aetherflow power. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 38,
     guid = "8285d7",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: Take 1 Acuity. Or play 0 to 2 more cards. \
+-- Secondary Action: Activate class Aetherflow power. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 39,
     guid = "309140",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: Spend n+1 Acuity. Convert n Void to any element(s) you already posess (may be assigned). \
+-- Secondary Action: Activate class Aetherflow power. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 40,
     guid = "49fdc7",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: Take 1 Acuity. Or play 0 to 2 more cards. \
+-- Secondary Action: Activate class Aetherflow power. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 41,
     guid = "c4e303",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: Spend n+1 Acuity. Convert n Void to any element(s) you already posess (may be assigned). \
+-- Secondary Action: Activate class Aetherflow power. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 42,
     guid = "ee56dd",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: Take 1 Acuity. Or play 0 to 2 more cards. \
+-- Secondary Action: Activate class Aetherflow power. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 43,
     guid = "61d47e",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: Spend n+1 Acuity. Convert n Void to any element(s) you already posess (may be assigned). \
+-- Secondary Action: Activate class Aetherflow power. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
   {
     id = 44,
     guid = "c7f1dd",
     sigils = {},
     discard = false,
-    desc = "",
+    desc = "-- Primary Action: Take 1 Acuity. Or play 0 to 2 more cards. \
+-- Secondary Action: Activate class Aetherflow power. \
+-- Discard Action: None. \
+* Provides no Sigil",
   },
 }
 

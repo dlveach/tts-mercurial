@@ -215,4 +215,116 @@
       </TableLayout>
   </Panel>
 
+  <!-- HUD panel -->
+  <Panel id="outer_hud_panel" active="false"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
+    offsetXY="-750 350"
+    color="rgb(0.7,0.3,0)"
+    image="Sprites/Layout/Viewport"
+    height="260" width="420">
+    <Panel id="inner_hud_panel" height="240" width="400">
+      <TableLayout class="hud_table">
+        <Row class="hud_title_row">
+          <Cell><Text class="hud_header" text="Player"/></Cell>
+          <Cell columnSpan="2"><Text class="hud_header" text="Spell Power"/></Cell>
+          <Cell><Text class="hud_header" text="Heroics"/></Cell>
+          <Cell><Text class="hud_header" text="Score"/></Cell>
+        </Row>
+        <Row id="hud_row_1" class="hud_data_row">
+          <Cell><Text id="hud_row_1_player" fontSize="18" text="Red" color="Red"/></Cell>
+          <Cell><Text id="hud_row_1_spell" class="hud_row" text="0"/></Cell>
+          <Cell padding="0 20 0 0"><Image id="hud_row_1_image" class="hud_image"/></Cell>
+          <Cell><Text id="hud_row_1_heroics" class="hud_row" text=""/></Cell>
+          <Cell><Text id="hud_row_1_score" class="hud_row" text="0"/></Cell>
+        </Row>
+        <Row id="hud_row_2" class="hud_data_row">
+          <Cell><Text id="hud_row_2_player" fontSize="18" text="Blue" color="Blue"/></Cell>
+          <Cell><Text id="hud_row_2_spell" class="hud_row" text="0"/></Cell>
+          <Cell padding="0 20 0 0"><Image id="hud_row_2_image" class="hud_image"/></Cell>
+          <Cell><Text id="hud_row_2_heroics" class="hud_row" text=""/></Cell>
+          <Cell><Text id="hud_row_2_score" class="hud_row" text="0"/></Cell>
+        </Row>
+        <Row id="hud_row_3" class="hud_data_row">
+          <Cell><Text id="hud_row_3_player" fontSize="18" text="Green" color="Green"/></Cell>
+          <Cell><Text id="hud_row_3_spell" class="hud_row" text="0"/></Cell>
+          <Cell padding="0 20 0 0"><Image id="hud_row_3_image" class="hud_image"/></Cell>
+          <Cell><Text id="hud_row_3_heroics" class="hud_row" text=""/></Cell>
+          <Cell><Text id="hud_row_3_score" class="hud_row" text="0"/></Cell>
+        </Row>
+        <Row id="hud_row_4" class="hud_data_row">
+          <Cell><Text id="hud_row_4_player" fontSize="18" text="Yellow" color="Yellow"/></Cell>
+          <Cell><Text id="hud_row_4_spell" class="hud_row" text="0"/></Cell>
+          <Cell padding="0 20 0 0"><Image id="hud_row_4_image" class="hud_image"/></Cell>
+          <Cell><Text id="hud_row_4_heroics" class="hud_row" text=""/></Cell>
+          <Cell><Text id="hud_row_4_score" class="hud_row" text="0"/></Cell>
+        </Row>
+        <Row preferredHeight="30" class="hud_title_row" visibility="Red">
+          <Cell columnSpan="5"><Text class="hud_header" text="Player Red unallocated dice"/></Cell>
+        </Row>
+        <Row preferredHeight="30" class="hud_title_row" visibility="Blue">
+          <Cell columnSpan="5"><Text class="hud_header" text="Player Blue unallocated dice"/></Cell>
+        </Row>
+        <Row preferredHeight="30" class="hud_title_row" visibility="Green">
+          <Cell columnSpan="5"><Text class="hud_header" text="Player Green unallocated dice"/></Cell>
+        </Row>
+        <Row preferredHeight="30" class="hud_title_row" visibility="Yellow">
+          <Cell columnSpan="5"><Text class="hud_header" text="Player Yellow unallocated dice"/></Cell>
+        </Row>
+        <Row id="Red_hud_dice_row" preferredHeight="60" visibility="Red">
+          <Cell columnSpan="5">
+            <HorizontalLayout padding="10">
+              <Image id="Red_hud_die_1_image" class="die_image_inactive" />
+              <Image id="Red_hud_die_2_image" class="die_image_inactive" />
+              <Image id="Red_hud_die_3_image" class="die_image_inactive" />
+              <Image id="Red_hud_die_4_image" class="die_image_inactive" />
+              <Image id="Red_hud_die_5_image" class="die_image_inactive" />
+              <Image id="Red_hud_die_6_image" class="die_image_inactive" />
+              <Image id="Red_hud_die_7_image" class="die_image_inactive" />
+            </HorizontalLayout>
+          </Cell>
+        </Row>
+        <Row id="Blue_hud_dice_row" preferredHeight="60" visibility="Blue">
+          <Cell columnSpan="5">
+            <HorizontalLayout padding="10">
+              <Image id="Blue_hud_die_1_image" class="die_image_inactive" />
+              <Image id="Blue_hud_die_2_image" class="die_image_inactive" />
+              <Image id="Blue_hud_die_3_image" class="die_image_inactive" />
+              <Image id="Blue_hud_die_4_image" class="die_image_inactive" />
+              <Image id="Blue_hud_die_5_image" class="die_image_inactive" />
+              <Image id="Blue_hud_die_6_image" class="die_image_inactive" />
+              <Image id="Blue_hud_die_7_image" class="die_image_inactive" />
+            </HorizontalLayout>
+          </Cell>
+        </Row>
+        <Row id="Green_hud_dice_row" preferredHeight="60" visibility="Green">
+          <Cell columnSpan="5">
+            <HorizontalLayout padding="10">
+              <Image id="Green_hud_die_1_image" class="die_image_inactive" />
+              <Image id="Green_hud_die_2_image" class="die_image_inactive" />
+              <Image id="Green_hud_die_3_image" class="die_image_inactive" />
+              <Image id="Green_hud_die_4_image" class="die_image_inactive" />
+              <Image id="Green_hud_die_5_image" class="die_image_inactive" />
+              <Image id="Green_hud_die_6_image" class="die_image_inactive" />
+              <Image id="Green_hud_die_7_image" class="die_image_inactive" />
+            </HorizontalLayout>
+          </Cell>
+        </Row>
+        <Row id="Yellow_hud_dice_row" preferredHeight="60" visibility="Yellow">
+          <Cell columnSpan="5">
+            <HorizontalLayout padding="10">
+              <Image id="Yellow_hud_die_1_image" class="die_image_inactive" />
+              <Image id="Yellow_hud_die_2_image" class="die_image_inactive" />
+              <Image id="Yellow_hud_die_3_image" class="die_image_inactive" />
+              <Image id="Yellow_hud_die_4_image" class="die_image_inactive" />
+              <Image id="Yellow_hud_die_5_image" class="die_image_inactive" />
+              <Image id="Yellow_hud_die_6_image" class="die_image_inactive" />
+              <Image id="Yellow_hud_die_7_image" class="die_image_inactive" />
+            </HorizontalLayout>
+          </Cell>
+        </Row>
+      </TableLayout>
+    </Panel>
+  </Panel>
+
 </XmlLayout>

@@ -119,3 +119,4 @@ C.pos.heroics[5] = { 4.145326, 0.973605, 2.309244 }
 C.pos.heroics[6] = { 6.158812, 0.973605, 2.319841 }
 C.pos.myst_rune = { 8.773835, 0.96, 6.248213 }
 C.rot.myst_rune = { 0, 270, 0 }
+C.die_elements = {"Fire", "Earth", "Aether", "Void", "Lightning", "Water"}
