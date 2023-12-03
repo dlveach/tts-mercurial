@@ -7,6 +7,7 @@ heroics = {
     cost = {Ruin = 10, Restore = 13},
     vp = 4,
     sigils = {},
+    desc = "",
   },
   {
     id = 2,
@@ -14,6 +15,7 @@ heroics = {
     cost = {Ruin = 10, Restore = 13},
     vp = 4,
     sigils = {},
+    desc = "",
   },
   {
     id = 3,
@@ -21,6 +23,7 @@ heroics = {
     cost = {Ruin = 12, Restore = 16},
     vp = 6,
     sigils = {"blue"},
+    desc = "",
   },
   {
     id = 4,
@@ -28,6 +31,7 @@ heroics = {
     cost = {Ruin = 19, Restore = 26},
     vp = 11,
     sigils = {"blue"},
+    desc = "",
   },
   {
     id = 5,
@@ -35,6 +39,7 @@ heroics = {
     cost = {Ruin = 22, Restore = 31},
     vp = 14,
     sigils = {"blue"},
+    desc = "",
   },
   {
     id = 6,
@@ -42,6 +47,7 @@ heroics = {
     cost = {Ruin = 14, Restore = 19},
     vp = 7,
     sigils = {"red","blue"},
+    desc = "",
   },
   {
     id = 7,
@@ -49,6 +55,7 @@ heroics = {
     cost = {Ruin = 18, Restore = 24},
     vp = 10,
     sigils = {"green","blue"},
+    desc = "",
   },
   {
     id = 8,
@@ -56,6 +63,7 @@ heroics = {
     cost = {Ruin = 11, Restore = 15},
     vp = 5,
     sigils = {"yellow"},
+    desc = "",
   },
   {
     id = 9,
@@ -63,6 +71,7 @@ heroics = {
     cost = {Ruin = 13, Restore = 18},
     vp = 7,
     sigils = {"yellow"},
+    desc = "",
   },
   {
     id = 10,
@@ -70,6 +79,7 @@ heroics = {
     cost = {Ruin = 17, Restore = 23},
     vp = 9,
     sigils = {"yellow"},
+    desc = "",
   },
   {
     id = 11,
@@ -77,6 +87,7 @@ heroics = {
     cost = {Ruin = 16, Restore = 21},
     vp = 8,
     sigils = {"green","yellow"},
+    desc = "",
   },
   {
     id = 12,
@@ -84,6 +95,7 @@ heroics = {
     cost = {Ruin = 24, Restore = 34},
     vp = 15,
     sigils = {"red","yellow"},
+    desc = "",
   },
   {
     id = 13,
@@ -91,6 +103,7 @@ heroics = {
     cost = {Ruin = 12, Restore = 16},
     vp = 6,
     sigils = {"green"},
+    desc = "",
   },
   {
     id = 14,
@@ -98,6 +111,7 @@ heroics = {
     cost = {Ruin = 21, Restore = 21},
     vp = 13,
     sigils = {"green"},
+    desc = "",
   },
   {
     id = 15,
@@ -105,6 +119,7 @@ heroics = {
     cost = {Ruin = 23, Restore = 32},
     vp = 15,
     sigils = {"green"},
+    desc = "",
   },
   {
     id = 16,
@@ -112,6 +127,7 @@ heroics = {
     cost = {Ruin = 11, Restore = 15},
     vp = 5,
     sigils = {"red"},
+    desc = "",
   },
   {
     id = 17,
@@ -119,6 +135,7 @@ heroics = {
     cost = {Ruin = 15, Restore = 20},
     vp = 8,
     sigils = {"red"},
+    desc = "",
   },
   {
     id = 18,
@@ -126,6 +143,7 @@ heroics = {
     cost = {Ruin = 20, Restore = 28},
     vp = 12,
     sigils = {"red"},
+    desc = "",
   },
 }
 
@@ -586,6 +604,7 @@ spells = {
     slots = 2,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 2,
@@ -599,6 +618,7 @@ spells = {
     slots = 2,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 3,
@@ -612,6 +632,7 @@ spells = {
     slots = 2,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 4,
@@ -625,6 +646,7 @@ spells = {
     slots = 3,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 5,
@@ -638,6 +660,7 @@ spells = {
     slots = 3,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 6,
@@ -651,6 +674,7 @@ spells = {
     slots = 4,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 7,
@@ -664,6 +688,7 @@ spells = {
     slots = 4,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 8,
@@ -677,6 +702,7 @@ spells = {
     slots = 3,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 9,
@@ -690,6 +716,7 @@ spells = {
     slots = 3,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 10,
@@ -703,6 +730,7 @@ spells = {
     slots = 3,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 11,
@@ -716,6 +744,7 @@ spells = {
     slots = 4,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 12,
@@ -729,6 +758,7 @@ spells = {
     slots = 4,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 13,
@@ -742,6 +772,7 @@ spells = {
     slots = 2,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 14,
@@ -755,6 +786,7 @@ spells = {
     slots = 2,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 15,
@@ -768,6 +800,7 @@ spells = {
     slots = 2,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 16,
@@ -781,6 +814,7 @@ spells = {
     slots = 3,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 17,
@@ -794,6 +828,7 @@ spells = {
     slots = 3,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 18,
@@ -807,6 +842,7 @@ spells = {
     slots = 4,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 19,
@@ -820,6 +856,7 @@ spells = {
     slots = 4,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 20,
@@ -833,6 +870,7 @@ spells = {
     slots = 2,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 21,
@@ -846,6 +884,7 @@ spells = {
     slots = 2,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 22,
@@ -859,6 +898,7 @@ spells = {
     slots = 2,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 23,
@@ -872,6 +912,7 @@ spells = {
     slots = 3,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 24,
@@ -885,6 +926,7 @@ spells = {
     slots = 3,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 25,
@@ -898,6 +940,7 @@ spells = {
     slots = 2,
     flex = 1,
     option = true,
+    desc = "",
   },
   {
     id = 26,
@@ -911,6 +954,7 @@ spells = {
     slots = 2,
     flex = 1,
     option = true,
+    desc = "",
   },
   {
     id = 27,
@@ -924,6 +968,7 @@ spells = {
     slots = 3,
     flex = 1,
     option = true,
+    desc = "",
   },
   {
     id = 28,
@@ -937,6 +982,7 @@ spells = {
     slots = 3,
     flex = 1,
     option = true,
+    desc = "",
   },
   {
     id = 29,
@@ -950,6 +996,7 @@ spells = {
     slots = 4,
     flex = 1,
     option = true,
+    desc = "",
   },
   {
     id = 30,
@@ -963,6 +1010,7 @@ spells = {
     slots = 4,
     flex = 1,
     option = true,
+    desc = "",
   },
   {
     id = 31,
@@ -976,6 +1024,7 @@ spells = {
     slots = 2,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 32,
@@ -989,6 +1038,7 @@ spells = {
     slots = 2,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 33,
@@ -1002,6 +1052,7 @@ spells = {
     slots = 2,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 34,
@@ -1015,6 +1066,7 @@ spells = {
     slots = 3,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 35,
@@ -1028,6 +1080,7 @@ spells = {
     slots = 3,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 36,
@@ -1041,6 +1094,7 @@ spells = {
     slots = 3,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 37,
@@ -1054,6 +1108,7 @@ spells = {
     slots = 3,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 38,
@@ -1067,6 +1122,7 @@ spells = {
     slots = 3,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 39,
@@ -1080,6 +1136,7 @@ spells = {
     slots = 4,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 40,
@@ -1093,6 +1150,7 @@ spells = {
     slots = 4,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 41,
@@ -1106,6 +1164,7 @@ spells = {
     slots = 2,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 42,
@@ -1119,6 +1178,7 @@ spells = {
     slots = 2,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 43,
@@ -1132,6 +1192,7 @@ spells = {
     slots = 3,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 44,
@@ -1145,6 +1206,7 @@ spells = {
     slots = 3,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 45,
@@ -1159,6 +1221,7 @@ spells = {
     slots = 3,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 46,
@@ -1173,6 +1236,7 @@ spells = {
     slots = 3,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 47,
@@ -1187,6 +1251,7 @@ spells = {
     slots = 2,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 48,
@@ -1201,6 +1266,7 @@ spells = {
     slots = 2,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 49,
@@ -1215,6 +1281,7 @@ spells = {
     slots = 3,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 50,
@@ -1229,6 +1296,7 @@ spells = {
     slots = 2,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 51,
@@ -1242,6 +1310,7 @@ spells = {
     slots = 3,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 52,
@@ -1255,6 +1324,7 @@ spells = {
     slots = 3,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 53,
@@ -1268,6 +1338,7 @@ spells = {
     slots = 5,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 54,
@@ -1281,6 +1352,7 @@ spells = {
     slots = 5,
     flex = 2,
     option = false,
+    desc = "",
   },
   {
     id = 55,
@@ -1294,6 +1366,7 @@ spells = {
     slots = 4,
     flex = 1,
     option = false,
+    desc = "",
   },
   {
     id = 56,
@@ -1307,5 +1380,6 @@ spells = {
     slots = 4,
     flex = 1,
     option = false,
+    desc = "",
   },
 }

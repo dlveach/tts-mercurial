@@ -149,7 +149,7 @@ function onLoad(saved_data)
     --scoring stuff (TODO)
     GD.board.scoring = {}
     GD.board.scoring.heroics = {}
-    GD.board.scoring.spells = {}
+    -- GD.board.scoring.spells = {}
     GD.board.scoring.arcanas = {}
     GD.board.scoring.values = {}
     GD.board.scoring.values.heroics = 0
@@ -350,17 +350,30 @@ function nextPlayerBtn(player, mouse, id)
 end
 
 --[[ Handler for "Cleanup" button press.  Cleanup player board after a spell cast. ]]
-function cleanupBtn(player, mouse, id)
-  if env.test.trace then log(self.getName() .. ": cleanupBtn()") end
-  if not(player.color == GD.board.player_color) then
-    broadcastToColor("Player " .. player.color .. ": " .. self.getName() .. " is not your class.", player.color)
-    return
-  end
+-- function cleanupBtn(player, mouse, id)
+function castSpellBtn(player, mouse, id)
+  if env.test.trace then log(self.getName() .. ": castSpellBtn()") end
+  if player.color ~= GD.board.player_color then return end
+  if player.color ~= GD.game.player_order[GD.game.current_player] then return end
+
+  updateSpellPower()  --TODO: is this necessary?
+  local ruin = GD.board.power.ruin.dice + GD.board.power.ruin.acuity + GD.board.power.ruin.cards
+  local restore = GD.board.power.restore.dice + GD.board.power.restore.acuity + GD.board.power.restore.cards
+
+    log("------------- TODO: automate claiming Heroic, Arcana and Prestige. ------------- ")
+    -- if ruin restore both > 0 display dialog to choose
+    -- if ruin restore == and greate than 6 then choose myst option
+
+  castCleanup()  -- move to button handler??
+end
+
+function castCleanup()
+  if env.test.trace then log(self.getName()..": castCleanup()") end
   local dice = {}
   local spells = {}
   local mana = {}
   local zone = getObjectFromGUID(GD.board.spells_zone)
-  assert(zone, self.getName().." ERROR cleanupBtn() no board spell zone.")
+  assert(zone, self.getName().." ERROR castSpellBtn() no board spell zone.")
   local stuff = zone.getObjects()
   for _,o in pairs(stuff) do
     if o.hasTag("Dice") then table.insert(dice, o)
@@ -371,11 +384,11 @@ function cleanupBtn(player, mouse, id)
       o.clearButtons()
     elseif o.hasTag("Acuity") then o.destruct()
     else
-      if env.test.debug then log(self.getName().." cleanupBtn() Unknown object in zone: "..o.getGUID()) end
+      if env.test.debug then log(self.getName().." castSpellBtn() Unknown object in zone: "..o.getGUID()) end
       if env.test.debug then log(o.getTags()) end
     end
   end
-  action = "cleanup"
+  action = "cleanup"                      --TODO: oh this is UGLY !!!
   local function place(list)
     if list[1] == nil then return end
     local obj = list[1]
@@ -1325,7 +1338,7 @@ function updateScore()
   local prestige_score = 0
   local arcanas_score = 0
   local sigil_score = 0
-  GD.board.scoring.spells = {}
+  -- GD.board.scoring.spells = {}
   GD.board.scoring.heroics = {}
   GD.board.scoring.arcanas = {}
   local heroics_data = Global.getTable("heroics")
@@ -1422,19 +1435,20 @@ function updateScore()
   -- log("Prestige score: "..prestige_score)
   GD.board.scoring.values.prestige = prestige_score
   --Arcana scoring
-  local spells = {}
+  local spell_cards = {}
+  local spells = Global.getTable("spells")
   local arcanas = {}
   local z = getObjectFromGUID(GD.board.spell_arcana_zone)
   for _,o in pairs(z.getObjects()) do
     if o.hasTag("Spell") then
       if o.tag == "Deck" then
         for _,c in pairs(o.getObjects()) do
-          spells[c.guid] = JSON.decode(c.gm_notes)
-          GD.board.scoring.spells[c.guid] = c.gm_notes
+          spell_cards[c.guid] = spells[tonumber(c.gm_notes)]
+          -- GD.board.scoring.spells[c.guid] = c.gm_notes
         end
       else
-        spells[o.getGUID()] = JSON.decode(o.getGMNotes())           --TODO: fix GMNotes
-        GD.board.scoring.spells[o.getGUID()] = o.getGMNotes()       --TODO: fix GMNotes
+        spell_cards[o.getGUID()] = spells[tonumber(o.getGMNotes())]
+        -- GD.board.scoring.spells[o.getGUID()] = o.getGMNotes()
       end
     elseif o.hasTag("Arcana") then
       table.insert(arcanas, o)
@@ -1443,59 +1457,53 @@ function updateScore()
       log("WARN: ignoring object "..o.getGUID().." in spell/arcana pile.")
     end
   end
-  -- log("found "..sizeOf(spells).." spell cards")
-  -- log("found "..#arcanas.." arcana cards")
+  log("found "..sizeOf(spell_cards).." spell cards")
+  log("found "..#arcanas.." arcana cards")
   local arcana_data
   for _,arcana in pairs(arcanas) do
     if arcana.is_face_down then
-      arcana_data = C.arcanas[arcana.getGUID()].face_down.reward
+      arcana_data = C.arcanas[arcana.getGUID()].face_down
     else
-      arcana_data = C.arcanas[arcana.getGUID()].face_up.reward
+      arcana_data = C.arcanas[arcana.getGUID()].face_up
     end
-    -- log("Scoring arcana: ")
-    -- log(arcana_data)
+    log("Scoring arcana data: ")
+    log(arcana_data)
+    local score = arcana_data.base_vp
     local count = 0
-    if arcana_data.spell_type == "aether_mod" then
-      for _,s in pairs(spells) do
-        if s.aether_mod then
+    local bonus = arcana_data.bonus
+    if bonus.spell_type == "aether_mod" then
+      for _,card in pairs(spell_cards) do
+        if card.aether_mod then
           count = count + 1
         end
       end
-    elseif arcana_data.spell_type == "not_aether" then
-      for _,s in pairs(spells) do
-        if not(s.aether_mod) then
+    elseif bonus.spell_type == "not_aether" then
+      for _,card in pairs(spell_cards) do
+        if not(card.aether_mod) then
           count = count + 1
         end
       end
-    elseif arcana_data.spell_type == "slot_count" then
-      for _,s in pairs(spells) do
-        if s.slots >= 4 then
+    elseif bonus.spell_type == "slot_count" then
+      for _,card in pairs(spell_cards) do
+        if card.slots >= 4 then
           count = count + 1
         end
       end
     else
-      for _,s in pairs(spells) do
-        if arcana_data.spell_type == "any" or
-        contains(s.dice, arcana_data.spell_type) then
+      for _,card in pairs(spell_cards) do
+        if bonus.spell_type == "any" or contains(card.dice, bonus.spell_type) then
           count = count + 1
         end
       end
     end
-    -- log("Number spells matching arcana "..arcana.getName().." condition = "..count)
-    local n = math.modf(count/arcana_data.count)
-    -- log(arcana.getName().." score is "..(n * arcana_data.vp))
-    arcanas_score = arcanas_score + (n * arcana_data.vp)
+    log("Number spells matching arcana "..arcana.getName().." condition = "..count..":"..tostring(bonus.spell_type))
+    local n = math.modf(count/bonus.count)
+    score = score + n * arcana_data.vp
+    log(arcana.getName().." score is "..tostring(score))
+    arcanas_score = arcanas_score + score
   end
-  --Add in arcana bonus for number of players == 3 or 4
-  local player_count = Global.call("getPlayerCount", {})
-  if player_count == 3 then
-    -- log("Arcana player count bonus = "..#arcanas)
-    arcanas_score = arcanas_score + #arcanas
-  elseif player_count == 4 then
-    -- log("Arcana player count bonus = "..(#arcanas * 2))
-    arcanas_score = arcanas_score + (#arcanas * 2)
-  end
-  -- log("total arcana score including player count bonus: "..arcanas_score)
+
+  log("total arcana score: "..arcanas_score)
   GD.board.scoring.values.arcanas = arcanas_score
 
   log("-------------TODO: fix arcana scoring to final rules -------------------")

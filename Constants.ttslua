@@ -42,7 +42,11 @@ C.arcanas = {}
 C.arcanas["8f529c"] = {
   face_up = {
     name = "Lizard",
-    reward = {
+    requirement = { --future
+      elements = {"fire","lightning","Earth"},
+    },
+    base_vp = 2,
+    bonus = {
       vp = 1,
       spell_type = "fire",
       count = 2
@@ -50,7 +54,11 @@ C.arcanas["8f529c"] = {
   },
   face_down = {
     name = "Dragon",
-    reward = {
+    requirement = { --future
+      elements = {"Water","Lightning","Earth"},
+    },
+    base_vp = 2,
+    bonus = {
       vp = 1,
       spell_type = "water",
       count = 2
@@ -60,7 +68,11 @@ C.arcanas["8f529c"] = {
 C.arcanas["5f944b"] = {
   face_up = {
     name = "Cat",
-    reward = {
+    requirement = { --future
+      cards = 4,
+    },
+    base_vp = 2,
+    bonus = {
       vp = 1,
       spell_type = "any",
       count = 4
@@ -68,18 +80,27 @@ C.arcanas["5f944b"] = {
   },
   face_down = {
     name = "Stallion",
-    reward = {
-      vp = 1,
+    requirement = { --future
+      spell_power = {ruin = 27, restore = 38}
+    },
+    base_vp = 2,
+    bonus = {
+      vp = 2,
       spell_type = "slot_count",
       slot_count = 4,
-      count = 2
+      count = 3
     }
   }
 }
 C.arcanas["a94aad"] = {
   face_up = {
     name = "Phoenix",
-    reward = {
+    requirement = { --future
+      aether_mod = 3,
+      aether = 1,
+    },
+    base_vp = 2,
+    bonus = {
       vp = 1,
       spell_type = "aether_mod",
       count = 2
@@ -87,7 +108,11 @@ C.arcanas["a94aad"] = {
   },
   face_down = {
     name = "Owl",
-    reward = {
+    requirement = { --future
+      myst = 12,
+    },
+    base_vp = 2,
+    bonus = {
       vp = 1,
       spell_type = "not_aether",
       count = 3

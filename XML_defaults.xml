@@ -143,6 +143,14 @@
     preserveAspect="true"
     active = "false" />
 
+  <!-- Heroic panel stuff -->
+
+  <TableLayout class="heroics_table"
+    autoCalculateHeight="true"
+    image="Sprites/Layout/Viewport"
+    useGlobalCellPadding="false"
+    color="#301616" />
+
   <!-- Score table styles -->
   <TableLayout class="score_table"
       image="Sprites/Layout/Viewport"

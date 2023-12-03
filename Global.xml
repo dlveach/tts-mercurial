@@ -327,4 +327,75 @@
     </Panel>
   </Panel>
 
+  <!-- Heroics panel -->
+  <Panel id="outer_heroic_panel" active="false"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
+    offsetXY="0 350"
+    color="rgb(0.7,0.3,0)"
+    image="Sprites/Layout/Viewport"
+    height="350" width="920">
+    <Panel id="inner_heroic_panel" height="330" width="900">
+      <TableLayout class="heroics_table">
+        <Row preferredHeight="30" >
+          <Cell columnSpan="6">
+            <Text class="hud_header">Claim one Heroic card</Text>
+          </Cell>
+        </Row>
+        <Row preferredHeight="240">
+          <Cell padding="10 5 5 5">
+            <Image id="heroic_1_image" preserveAspect="true" image="Heroic-1"/>
+          </Cell>
+          <Cell padding="5 5 5 5">
+            <Image id="heroic_2_image" preserveAspect="true" image="Heroic-2"/>
+          </Cell>
+          <Cell padding="5 5 5 5">
+            <Image id="heroic_3_image" preserveAspect="true" image="Heroic-3"/>
+          </Cell>
+          <Cell padding="5 5 5 5">
+            <Image id="heroic_4_image" preserveAspect="true" image="Heroic-4"/>
+          </Cell>
+          <Cell padding="5 5 5 5">
+            <Image id="heroic_5_image" preserveAspect="true" image="Heroic-5"/>
+          </Cell>
+          <Cell padding="5 10 5 5">
+            <Image id="heroic_6_image" preserveAspect="true" image="Heroic-6"/>
+          </Cell>
+        </Row>
+        <Row preferredHeight="60">
+          <Cell padding="30 30 10 10">
+            <Panel id="heroic_1_button_panel">
+              <Button id="heroic_1_take" onClick="takeHeroicBtn">Claim</Button>
+            </Panel>
+          </Cell>
+          <Cell padding="30 30 10 10">
+            <Panel id="heroic_2_button_panel">
+              <Button id="heroic_2_take" onClick="takeHeroicBtn">Claim</Button>
+            </Panel>
+          </Cell>
+          <Cell padding="30 30 10 10">
+            <Panel id="heroic_3_button_panel">
+              <Button id="heroic_3_take" onClick="takeHeroicBtn">Claim</Button>
+            </Panel>
+          </Cell>
+          <Cell padding="30 30 10 10">
+            <Panel id="heroic_4_button_panel">
+              <Button id="heroic_4_take" onClick="takeHeroicBtn">Claim</Button>
+            </Panel>
+          </Cell>
+          <Cell padding="30 30 10 10">
+            <Panel id="heroic_5_button_panel">
+              <Button id="heroic_5_take" onClick="takeHeroicBtn">Claim</Button>
+            </Panel>
+          </Cell>
+          <Cell padding="30 30 10 10">
+            <Panel id="heroic_6_button_panel">
+              <Button id="heroic_6_take" onClick="takeHeroicBtn">Claim</Button>
+            </Panel>
+          </Cell>
+        </Row>
+      </TableLayout>
+    </Panel>
+  </Panel>
+
 </XmlLayout>

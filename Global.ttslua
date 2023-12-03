@@ -22,7 +22,7 @@ Future possible stuff for greater enhancement
         - players herocs count vs max
   --TODO: track take & play actions??? (with "Take" buttons on cards, enforce limits & requirements)
   --TODO: Automate alteration play actions. A big one!
-  --TODO: automate spell cast???
+  --IN WORK: automate spell cast???
         - calcuate winnings and display "Take" buttons on Heroics/Arcanas/Prestige
         - dialog for Myst if equilibrium attained.
   --TODO: automate assinging resources to spell cards???
@@ -37,7 +37,7 @@ env.test= {}
 -- env.test.test_players = {"Green", "Blue"}
 env.test.test_players = {"Green", "Blue"}
 env.test.auto_switch = true
-env.test.in_dev = false
+env.test.in_dev = true
 env.test.trace = true
 env.test.debug = true
 env.test.force_fresh_save = true
@@ -878,6 +878,14 @@ function recycleSpellBtn(player, button, id)
   board.call("dealItems", {["item_type"]="acuity",["amount"]=1})
 end
 
+--[[ Handler for the take Heroic button. ]]
+function takeHeroicBtn(player, button, id)
+  if env.test.trace then log("Global: takeHeroicBtn() "..tostring(player.color)..", "..tostring(id)) end
+
+  --TODO:
+
+end
+
 --[[ Handle objects picked up in game.  Only certain object tags supported.  --]]
 function onObjectPickUp(player_color, obj)
   if GD.game.started then
@@ -895,10 +903,20 @@ end
 
 --[[ Handle cards leaving decks.  Set tooltip description if enabled. ]]
 function onObjectLeaveContainer(container, obj)
-  if GD.env.card_tooltips then
-    if container.tag == "Deck" and obj.hasTag("Alteration") then
+  if container.tag == "Deck" then
+    if obj.hasTag("Alteration") then
       local data = alterations[tonumber(obj.getGMNotes())]
-      obj.setDescription(data.desc)
+      if GD.env.card_tooltips then obj.setDescription(data.desc) end
+      if env.test.debug then obj.setName(data.id)
+      else obj.setName("") end
+    elseif obj.hasTag("Spell") then
+      local data = spells[tonumber(obj.getGMNotes())]
+      if GD.env.card_tooltips then obj.setDescription(data.desc) end
+      if env.test.debug then obj.setName(data.id)
+      else obj.setName("") end
+    elseif obj.hasTag("Heroic") then
+      local data = heroics[tonumber(obj.getGMNotes())]
+      if GD.env.card_tooltips then obj.setDescription(data.desc) end
       if env.test.debug then obj.setName(data.id)
       else obj.setName("") end
     end

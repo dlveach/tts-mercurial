@@ -123,7 +123,7 @@
   <Button id="cleanup_btn_id"
           width="200" height="50"
           onClick="cleanupBtn"
-          text="Cleanup after cast" />
+          text="Cast Spell" />
 </Panel>
 
 <Panel  class="class_board_button"
