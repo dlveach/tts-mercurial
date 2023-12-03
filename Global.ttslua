@@ -30,7 +30,7 @@ Future possible stuff for greater enhancement
 ****************************************************************************** ]]
 
 env = {}
-env.version = "1.0.1 production release"
+env.version = "1.0.2 production release"
 env.test= {}
 -- env.test.test_players = {"Green", "Blue", "Yellow", "Red"}
 -- env.test.test_players = {"Yellow", "Red", "Blue"}
