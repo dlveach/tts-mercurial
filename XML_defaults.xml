@@ -151,6 +151,12 @@
     useGlobalCellPadding="false"
     color="#301616" />
 
+  <!-- Heroic card buttons -->
+  <Button class="heroic_button"
+    fontSize="40"
+    text="Claim"
+    onClick="Global/heroicsBtn"/>
+
   <!-- Score table styles -->
   <TableLayout class="score_table"
       image="Sprites/Layout/Viewport"

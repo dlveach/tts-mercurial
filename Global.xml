@@ -7,6 +7,8 @@
   <!-- Start Panel -->
   <Panel id="startPanel" active="false"
     height="160" width="300"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
     showAnimation="Grow" hideAnimation="Shrink">
     <VerticalLayout>
       <Panel class="title">
@@ -327,7 +329,7 @@
     </Panel>
   </Panel>
 
-  <!-- Heroics panel -->
+  <!-- Heroics panel
   <Panel id="outer_heroic_panel" active="false"
     allowDragging="true"
     returnToOriginalPositionWhenReleased="false"
@@ -397,5 +399,6 @@
       </TableLayout>
     </Panel>
   </Panel>
+-->
 
 </XmlLayout>
