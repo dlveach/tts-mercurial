@@ -23,13 +23,68 @@ C.alterations_deck_pos = {x=8.1403, y=1.1013, z=-3.7780}
 C.guids.heroics_deck = "c147d7"
 C.heroics_deck_pos = {x=8.1396, y=1.0675, z=2.3360}
 C.guids.artifacts_deck = "5e6187"
-C.guids.mana_bag = "a39f6e"
-C.guids.acuity_bag = "5561d3"
-C.guids.prestige_bag = "9db97c"
-C.guids.dice_bag = "bf3a6e"
 C.guids.myst_rune_1 = "3444cf"
 C.guids.myst_rune_2 = "8b61f9"
-C.guids.recycle_spell_btn = "6e7155"
+C.guids.table_UI = "ba7e59"
+
+C.setup={
+  Arcanist = {
+    start_deck = "a25cd5",
+    artifact_cards = 1,
+    myst_rune = false,
+    start_dice = 5,
+    start_mana = 6,
+    start_acuity = 1,
+    board_sigil = "red",
+    dice_translation = {"ruin","ruin","","","restore","restore"},
+    home_position = {-6.97, 1.16, -21.35},
+  },
+  Chaosmancer = {
+    start_deck = "b6dde1",
+    artifact_cards = 1,
+    myst_rune = false,
+    start_dice = 7,
+    start_mana = 4,
+    start_acuity = 0,
+    board_sigil = "blue",
+    dice_translation = {"ruin","ruin","","","restore","restore"},
+    home_position = {8.62, 1.16, -21.20},
+  },
+  Elementalist = {
+    start_deck = "00437d",
+    artifact_cards = 1,
+    myst_rune = false,
+    start_dice = 6,
+    start_mana = 5,
+    start_acuity = 0,
+    board_sigil = "yellow",
+    dice_translation = {"ruin","ruin","","","restore","restore"},
+    home_position = {-6.92, 1.16, -15.99},
+  },
+  Enchanter = {
+    start_deck = "f16ace",
+    artifact_cards = 3,
+    myst_rune = false,
+    start_dice = 6,
+    start_mana = 5,
+    start_acuity = 1,
+    board_sigil = "green",
+    dice_translation = {"ruin","restore","","","ruin","restore"},
+    home_position = {8.50, 1.16, -15.98},
+  },
+  Mystcaller = {
+    start_deck = "f43fab",
+    artifact_cards = 1,
+    take_myst_rune = true,
+    start_dice = 5,
+    start_mana = 6,
+    start_acuity = 2,
+    board_sigil = "wild",
+    dice_translation = {"ruin","restore","","","ruin","restore"},
+    home_position = {0.94, 1.16, -18.65},
+  },
+}
+
 C.default_cast_params = {
   direction    = {0,1,0},
   type         = 2,

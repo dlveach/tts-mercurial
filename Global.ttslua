@@ -2,7 +2,7 @@
 
 Work items for converstion of beta to production version:
 
-  - BUG: fix arcana scoring to final rules
+  - BUG: fix arcana scoring to final rules  TESTING?
   - BUG: score display on player area doesn't update as often as it should.
 
   - TODO: start options in UI start game panel
@@ -53,11 +53,6 @@ env.game.card_tooltips = true
 function onLoad(saved_data)
   log("Mercurial version " .. env.version)
   log("Loading ...")
-  if not(env.test.in_dev) then
-    local dice_bag = getObjectFromGUID(C.guids.dice_bag)
-    dice_bag.interactable = false
-    dice_bag.setInvisibleTo(Player.getColors())
-  end
   for i=1,4 do
     local bar = getObjectFromGUID(C.guids.color_bars[i])
     if bar ~= nil then
@@ -66,7 +61,12 @@ function onLoad(saved_data)
       bar.setInvisibleTo(Player.getColors())
     end
   end
+
+  --set globals
+  g_table_UI = getObjectFromGUID(C.guids.table_UI)
   GD = {}
+
+  --handle game loading state
   if saved_data ~= "" then
     if env.test.trace then log("Global onLoad(): Saved load") end
     local restore_data = JSON.decode(saved_data)
@@ -77,6 +77,7 @@ function onLoad(saved_data)
     --persistent state data
     GD.states = {}
     GD.states.UI = {}
+    GD.states.table_UI = {}
     GD.states.obj_vis = {}
     --persistent environment vars
     GD.env = {}
@@ -128,7 +129,6 @@ function onLoad(saved_data)
       --TODO: anything??
     end
     UI_setAttribute("startPanel", "active", true)
-    setInvisibleTo(C.guids.recycle_spell_btn, Player.getColors())
   end
   math.randomseed(os.time())
   log("Loading complete.")
@@ -150,6 +150,16 @@ function UI_setAttribute(id, field, value)
   assert(type(field) == "string", "field must be a string")
   UI.setAttribute(id, field, value)
   GD.states.UI[id..":"..field] = value
+end
+
+--[[  Wrapper function for saving table UI attributes for game restore. ]]
+function table_UI_setAttribute(id, field, value)
+  if env.test.trace and GD.env.verbose then log("table_UI_setAttribute()") end
+  if not(g_table_UI) then g_table_UI = getObjectFromGUID(C.guids.table_UI) end
+  assert(type(id) == "string", "id must be a string")
+  assert(type(field) == "string", "field must be a string")
+  g_table_UI.UI.setAttribute(id, field, value)
+  GD.states.table_UI[id..":"..field] = value
 end
 
 --[[ Wrapper function for hiding UI elements with animations. --]]
@@ -190,6 +200,16 @@ function restoreGameState()
     local field = Split(key, ':')[2]
     UI.setAttribute(id, field, value)
   end
+
+  --restore table UI state
+  if not(g_table_UI) then g_table_UI = getObjectFromGUID(C.guids.table_UI) end
+  for key,value in pairs(GD.states.table_UI) do
+    local id = Split(key, ':')[1]
+    local field = Split(key, ':')[2]
+    g_table_UI.UI.setAttribute(id, field, value)
+  end
+
+  --TODO: move into table UI
   if GD.game.started then
     local btn = getObjectFromGUID(C.guids.recycle_spell_btn)
     btn.UI.setAttribute("recycle_spell_panel","active","true")
@@ -271,8 +291,9 @@ function startGameBtn()
     i=i+1
   end
   UI_setAttribute("selectClassBoardPanel","active","true")
-  if env.test.auto_switch then autoSwitch(GD.game.player_order[GD.game.current_player]) end
-
+  if env.test.auto_switch then
+    autoSwitch(GD.game.player_order[GD.game.current_player])
+  end
 end
 
 --[[TESTING ONLY: Facilitate testing.  Switch test player color to game active player color.]]
@@ -307,13 +328,14 @@ function setPlayerClass(params)
   local position = params.position
   local pcol = params.player
   local error = false;
+  local player = GD.game.players[pcol]
   if not(contains(GD.game.player_order, pcol)) then
     broadcastToAll("Player " .. pcol .. " is not a player in this game.")
     error = true
   elseif pcol ~= GD.game.player_order[GD.game.current_player] then
     broadcastToColor("Player " .. pcol .. " is not the current player.", pcol)
     error = true
-  elseif GD.game.players[pcol].class then
+  elseif player.class then
     broadcastToColor("Player " .. pcol .. " cannot select a second class.", pcol)
     error = true
   elseif GD.game.positions[position] ~= "" then
@@ -327,10 +349,47 @@ function setPlayerClass(params)
     local class_board = getObjectFromGUID(params.guid)
     assert(class_board, "ERROR: Global: setPlayerClass(): Missing board object")
     if GD.env.verbose then print("Player " .. pcol .. " selected class " .. class_board.getName()) end
+    local setup = C.setup[class_board.getName()]
+    assert(setup, "ERROR: Global:setPlayerClass() missing setup data for "..class_board.getName())
     GD.game.positions[position] = pcol
-    GD.game.players[pcol].class = class_board.getName()
-    GD.game.players[pcol].board_guid = class_board.getGUID()
-    GD.game.players[pcol].alteration_cards = {}
+    player.class = class_board.getName()
+    player.board_guid = class_board.getGUID()
+    player.alteration_cards = {}
+    player.heroics = {}
+    player.active_spell = {}
+    player.cast_spells = {}
+    player.arcanas = {}
+    player.prestige = 0
+    player.actions = {}
+    player.actions.takes = {} --{"any"|"spell"}
+    player.actions.play = 0
+    player.dice = {}
+    for i=1,setup.start_dice do
+      table.insert(player.dice, {value=math.random(1,6),allocated=false})
+    end
+    player.mana = setup.start_mana
+    player.mana_assigned = 0
+    player.acuity = setup.start_acuity
+    player.sigils = { red = 0, blue = 0, green = 0, yellow = 0 }
+    player.sigils[setup.board_sigil] = 1
+    --deal start cards to player and assign them
+    local start_deck = getObjectFromGUID(setup.start_deck)
+    assert(start_deck,"ERROR: Global:setPlayerClass(): unable to get start deck for board "..tostring(class_board))
+    local start_cards = start_deck.getObjects()
+    for _,c in ipairs(start_cards) do
+      table.insert(player.alteration_cards, c.guid)
+    end
+    start_deck.deal(#start_cards, pcol)
+    local artifacts_deck = getObjectFromGUID(C.guids.artifacts_deck)
+    assert(artifacts_deck,"ERROR: Global:setPlayerClass(): unable to get artifacts deck for board "..tostring(class_board))
+    Wait.time(function()
+      artifacts_deck.takeObject(
+        {callback_function = function(o)
+          table.insert(player.alteration_cards, o.guid)
+          o.deal(1,pcol)
+        end}
+      )
+    end, 0.5, setup.num_artifacts)
     --complete player assignment in board
     class_board.call("setPlayer", {["player"]=pcol, ["position"]=position})
     GD.game.assigned_boards_count = GD.game.assigned_boards_count + 1
@@ -388,9 +447,7 @@ function finalSetup()
     end
     deck.takeObject(p)
   end
-  setInvisibleTo(C.guids.recycle_spell_btn, {})
-  local btn = getObjectFromGUID(C.guids.recycle_spell_btn)
-  btn.UI.setAttribute("recycle_spell_panel","active","true")
+
   -- Place Alteration cards
   deck = getAlterationsDeck()
   for i=1,6 do
@@ -398,30 +455,34 @@ function finalSetup()
     p.callback_function = function(obj)
       GD.game.alterations[i].card_id = tonumber(obj.getGMNotes())
       GD.game.alterations[i].card_guid = obj.getGUID()
+      if i <= GD.game.player_count then
+        GD.game.alterations[i].acuity = 1
+        table_UI_setAttribute("alterations_acuity_"..tostring(i).."_text","text","1")
+      else
+        GD.game.alterations[i].acuity = 0
+        table_UI_setAttribute("alterations_acuity_"..tostring(i).."_text","text","0")
+        table_UI_setAttribute("alterations_acuity_"..tostring(i).."_pnl","active","false")
+      end
       Wait.condition(
         function() obj.setLock(true) end,
         function() return obj.resting end)
     end
     deck.takeObject(p)
   end
-  -- Place Heroic cards
-  local n = 1
-  Wait.time(function()
-    if n > 6 then return end -- safety
-    placeHeroic(n, 1)
-    n = n + 1
-  end, .25, 6)
+  table_UI_setAttribute("alterations_acuity_pnl","active","true")
 
- -- Place acuity on alterations per player count
- local acuity_bag = getObjectFromGUID(C.guids.acuity_bag)
-  for i=1, GD.game.player_count do
-    local pos = Vector(C.pos.alterations[i])
-    pos.y = pos.y + 1
-    acuity_bag.takeObject({
-      callback_function = function(obj)
-        obj.setPositionSmooth(pos, false, false)
-        table.insert(GD.game.alterations[i].acuity_guids, obj.getGUID())
-      end })
+  -- Place Heroic cards
+  deck = getHeroicsDeck()
+  for i=1,6 do
+    p.position = GD.game.heroics[i].pos
+    p.callback_function = function(obj)
+      GD.game.heroics[i].card_id = tonumber(obj.getGMNotes())
+      GD.game.heroics[i].card_guid = obj.getGUID()
+      Wait.condition(
+        function() obj.setLock(true) end,
+        function() return obj.resting end)
+    end
+    deck.takeObject(p)
   end
 
   -- Place the previously random selected myst rune (if Mystcaller not taken)
@@ -433,11 +494,11 @@ function finalSetup()
     local myst_rune = getObjectFromGUID(GD.game.myst_rune)
     myst_rune.setPositionSmooth(C.pos.myst_rune)
     myst_rune.setRotation(C.rot.myst_rune)
+    myst_rune.setLock(false)
   end
 
   -- Random flip arcanas
   for g,data in pairs(C.arcanas) do
-    log("random flip arcana "..g)
     local arcana = getObjectFromGUID(g)
     if (math.random(1, 10) > 5) then arcana.flip() end
     Wait.condition(
@@ -453,25 +514,14 @@ function finalSetup()
   end
 
   -- Give extra acuity to players in turn order
-  local player = GD.game.start_player
+  local p = GD.game.start_player
   local count = 1
-  Wait.time(
-    function()
-      player = player + 1
-      if player > GD.game.player_count then player = 1 end --wrap around
-      player_color = GD.game.player_order[player]
-      if GD.env.verbose then print("Dealing " .. count .. " extra acuity to player " .. count+1 .. " - " .. player_color) end
-      local board = getObjectFromGUID(GD.game.players[player_color].board_guid)
-      board.call("dealItems", {["item_type"]="acuity",["amount"]=count})
-      count = count + 1
-    end,
-    .5,
-    GD.game.player_count-1
-  )
-  local pcol = GD.game.player_order[GD.game.current_player]
-  local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
-  board.call("enableActivePlayer")
-  if GD.env.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
+  for n=1,GD.game.player_count-1 do
+    if p > GD.game.player_count then p = 1 end --wrap around
+    local pcol = GD.game.player_order[p]
+    GD.game.players[pcol].acuity = GD.game.players[pcol].acuity + count
+    count = count + 1
+  end
 
   --Configure final scoring table and HUD for number of players
   local num_players = #GD.game.player_order
@@ -486,7 +536,7 @@ function finalSetup()
   end
   local table_size = 360 - ((4 - num_players) * 55)
   UI_setAttribute("score_panel", "height", tostring(table_size))
-  local inner_hud_panel_size = 120 + num_players * 30
+  local inner_hud_panel_size = 160 + num_players * 30
   local outer_hud_panel_size = inner_hud_panel_size + 20
   UI_setAttribute("inner_hud_panel","height",tostring(inner_hud_panel_size))
   UI_setAttribute("outer_hud_panel","height",tostring(outer_hud_panel_size))
@@ -496,54 +546,101 @@ function finalSetup()
     end
   end
   UI_setAttribute("outer_hud_panel","active","true")
+
   --done with final setup
   GD.game.started = true
+  --TODO: figure out what to wait on, card data structures not yet set up.
+  Wait.time(function()
+    table_UI_setAttribute("alterations_buttons_pnl","active",true)
+    table_UI_setAttribute("spells_buttons_pnl","active",true)
+    startPlayerTurn(GD.game.player_order[GD.game.current_player])
+  end,2)
 end
 
---[[ Place a heroic card at location n and put the bonus bits on it.
-    Recursive to add delay for placing bits.   --]]
-function placeHeroic(n, iteration)
-  if iteration > 3 then return end  -- safety, should not happen
-  local pos = Vector(GD.game.heroics[n].pos)
-  if iteration == 1 then
-    if env.test.debug then log("---- placeHeroic() n = "..tostring(n)) end
-    local deck = getHeroicsDeck()
-    if deck then
-      deck.takeObject({
-        position = pos,
-        flip = true,
-        top = true,
-        smooth = false,
-        callback_function = function(obj)
-          GD.game.heroics[n].card_id = tonumber(obj.getGMNotes())
-          GD.game.heroics[n].card_guid = obj.getGUID()
-          Wait.condition(
-            function() obj.setLock(true) end,
-            function() return obj.resting end)
-        end
-      })
-    else return end
-  elseif iteration == 2 then
-    pos.y = 1
-    local mana_bag = getObjectFromGUID(C.guids.mana_bag)
-    mana_bag.takeObject({
-      callback_function = function(obj)
-        obj.setPositionSmooth(pos, false, false)
-        GD.game.heroics[n].mana_guid = obj.getGUID()
-      end })
-  elseif iteration == 3 then
-    pos.y = 2
-    pos.z = pos.z - 0.5
-    local acuity_bag = getObjectFromGUID(C.guids.acuity_bag)
-    acuity_bag.takeObject({
-      callback_function = function(obj)
-        obj.setPositionSmooth(pos, false, false)
-        GD.game.heroics[n].acuity_guid = obj.getGUID()
-      end })
-    return
+--[[ Setup stuff at beginning of player turn. ]]
+function startPlayerTurn(pcol)
+  if env.test.trace then log("Global:startPlayerTurn() "..tostring(pcol)) end
+  if env.test.debug then log(GD.game.players[pcol]) end
+  if pcol ~= GD.game.player_order[GD.game.current_player] then return end
+  local player = GD.game.players[pcol]
+  --enable UI stuffs
+  table_UI_setAttribute("recycle_spell_panel","active",true)
+  enableAlterationButtons(true)
+  --set spell card take buttons based on player's avaialable resources
+  updateSpellButtons(pcol)
+  --set up player actions
+  player.actions.takes = {"any"}
+  player.actions.play = 1
+  getObjectFromGUID(GD.game.players[pcol].board_guid).call("enableActivePlayer")
+  if GD.env.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
+  updateHUD()
+end
+
+--[[ Set spell card take button states based on player's avaialable resources --]]
+function updateSpellButtons(pcol)
+  if env.test.trace then log("Global:updateSpellButtons() "..tostring(pcol)) end
+  for i=1,6 do
+    local s = false
+    if GD.game.spells[i].card_id > 0 then s = checkSpellRequirements(i, pcol) end
+    table_UI_setAttribute("spells_button_"..tostring(i).."_pnl","active",s)
   end
-  iteration = iteration + 1
-  Wait.frames(function() placeHeroic(n, iteration) end, 10)
+end
+
+--[[ Hide all the spell buttons --]]
+function hideSpellButtons()
+  if env.test.trace then log("Global:hideSpellButtons()") end
+  for i=1,6 do
+    table_UI_setAttribute("spells_button_"..tostring(i).."_pnl","active",false)
+  end
+end
+
+--[[ Set alteration card take button states as specified.  Defaults to true. --]]
+function enableAlterationButtons(state)
+  if env.test.trace then log("Global:enableAlterationButtons()") end
+  for i=1,6 do
+    local state = state and true
+    if GD.game.alterations[i].card_id == 0 then state = false end
+    table_UI_setAttribute("alterations_button_"..tostring(i).."_pnl","active",state)
+  end
+end
+
+--[[ Check a spell card at a given location to see if a player can take it. --]]
+function checkSpellRequirements(loc, pcol)
+  if env.test.trace then log("Global:checkSpellRequirements() "..tostring(loc)..", "..tostring(pcol)) end
+  local id = GD.game.spells[loc].card_id
+  local mana = GD.game.players[pcol].mana
+  if loc == 1 then mana = mana + 1 end  --discount
+  local acuity = GD.game.players[pcol].acuity
+  if loc == 2 then acuity = acuity + 1 end  --discount
+  local flex_die = math.floor(mana / 2) + math.floor(acuity / 4)
+  local dice = {}
+  for _,d in ipairs(GD.game.players[pcol].dice) do
+    if not(d.allocated) then
+      local element = C.die_elements[d.value]
+      if dice[element] then dice[element] = dice[element] + 1
+      else dice[element] = 1 end
+    end
+  end
+  local spell = spells[id]
+  local flex = spell.flex
+  local physical = spell.slots - flex
+  if physical == 0 then
+    if flex_die >= spell.slots then
+      return true
+    end
+  end
+  for _,element in ipairs(spell.dice) do
+    if dice[element] then
+      if dice[element] >= spell.slots then
+        return true
+      elseif dice[element] >= physical then
+        if dice[element] + flex_die >= spell.slots then
+          return true
+        end
+      end
+    end
+  end
+  return false
 end
 
 --[[ Called from setNextPlayer (on turn "done") --]]
@@ -557,42 +654,41 @@ end
 --[[ Shift spell cards left to fill empty spaces, placing new cards in rightmost spot. --]]
 function refillSpells()
   if env.test.trace then log("Global: refillSpells()") end
-  local spots = {}
-  local empty_spots = 0
+  local empty = 0
   for i=1,6 do
-    if GD.game.spells[i].card_guid == "" then
-      empty_spots = empty_spots + 1
-    end
+    if GD.game.spells[i].card_guid == "" then empty = empty + 1 end
   end
-  local function shift(empty_spots)
-    for i=1,6 do
+  for n=1,empty do
+    for i=1,5 do
       if GD.game.spells[i].card_guid == "" then
-        for j=i+1,6 do  --TODO: only check up to spot 5?
-          local pos = GD.game.spells[j-1].pos
+        for j=i+1,6 do
           card = getObjectFromGUID(GD.game.spells[j].card_guid)
           if card ~= nil then
-            card.setPosition(pos)
-            GD.game.spells[j-1] = simpleDeepCopy(GD.game.spells[j])
+            card.setPosition(GD.game.spells[j-1].pos)
+            GD.game.spells[j-1].card_id = GD.game.spells[j].card_id
+            GD.game.spells[j-1].card_guid = GD.game.spells[j].card_guid
+            GD.game.spells[j].card_id = 0
             GD.game.spells[j].card_guid = ""
           end
         end
       end
     end
-    --now fill spot 6 which is empty after shift
+  end
+  --now fill empty spots with cards
+  for i=6-(empty-1),6 do
     local deck = getSpellsDeck()
     if deck then
       local card
       if deck.tag == "Deck" then
         card = deck.takeObject({
-          position = GD.game.spells[6].pos,
+          position = GD.game.spells[i].pos,
           flip = true,
           top = true,
           smooth = false,
           callback_function = function(obj)
             GD.game.spells[i].card_id = tonumber(obj.getGMNotes())
-            GD.game.spells[i].card_guid = obj.getGUID()
-            Wait.condition(
-              function() obj.setLock(true) end,
+            GD.game.spells[i].card_guid = card.getGUID()
+            Wait.condition(function() obj.setLock(true) end,
               function() return obj.resting end)
             end
         })
@@ -606,37 +702,48 @@ function refillSpells()
     else
       log("WARN: spells deck is empty!")  --not sure this can ever happen, but warn anyway.
     end
-    empty_spots = empty_spots - 1
-    if empty_spots > 0 then
-      Wait.frames(function() shift(empty_spots) end, .5)
-    end
-  end
-  if empty_spots > 0 then
-    shift(empty_spots)
   end
 end
 
-  --TODO: remove physics cast version when take button done
+--[[ Place acuity on remaining cards to left of rightmost empty spot.
+    Then shift cards left to fill empty spaces, placing new cards in rightmost spot.
+    Move acuity with the cards. --]]
+function refillAlterations()
+  if env.test.trace then log("Global: refillAlterations()") end
+  log("----- >>>> TODO: fix refillAlterations()")
+  --TODO: see refillSpells()
+
   -- local p = {
   --   origin       = {},
   --   direction    = {0,1,0},
   --   type         = 3,
   --   size         = {1,2,2},
   --   max_distance = 0,
-  --   debug        = false,
+  --   debug        = true,
   -- }
+  -- local deck = getAlterationsDeck()
+  -- if not(deck) then
+  --   log("--TODO: Global:refillAlterations() handle empty alteration deck!")
+  --   return
+  -- end
+  -- --Set up current condition (find cards, empty spots and current acuity on cards)
   -- local spots = {}
+  -- local acuity = {}
   -- local empty_spots = 0
+  -- local rightmost_empty = 0
   -- for i=1,6 do
-  --   p.origin =  C.pos.spells[i]
+  --   acuity[i] = {}
+  --   p.origin =  C.pos.alterations[i]
   --   local hits = Physics.cast(p)
   --   local empty = true
   --   if hits ~= nil then
   --     for _,hit in ipairs(hits) do
   --       if hit.hit_object.tag ~= "Surface" then
-  --         if hit.hit_object.hasTag("Spell") then
+  --         if hit.hit_object.hasTag("Alteration") then
   --           spots[i] = hit.hit_object.getGUID()
   --           empty = false
+  --         elseif hit.hit_object.hasTag("Acuity") then
+  --           table.insert(acuity[i], hit.hit_object.getGUID())
   --         end
   --       end
   --     end
@@ -644,217 +751,129 @@ end
   --   if empty then
   --     spots[i] = "-"
   --     empty_spots = empty_spots + 1
+  --     rightmost_empty = i
   --   end
   -- end
-  --recursively shift cards left into empty spots and fill last spot
+  -- if env.test.debug then log("Rightmost empty is "..tostring(rightmost_empty)) end
+  --
+  -- --add acuity to remaining cards left of rightmost empty BEFORE shifting, update current acuity table
+  -- local n = rightmost_empty-1
+  -- local new_acuity = {}
+  -- if n >= 1 then
+  --   local bag = getObjectFromGUID(C.guids.acuity_bag)
+  --   for i=1,n do
+  --     if spots[i] ~= "-" then
+  --       local pos = Vector(C.pos.alterations[i])
+  --       pos.y = pos.y + 3
+  --       pos = scatter(pos, {0.4,0,0.4}, {0.1,0,0.1})
+  --       local o = bag.takeObject({
+  --         callback_function = function(obj)
+  --           obj.setPositionSmooth(pos, false, false)
+  --         end })
+  --       table.insert(new_acuity, o)
+  --       table.insert(acuity[i], o.getGUID())
+  --     end
+  --   end
+  -- end
+  -- --recursively shift cards left into empty spots and fill right most empty spot(s)
   -- local function shift(empty_spots)
   --   for i=1,6 do
   --     if spots[i] == "-" then
   --       for j=i+1,6 do
-  --         local pos = C.pos.spells[j-1]
+  --         local pos = C.pos.alterations[j-1]
   --         card = getObjectFromGUID(spots[j])
   --         if card ~= nil then
   --           card.setPosition(pos)
   --           spots[j-1] = spots[j]
   --           spots[j] = "-"
+  --           for _,g in ipairs(acuity[j]) do
+  --             local o = getObjectFromGUID(g)
+  --             local delta_x = C.pos.alterations[j][1] - C.pos.alterations[j-1][1]
+  --             local o_pos = o.getPosition()
+  --             o_pos.x = o_pos.x - delta_x
+  --             o.setPositionSmooth(o_pos, false, true)
+  --             table.insert(acuity[j-1], g)
+  --           end
+  --           acuity[j] = {}
   --         end
   --       end
   --     end
   --   end
-  --   local deck = getSpellsDeck()
-  --   if deck then
-  --     local card
-  --     if deck.tag == "Deck" then
-  --       card = deck.takeObject({
-  --         ["position"] = C.pos.spells[6],
-  --         ["flip"] = true,
-  --         ["top"] = true,
-  --         ["smooth"] = false
-  --       })
-  --     elseif deck.tag == "Card" then
-  --       card = deck
-  --     else
-  --       log("ERROR: Global: refillSpells() unknown spell deck object")
-  --     end
-  --     spots[6] = card.getGUID()
-  --   else
-  --     log("WARN: spells deck is empty!")  --not sure this can ever happen, but warn anyway.
-  --   end
+  --   local card = deck.takeObject({
+  --     ["position"] = C.pos.alterations[6],
+  --     ["flip"] = true,
+  --     ["top"] = true,
+  --     ["smooth"] = false
+  --   })
+  --   spots[6] = card.getGUID()
   --   empty_spots = empty_spots - 1
   --   if empty_spots > 0 then
-  --     Wait.frames(function() shift(empty_spots) end, .5)
+  --     Wait.time(function() shift(empty_spots) end, .5)
   --   end
   -- end
+  --
+  -- --After placing any new acuity, start shifting cards left to fill empty spaces.
   -- if empty_spots > 0 then
-  --   shift(empty_spots)
+  --   if #new_acuity > 0 then
+  --     --New acuity placed so wait until all are resting before shifting
+  --     Wait.condition(function() shift(empty_spots) end,
+  --       function()
+  --         for _,o in ipairs(new_acuity) do
+  --           if not(o.resting) then return false end
+  --         end
+  --         return true
+  --       end)
+  --   else
+  --     shift(empty_spots)
+  --   end
   -- end
--- end
-
---[[ Place acuity on remaining cards to left of rightmost empty spot.
-    Then shift cards left to fill empty spaces, placing new cards in rightmost spot.
-    Move acuity with the cards. --]]
-function refillAlterations()
-  if env.test.trace then log("Global: refillAlterations()") end
-  local p = {
-    origin       = {},
-    direction    = {0,1,0},
-    type         = 3,
-    size         = {1,2,2},
-    max_distance = 0,
-    debug        = true,
-  }
-  local deck = getAlterationsDeck()
-  if not(deck) then
-    log("--TODO: Global:refillAlterations() handle empty alteration deck!")
-    return
-  end
-  --Set up current condition (find cards, empty spots and current acuity on cards)
-  local spots = {}
-  local acuity = {}
-  local empty_spots = 0
-  local rightmost_empty = 0
-  for i=1,6 do
-    acuity[i] = {}
-    p.origin =  C.pos.alterations[i]
-    local hits = Physics.cast(p)
-    local empty = true
-    if hits ~= nil then
-      for _,hit in ipairs(hits) do
-        if hit.hit_object.tag ~= "Surface" then
-          if hit.hit_object.hasTag("Alteration") then
-            spots[i] = hit.hit_object.getGUID()
-            empty = false
-          elseif hit.hit_object.hasTag("Acuity") then
-            table.insert(acuity[i], hit.hit_object.getGUID())
-          end
-        end
-      end
-    end
-    if empty then
-      spots[i] = "-"
-      empty_spots = empty_spots + 1
-      rightmost_empty = i
-    end
-  end
-  if env.test.debug then log("Rightmost empty is "..tostring(rightmost_empty)) end
-
-  --add acuity to remaining cards left of rightmost empty BEFORE shifting, update current acuity table
-  local n = rightmost_empty-1
-  local new_acuity = {}
-  if n >= 1 then
-    local bag = getObjectFromGUID(C.guids.acuity_bag)
-    for i=1,n do
-      if spots[i] ~= "-" then
-        local pos = Vector(C.pos.alterations[i])
-        pos.y = pos.y + 3
-        pos = scatter(pos, {0.4,0,0.4}, {0.1,0,0.1})
-        local o = bag.takeObject({
-          callback_function = function(obj)
-            obj.setPositionSmooth(pos, false, false)
-          end })
-        table.insert(new_acuity, o)
-        table.insert(acuity[i], o.getGUID())
-      end
-    end
-  end
-  --recursively shift cards left into empty spots and fill right most empty spot(s)
-  local function shift(empty_spots)
-    for i=1,6 do
-      if spots[i] == "-" then
-        for j=i+1,6 do
-          local pos = C.pos.alterations[j-1]
-          card = getObjectFromGUID(spots[j])
-          if card ~= nil then
-            card.setPosition(pos)
-            spots[j-1] = spots[j]
-            spots[j] = "-"
-            for _,g in ipairs(acuity[j]) do
-              local o = getObjectFromGUID(g)
-              local delta_x = C.pos.alterations[j][1] - C.pos.alterations[j-1][1]
-              local o_pos = o.getPosition()
-              o_pos.x = o_pos.x - delta_x
-              o.setPositionSmooth(o_pos, false, true)
-              table.insert(acuity[j-1], g)
-            end
-            acuity[j] = {}
-          end
-        end
-      end
-    end
-    local card = deck.takeObject({
-      ["position"] = C.pos.alterations[6],
-      ["flip"] = true,
-      ["top"] = true,
-      ["smooth"] = false
-    })
-    spots[6] = card.getGUID()
-    empty_spots = empty_spots - 1
-    if empty_spots > 0 then
-      Wait.time(function() shift(empty_spots) end, .5)
-    end
-  end
-
-  --After placing any new acuity, start shifting cards left to fill empty spaces.
-  if empty_spots > 0 then
-    if #new_acuity > 0 then
-      --New acuity placed so wait until all are resting before shifting
-      Wait.condition(function() shift(empty_spots) end,
-        function()
-          for _,o in ipairs(new_acuity) do
-            if not(o.resting) then return false end
-          end
-          return true
-        end)
-    else
-      shift(empty_spots)
-    end
-  end
 end
 
 --[[ Refill the Heroics card positions. --]]
 function refillHeroics()
   if env.test.trace then log("Global: refillHeroics()") end
-  --only one spot should be empty during play.  No need to use coro delay.
-  for i=1,6 do
-    if GD.game.heroics[i].card_guid == "" then
-      placeHeroic(i,1)
+  --only one spot should be empty during play.
+  local deck = getHeroicsDeck()
+  if deck then
+    if deck.tag == "Deck" then
+      local p = {
+        ["position"] = {},
+        ["flip"] = true,
+        ["top"] = true,
+        ["smooth"] = true
+      }
+      for i=1,6 do
+        if GD.game.heroics[i].card_guid == "" then
+          p.position = GD.game.heroics[i].pos
+          p.callback_function = function(obj)
+            GD.game.heroics[i].card_id = tonumber(obj.getGMNotes())
+            GD.game.heroics[i].card_guid = obj.getGUID()
+            Wait.condition(
+              function() obj.setLock(true) end,
+              function() return obj.resting end)
+          end
+          deck.takeObject(p)
+          return
+        end
+      end
+    else
+      --last card in heroics deck. shouldn't happen but handle case anyway
+      log("WARN: placing last Heroic card in deck")
+      local card = deck
+      for i=1,6 do
+        if GD.game.heroics[i].card_guid == "" then
+          card.setPosition(GD.game.heroics[i].pos)
+          if card.is_face_down then card.flip() end
+          Wait.condition(
+            function() card.setLock(true) end,
+            function() return card.resting end)
+          return
+        end
+      end
     end
+  else
+    log("WARN: Heroic deck is empty.")
   end
-
-    --TODO: remove old physics cast code when "take button" implemented
-  -- local p = {
-  --   origin       = {},
-  --   direction    = {0,1,0},
-  --   type         = 3,
-  --   size         = {1,2,2},
-  --   max_distance = 0,
-  --   debug        = false,
-  -- }
-  -- local deck = getObjectFromGUID(GD.game.heroics_deck_guid)
-  -- local empty_spots = {}
-  -- for i=1,6 do
-  --   p.origin =  C.pos.heroics[i]
-  --   local hits = Physics.cast(p)
-  --   local empty = true
-  --   if hits ~= nil then
-  --     for _,hit in ipairs(hits) do
-  --       if hit.hit_object.tag ~= "Surface" then
-  --         if hit.hit_object.hasTag("Heroic") then empty = false end
-  --       end
-  --     end
-  --   end
-  --   if empty then  table.insert(empty_spots, C.pos.heroics[i]) end
-  -- end
-  -- --fill the spot(s).  Recursive to add delay between.
-  -- local function fillSpot()
-  --   if empty_spots[1] == nil then return end
-  --   placeHeroic(Vector(empty_spots[1]), 1)
-  --   table.remove(empty_spots, 1)
-  --   Wait.time(function() fillSpot() end, .5)
-  -- end
-  -- if #empty_spots > 0 then
-  --   fillSpot()
-  -- end
 end
 
 --[[ Set the next player in player_order.
@@ -869,9 +888,11 @@ function setNextPlayer()
   refillCards()
   local pcol = GD.game.player_order[GD.game.current_player]
   local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
-  board.call("enableActivePlayer")
+  board.call("enableActivePlayer", true)
   if env.test.auto_switch then autoSwitch(GD.game.player_order[GD.game.current_player]) end
   if GD.env.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
+  --TODO: figure out how to wait for refillCards()
+  Wait.time(function() startPlayerTurn(pcol) end,2)
 end
 
 --[[ Special case needed by Mystcaller board only. ]]
@@ -897,11 +918,16 @@ function getPlayerClassBoardGUID(params)
 end
 
 --[[ Used only when player types a number on a die to change it.  Trigger update spell power for player. --]]
+-- function onObjectNumberTyped(o, pcol, n)
+--   if o.hasTag("Dice") and n >= 1 and n <= 6 then
+--     local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
+--     Wait.time(function() board.call("updateSpellPower", {}) end, 0.5)
+--   end
+-- end
+--[[ Don't allow player's to deal cards by typing a number on them. --]]
 function onObjectNumberTyped(o, pcol, n)
-  if o.hasTag("Dice") and n >= 1 and n <= 6 then
-    local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
-    Wait.time(function() board.call("updateSpellPower", {}) end, 0.5)
-  end
+  if env.test.debug then log("Prevented player "..pcol.." from typing number on object "..o.getGUID()) end
+  return true
 end
 
 --[[ When die are randomized (re-rolled) by a player then trigger HUD update. ]]
@@ -919,21 +945,27 @@ function onObjectRandomize(o, pcol)
   end
 end
 
---[[ Check Alteration cards as they entern player's hand.  Assign ownership if they are not owned. ]]
-function onObjectEnterZone(zone, obj)
-  if zone.tag == "Hand" then
-    if obj.hasTag("Alteration") then
-      local pcol = zone.getData()["FogColor"]
-      if not(contains(GD.game.players[pcol].alteration_cards, obj.getGUID())) then
-        table.insert(GD.game.players[pcol].alteration_cards, obj.getGUID())
-        if env.test.debug then log("Alteration card "..obj.getGUID().." first entered hand zone and assigned to player "..pcol) end
-        if #alterations[tonumber(obj.getGMNotes())].sigils > 0 then
-          getObjectFromGUID(GD.game.players[pcol].board_guid).call("updateScore")
-        end
-      end
-    end
-  end
-end
+--[[ Check Alteration cards as they enter player's hand.  Assign ownership if they are not owned. ]]
+--TODO: remove this, OBE
+-- function onObjectEnterZone(zone, obj)
+--   if zone.tag == "Hand" then
+--     if obj.hasTag("Alteration") then
+--       for _,pcol in ipairs(GD.game.player_order) do
+--         if contains(GD.game.players[pcol].alteration_cards, obj.getGUID()) then
+--           return
+--         end
+--       end
+--       local pcol = zone.getData()["FogColor"]
+--       -- if not(contains(GD.game.players[pcol].alteration_cards, obj.getGUID())) then
+--       table.insert(GD.game.players[pcol].alteration_cards, obj.getGUID())
+--       if env.test.debug then log("Alteration card "..obj.getGUID().." first entered hand zone and assigned to player "..pcol) end
+--       if #alterations[tonumber(obj.getGMNotes())].sigils > 0 then
+--         getObjectFromGUID(GD.game.players[pcol].board_guid).call("updateScore")
+--       end
+--       -- end
+--     end
+--   end
+-- end
 
 --[[ Handle objects dropped in game.  Only certain object tags supported.  --]]
 function onObjectDrop(player_color, obj)
@@ -1017,28 +1049,393 @@ function recycleSpellBtn(player, button, id)
   end
   -- give player one acuity
   local board = getObjectFromGUID(GD.game.players[player.color].board_guid)
-  board.call("dealItems", {["item_type"]="acuity",["amount"]=1})
+  -- board.call("dealItems", {["item_type"]="acuity",["amount"]=1})
+  GD.game.players[player.color].acuity = GD.game.players[player.color].acuity + 1
 end
 
 --[[ Handler for the take Heroic button. ]]
-function heroicsBtn(player, button, id)
+function takeHeroicBtn(player, button, id)
   if env.test.trace then log("Global: heroicsBtn() "..tostring(player.color)..", "..tostring(id)) end
+  if player.color ~= GD.game.player_order[GD.game.current_player] then return end
+  local index = tonumber(Split(id,"_")[3])
+  local card = getObjectFromGUID(GD.game.heroics[index].card_guid)
+  assert(card, "ERROR: Global:takeHeroicBtn() could not locate card")
 
   --TODO:
 end
 
 --[[ Handler for the take Alteration button. ]]
-function alterationsBtn(player, button, id)
-  if env.test.trace then log("Global: alterationsBtn() "..tostring(player.color)..", "..tostring(id)) end
-
+function takeAlterationBtn(player, button, id)
+  if env.test.trace then log("Global: takeAlterationBtn() "..tostring(player.color)..", "..tostring(id)) end
+  if player.color ~= GD.game.player_order[GD.game.current_player] then return end
+  local index = tonumber(Split(id,"_")[3])
+  local card = getObjectFromGUID(GD.game.alterations[index].card_guid)
+  assert(card, "ERROR: Global:takeAlterationBtn() could not locate card")
+  local board = getObjectFromGUID(GD.game.players[player.color].board_guid)
+  for _,g in ipairs(GD.game.alterations[index].acuity_guids) do
+    board.call("placeObjByGUID",{guid=g})
+  end
+  table.insert(GD.game.players[player.color].alteration_cards, card.getGUID())
+  card.deal(1,player.color)
+  Wait.time(function()
+    updateHUD()
+    updateSpellButtons(player.color)
+  end, 1)
   --TODO:
+    -- decrement player take actions`
+    -- hide take buttons if no more`
 end
 
 --[[ Handler for the take Spell button. ]]
-function spellsBtn(player, button, id)
-  if env.test.trace then log("Global: spellsBtn() "..tostring(player.color)..", "..tostring(id)) end
+function takeSpellBtn(player, button, id)
+  if env.test.trace then log("Global: takeSpellBtn() "..tostring(player.color)..", "..tostring(id)) end
+  if player.color ~= GD.game.player_order[GD.game.current_player] then return end
+  local card_index = tonumber(Split(id,"_")[3])
+  showPaySpellDlg(card_index, player.color)
+end
 
-  --TODO:
+--[[ setup persistent data for dialog and show it. --]]
+function showPaySpellDlg(card_index, pcol)
+  if env.test.trace then log("Global: showPaySpellDlg() "..tostring(pcol)..", "..tostring(card_index)) end
+  local card = getObjectFromGUID(GD.game.spells[card_index].card_guid)
+  assert(card,"showPaySpellDlg(): missing spell card object")
+  local spell = spells[tonumber(card.getGMNotes())]
+  local player = GD.game.players[pcol]
+  assert(spell,"showPaySpellDlg() missing spell card data")
+  assert(player, "showPaySpellDlg() missing player data")
+  local pos = card.getPosition()
+  pos.y = pos.y + 2
+  card.setPosition(pos)
+  card.setLock(true)
+  GD.game.spell_cost = {
+    card_index = card_index,
+    player_color = pcol,
+    element = "",
+    available_dice = {},
+    assigned_dice = {},
+    available_mana = player.mana,
+    assigned_mana = 0,
+    available_acuity = player.acuity,
+    assigned_acuity = 0,
+    flex_spots = spell.flex,
+    fixed_spots = spell.slots - spell.flex,
+    slots = {},
+    filled = 0,
+    mana_discount = 0,
+    acuity_discount = 0,
+    excess_mana = 0,
+    excess_acuity = 0,
+  }
+  local dlg = GD.game.spell_cost
+  if card_index == 1 then dlg.mana_discount = 1
+  elseif card_index == 2 then dlg.acuity_discount = 1 end
+  --availble dice
+  for i,die in ipairs(player.dice) do
+    if not(die.allocated) then
+      local e = C.die_elements[die.value]
+      if contains(spell.dice, e) then
+        table.insert(dlg.available_dice, {
+          index=i,
+          element=e,
+        })
+      end
+    end
+  end
+  for i=1,dlg.flex_spots do
+    table.insert(dlg.slots, {
+      filled = false,
+      die = 0,
+      flex = true,
+      mana = 0,
+      acuity = 0,
+    })
+  end
+  for i=1,dlg.fixed_spots do
+    table.insert(dlg.slots, {
+      filled = false,
+      die = 0,
+      flex = false,
+    })
+  end
+  --TODO: pre-populate selections with matching fixed die if possible?
+  for i=1,5 do
+    UI.setClass("spell_assigned_die_"..tostring(i).."_img","die_image_inactive")
+  end
+  updateSpellCostDlg()
+  local card_image = "Spell-"..card.getGMNotes()
+  if env.test.debug then
+    log("---- Clearing card image")
+    UI_setAttribute("spell_cost_card_img","image","")  --HACK: trying to force image load
+    Wait.time(function()
+      log("---- Setting card image: "..card_image)
+      UI_setAttribute("spell_cost_card_img","image",card_image)
+    end,1)
+  else
+    UI_setAttribute("spell_cost_card_img","image",card_image)
+  end
+  UI_setAttribute("outer_spell_cost_panel","active",true)
+  hideSpellButtons()
+  enableAlterationButtons(false)
+end
+
+--[[ Update the spell cost dialog with latest data.  ]]
+function updateSpellCostDlg()
+  if env.test.trace then log("Global: updateSpellCostDlg") end
+  local dlg = GD.game.spell_cost
+  --availble resources
+  UI_setAttribute("spell_cost_mana_txt","text",tostring(dlg.available_mana))
+  UI_setAttribute("spell_cost_acuity_txt","text",tostring(dlg.available_acuity))
+  for i,die in ipairs(dlg.available_dice) do
+    UI_setAttribute("spell_cost_die_"..tostring(i).."_img","image",die.element)
+    UI.setClass("spell_cost_die_"..tostring(i).."_img","die_image_active")
+  end
+  for i=(#dlg.available_dice+1),7 do
+    UI.setClass("spell_cost_die_"..tostring(i).."_img","die_image_inactive")
+  end
+  --selected resources
+  UI_setAttribute("spell_assigned_mana_txt","text",tostring(dlg.assigned_mana))
+  UI_setAttribute("spell_assigned_acuity_txt","text",tostring(dlg.assigned_acuity))
+  for i,slot in ipairs(dlg.slots) do
+    if slot.filled then
+      if slot.die > 0 then
+        UI_setAttribute("spell_assigned_die_"..tostring(i).."_img","image",dlg.element)
+        UI.setClass("spell_assigned_die_"..tostring(i).."_img","die_image_active")
+      else
+        UI_setAttribute("spell_assigned_die_"..tostring(i).."_img","image","Filled-flex")
+        UI.setClass("spell_assigned_die_"..tostring(i).."_img","die_image_active")
+      end
+    else
+      if slot.flex then
+        --TODO: use unfilled flex slot image
+        UI_setAttribute("spell_assigned_die_"..tostring(i).."_img","image","Empty-flex")
+        UI.setClass("spell_assigned_die_"..tostring(i).."_img","die_image_active")
+      else
+        UI_setAttribute("spell_assigned_die_"..tostring(i).."_img","image","Empty-fixed")
+        UI.setClass("spell_assigned_die_"..tostring(i).."_img","die_image_active")
+      end
+    end
+  end
+  local state = false
+  if dlg.filled == dlg.flex_spots + dlg.fixed_spots then
+    if dlg.excess_mana == 0 and dlg.excess_acuity == 0 then
+      state = true
+    end
+  end
+  UI_setAttribute("spell_cost_assign_pnl","active",state)
+end
+
+--[[ Handler for pay spell cost dialog --]]
+function spellCostHandler(player, button, id)
+  if env.test.trace then log("Global: spellCostHandler() "..tostring(player.color)..", "..tostring(id)) end
+  if player.color ~= GD.game.player_order[GD.game.current_player] then return end
+  local dlg = GD.game.spell_cost
+  --////////////////////////////
+  local function updateSlots()
+    -- log("Global: spellCostHandler() updateSlots()")
+    --initialize the table of slots
+    dlg.filled = 0
+    for i=1,#dlg.slots do
+      dlg.slots[i].filled = false
+      dlg.slots[i].die = 0
+      if dlg.slots[i].flex then
+        dlg.slots[i].mana = 0
+        dlg.slots[i].acuity = 0
+      end
+    end
+    --fill with fixed die first
+    for i,die in ipairs(dlg.assigned_dice) do
+      local s = dlg.slots[#dlg.slots - (i-1)] --fill in reverse order
+      s.filled = true
+      s.die = die.index
+      dlg.filled = dlg.filled + 1
+    end
+    --fill flex slots with mana next
+    local mana_discount = dlg.mana_discount
+    local mana_used = 0
+    for i,slot in ipairs(dlg.slots) do
+      if not(slot.filled) and slot.flex then
+        if mana_discount > 0 then
+          slot.mana = slot.mana + 1
+          mana_discount = 0  --use only once
+        end
+        for n=1,2 do
+          if dlg.assigned_mana > mana_used then
+            mana_used = mana_used + 1
+            slot.mana = slot.mana + 1
+          end
+        end
+        if math.floor((slot.mana*2 + slot.acuity) / 2) >= 2 then
+          slot.filled = true
+          dlg.filled = dlg.filled + 1
+        end
+      end
+    end
+    --fill flex slots with acuity last
+    local acuity_discount = dlg.acuity_discount
+    local acuity_used = 0
+    for i,slot in ipairs(dlg.slots) do
+      if not(slot.filled) and slot.flex then
+        for n=1,4 do
+          if acuity_discount > 0 then
+            slot.acuity = slot.acuity + 1
+            acuity_discount = 0  --use only once
+          end
+          if dlg.assigned_acuity > acuity_used then
+            acuity_used = acuity_used + 1 --first mana spot in slot
+            slot.acuity = slot.acuity + 1
+          end
+        end
+        if math.floor((slot.mana*2 + slot.acuity) / 2) >= 2 then
+          slot.filled = true
+          dlg.filled = dlg.filled + 1
+        end
+      end
+    end
+  end
+  --////////////////////////////
+  local action = Split(id,"_")[3]
+  if action == "cancel" then
+    UI_setAttribute("outer_spell_cost_panel","active",false)
+    GD.game.spell_cost = {}
+    local card = getObjectFromGUID(GD.game.spells[dlg.card_index].card_guid)
+    assert(card,"spellCostHandler(): missing spell card object")
+    card.setLock(false)
+    Wait.frames(function()
+      Wait.condition(function() card.setLock(true) end, function() return card.resting end)
+    end,1)
+    updateSpellButtons(player.color)
+    enableAlterationButtons()
+  elseif action == "assign" then
+    --count up only assigned acuity and/or mana to pay, accounting for discounts
+    local mana = 0
+    local acuity = 0
+    for _,slot in ipairs(dlg.slots) do
+      if slot.flex and slot.die == 0 then
+        mana = mana + slot.mana
+        acuity = acuity + slot.acuity
+      end
+    end
+    if mana > 0 then mana = mana - dlg.mana_discount end
+    if acuity > 0 then acuity = acuity - dlg.acuity_discount end
+    if env.test.debug then
+      log(dlg)
+      log("Player payes "..tostring(mana).." Mana")
+      log("Player payes "..tostring(acuity).." Acuity")
+      for _,die in ipairs(dlg.assigned_dice) do
+        log("Player pays die at index: "..tostring(die.index)..", "..die.element)
+      end
+    end
+    local p = GD.game.players[player.color]
+    local board = getObjectFromGUID(p.board_guid)
+    assert(board, "ERROR: spellCostHandler(): assign: missing board")
+    local card = getObjectFromGUID(GD.game.spells[dlg.card_index].card_guid)
+    assert(card,"spellCostHandler(): assign: missing spell card object")
+    card.setLock(false)
+    board.call("placeObjByGUID", {guid=card.getGUID()})
+    GD.game.spells[dlg.card_index].card_id = 0
+    GD.game.spells[dlg.card_index].card_guid = ""
+    p.mana = p.mana - mana
+    p.acuity = p.acuity - acuity
+    for  _,die in ipairs(dlg.assigned_dice) do
+      p.dice[die.index].allocated = true
+    end
+    local index = #p.actions.takes
+    for i,take in ipairs(p.actions.takes) do
+      if take == "spell" then index=i; break end --priortize remove spell take
+    end
+    table.remove(p.actions.takes, index)
+    UI_setAttribute("outer_spell_cost_panel","active",false)
+    if #p.actions.takes == 0 then
+      hideSpellButtons()
+      enableAlterationButtons(false)
+    else
+      local alt_take, spell_take = false, false
+      for i,take in ipairs(p.actions.takes) do
+        if take == "spell" then spell_take = true end
+        if take == "any" then alt_take = true; spell_take = true end
+      end
+      if not(alt_take) then enableAlterationButtons(false) end
+      if spell_take then updateSpellbuttons(player.color)
+      else hideSpellButtons() end
+    end
+    GD.game.spell_cost = {}
+    updateHUD()
+  elseif action == "mana" then
+    local type = Split(id,"_")[2]
+    if type == "cost" then
+      if dlg.available_mana == 0 then return end --no more mana
+      if dlg.filled == #dlg.slots then return end --slots full
+      if dlg.filled - #dlg.assigned_dice >= dlg.flex_spots then return end -- no more flex spots
+      dlg.assigned_mana = dlg.assigned_mana + 1
+      dlg.available_mana = dlg.available_mana - 1
+      updateSlots()
+    elseif type == "assigned" then
+      -- log("------ decrement mana")
+      if dlg.assigned_mana == 0 then return end --no more mana assigned
+      dlg.assigned_mana = dlg.assigned_mana - 1
+      dlg.available_mana = dlg.available_mana + 1
+      updateSlots()
+    else
+      log("ERROR: spellCostHandler() unknown mana action type")
+      return
+    end
+    updateSpellCostDlg()
+  elseif action == "acuity" then
+    local type = Split(id,"_")[2]
+    if type == "cost" then
+      if dlg.available_acuity == 0 then return end --no more mana
+      if dlg.filled == #dlg.slots then return end --slots full
+      if dlg.filled - #dlg.assigned_dice >= dlg.flex_spots then return end -- no more flex spots
+      dlg.assigned_acuity = dlg.assigned_acuity + 1
+      dlg.available_acuity = dlg.available_acuity - 1
+      updateSlots()
+    elseif type == "assigned" then
+      if dlg.assigned_acuity == 0 then return end --no more acuity assigned
+      dlg.assigned_acuity = dlg.assigned_acuity - 1
+      dlg.available_acuity = dlg.available_acuity + 1
+      updateSlots()
+    else
+      log("ERROR: spellCostHandler() unknown acuity action type")
+      return
+    end
+    updateSpellCostDlg()
+  elseif action == "die" then
+    local type = Split(id,"_")[2]
+    if type == "cost" then
+      local i = tonumber(Split(id,"_")[4])
+      local die = dlg.available_dice[i]
+      if dlg.element ~= "" and die.element ~= dlg.element then
+        broadcastToColor("Cannot mix element types on a spell card", player.color)
+        return
+      end
+      if dlg.filled == #dlg.slots then return end --slots full
+      if dlg.element == "" then dlg.element = die.element end
+      table.insert(dlg.assigned_dice, {
+        index=die.index,
+        element=die.element,
+        value=die.value,
+      })
+      table.remove(dlg.available_dice,i)
+      updateSlots()
+    elseif type == "assigned" then
+      local i = tonumber(Split(id,"_")[4])
+      if dlg.slots[i].die == 0 then return end --ignore spot without die
+      if dlg.filled == 0 then return end --ignore if empty
+      local die = dlg.assigned_dice[#dlg.assigned_dice]
+      table.insert(dlg.available_dice, {
+        index=die.index,
+        element=die.element,
+        value=die.value,
+      })
+      table.remove(dlg.assigned_dice,#dlg.assigned_dice)
+      if #dlg.assigned_dice == 0 then dlg.element = "" end
+      updateSlots()
+    else
+      log("ERROR: spellCostHandler() unknown die action type")
+      return
+    end
+    updateSpellCostDlg()
+  end
 end
 
 --[[ Handle objects picked up in game.  Only certain object tags supported.  --]]
@@ -1157,16 +1554,17 @@ function updateHUD(player_color)
     end
     UI_setAttribute("hud_row_"..tostring(i).."_heroics", "text", tostring(heroics).." / "..tostring(max_heroics))
     UI_setAttribute("hud_row_"..tostring(i).."_score", "text", tostring(score))
-    local d = board.call("getUnallocatedDiceValues")
-    for i=1,7 do
+    for i,d in ipairs(GD.game.players[pcol].dice) do
       local id = pcol.."_hud_die_"..tostring(i).."_image"
-      if i <= #d then
-        UI.setAttribute(id,"image",C.die_elements[d[i]])
-        UI.setClass(id, "die_image_active")
-      else
+      if d.allocated then
         UI.setClass(id, "die_image_inactive")
+      else
+        UI.setAttribute(id,"image",C.die_elements[d.value])
+        UI.setClass(id, "die_image_active")
       end
     end
+    UI_setAttribute(pcol.."_hud_mana_text","text",tostring(GD.game.players[pcol].mana))
+    UI_setAttribute(pcol.."_hud_acuity_text","text",tostring(GD.game.players[pcol].acuity))
   end
   if player_color ~= nil then
     updatePlayerHUD(indexOf(GD.game.player_order, player_color), player_color)
@@ -1256,6 +1654,21 @@ end
 
 --[[ ******** UTILITY ******** --]]
 
+function simpleDeepCopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[simpleDeepCopy(orig_key)] = simpleDeepCopy(orig_value)
+        end
+        setmetatable(copy, simpleDeepCopy(getmetatable(orig)))
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end
+
 --[[ Get obj position (DEVELOPMENT ONLY) ]]
 function savePosition(g)
   local o = getObjectFromGUID(g)
@@ -1263,7 +1676,7 @@ function savePosition(g)
 end
 
 --[[ Get obj rotation (DEVELOPMENT ONLY) ]]
-  function saveRotation(g)
+function saveRotation(g)
   local o = getObjectFromGUID(g)
   Notes.setNotes(tostring(o.getRotation()))
 end

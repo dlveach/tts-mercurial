@@ -81,6 +81,7 @@ heroics_zone_size = {["x"]=1.68,["y"]=5.1,["z"]=6.59}
 mana_acuity_zone_local_pos = {x=0.9717337,y=-2.351134,z=-0.3036352}
 mana_acuity_zone_size = {x=2.998749,y=5.1,z=2.524589}
 
+--TODO: move card decal stuff to Constants.ttslua
 card_decal_pos = {0,0.364,-1.124}
 card_decal_rot = {90,180,0}
 card_decal_scale = {0.97,0.81,11.54}
@@ -190,17 +191,16 @@ function restoreBoardState()
   --TODO: buttons on cards do not survive save/laod.  Recreate.
     --  Workaround is just pickup the card and drop it.
     --  Decals DO save and restore.
-
 end
 
 --[[ Wrapper function for saving obj visiblity for game restore. ]]
-  function setInvisibleTo(guid, colors)
-    if env.test.trace then log("setInvisibleTo(): "..guid) end
-    assert(type(guid) == 'string', "guid must be a string")
-    assert(colors)
-    getObjectFromGUID(guid).setInvisibleTo(colors)
-    GD.states.obj_vis[guid] = colors
-  end
+function setInvisibleTo(guid, colors)
+  if env.test.trace then log("setInvisibleTo(): "..guid) end
+  assert(type(guid) == 'string', "guid must be a string")
+  assert(colors)
+  getObjectFromGUID(guid).setInvisibleTo(colors)
+  GD.states.obj_vis[guid] = colors
+end
 
 --[[  Wrapper function for saving UI attributes for game restore. ]]
 function UI_setAttribute(id, field, value)
@@ -209,6 +209,15 @@ function UI_setAttribute(id, field, value)
   assert(type(field) == "string", "field must be a string")
   self.UI.setAttribute(id, field, value)
   GD.states.UI[id..":"..field] = value
+end
+
+--[[ Provide an external call to UI_setAttribute. ]]
+function setUI(p)
+  assert(p, self.getName()..": ERROR: setUI() missing parameter table")
+  assert(p.id, self.getName()..": ERROR: setUI() missing parameter id")
+  assert(p.field, self.getName()..": ERROR: setUI() missing parameter field")
+  assert(p.value == false or p.value == true, self.getName()..": ERROR: setUI() missing parameter value")
+  UI_setAttribute(p.id, p.field, p.value)
 end
 
 --[[ Create script zones for this player board.
@@ -450,7 +459,7 @@ function castCleanup()
   UI_setAttribute("acuity_restore_text_id", "text", "0")
   UI_setAttribute("acuity_ruin_text_id", "text", "0")
   UI_setAttribute("score_text_id", "text", "0")
-  UI_setAttribute("roll_dice_pnl", "active", "true")
+  -- UI_setAttribute("roll_dice_pnl", "active", "true")
 end
 
 --[[ Player dropped something on this board. --]]
@@ -491,9 +500,18 @@ function placeObjects(list)
   Wait.frames(function() placeObjects(list) end, 30)
 end
 
+--[[ Ext call wrapper for placing an object on this board. ]]
+function placeObjByGUID(params)
+  if env.test.trace then log(self.getName() .. ":placeObjByGUID()") end
+  assert(params,self.getName()..":ERROR:placeObjByGUID() missing params")
+  local obj = getObjectFromGUID(params.guid)
+  assert(obj,self.getName()..":ERROR:placeObjByGUID() missing object")
+  action = "drop" --HACK: don't like this!
+  placeObject(obj)
+end
+
 --[[ Document --]]
 function placeObject(obj)
-  -- if env.test.trace then log(self.getName() .. ":placeObject() "..tostring(obj)) end
   if env.test.trace then log(self.getName() .. ":placeObject()") end
   local p = {
     origin       = {},
@@ -576,12 +594,21 @@ function placeObject(obj)
     local pos = scatter(self.positionToWorld(dice_zone_local_pos), {1.25,0,1.5}, {0.1,0,0.1})
     obj.setPositionSmooth(pos, false, true)
   elseif obj.hasTag("Spell") then
+    log("action is "..action)
     if action == "drop" then
-      log("--- TODO: Spell drop, locate best spell position for spell power?")
+      log("--- TODO: Spell drop, locate best spell position for spell card?")
+      --TODO: global "action" flag is ugly!  find a better way
+      local pos = self.positionToWorld(drop_zone_local_pos)
+      pos.y = 3
+      log(pos)
+      obj.setLock(false)
+      obj.setPositionSmooth(pos, false, true) --just drop it on player board for now
     elseif action == "cleanup" then
       local pos = Vector(self.positionToWorld(spell_discards_local_pos))
       pos.y = 3
       obj.setPositionSmooth(pos, false, true)
+    else
+      log(self.getName()..": ERROR: placeObject() invalid action for spell card")
     end
   elseif obj.hasTag("Arcana") then
     local pos = Vector(self.positionToWorld(spell_discards_local_pos))
@@ -671,11 +698,6 @@ function setPlayer(params)
   GD.board.player_position = params.position
   createZones()
   UI_setAttribute("class_select_pnl", "active", "false")
-  local deck = getObjectFromGUID(start_deck)
-  card_count = #deck.getObjects()
-  deck.deal(card_count, GD.board.player_color)
-  deck = getObjectFromGUID(C.guids.artifacts_deck)
-  deck.deal(artifact_cards, GD.board.player_color)
   if take_myst_rune then
     --get the myst rune and move it to Mystcaller
     local guid = Global.call("getMystRuneGuid")
@@ -700,41 +722,12 @@ function setPlayer(params)
   UI_setAttribute("acuity_ruin_panel", "active", "true")
   UI_setAttribute("update_spell_pnl", "active", "true")
   UI_setAttribute("score_panel", "active", "true")
-  UI_setAttribute("roll_dice_pnl", "active", "true")
+  -- UI_setAttribute("roll_dice_pnl", "active", "true")
   UI_setAttribute("yellow_sigils_panel", "active", "true")
   UI_setAttribute("green_sigils_panel", "active", "true")
   UI_setAttribute("red_sigils_panel", "active", "true")
   UI_setAttribute("blue_sigils_panel", "active", "true")
   UI_setAttribute("wild_sigils_panel", "active", "true")
-  --Starting dice
-  local dice_bag = getObjectFromGUID(C.guids.dice_bag)
-  local function dice()
-    dice_bag.takeObject({
-      callback_function = function(obj)
-        obj.setValue(math.random(1,6))
-        placeObject(obj)
-      end
-    })
-  end
-  Wait.time(function() dice() end, .25, start_dice)
-  --Starting mana
-  local mana_bag = getObjectFromGUID(C.guids.mana_bag)
-  local function mana()
-    mana_bag.takeObject({
-      callback_function = function(obj) placeObject(obj) end
-    })
-  end
-  Wait.time(function() mana() end, .25, start_mana)
-  --Starting acuity
-  if start_acuity > 0 then
-    local acuity_bag = getObjectFromGUID(C.guids.acuity_bag)
-    local function acuity()
-      acuity_bag.takeObject({
-        callback_function = function(obj) placeObject(obj) end
-      })
-    end
-    Wait.time(function() acuity() end, .25, start_acuity)
-  end
   GD.board.sigils[board_sigil] = 1
   if board_sigil == "wild" then
     UI_setAttribute(board_sigil.."_sigils_text","text","+1")
@@ -744,49 +737,65 @@ function setPlayer(params)
 end
 
 --[[ Called from Global during player setup or when player types a number over a bag. ]]
+--TODO: get rid of this mess, use global player data
 function dealItems(params)
   if env.test.trace then log(self.getName() .. ": dealAcuity()") end
-  assert(params.item_type)
-  assert(params.amount)
-  local bag
-  local function endTrigger() end
-  if params.item_type == "acuity" then
-    bag = getObjectFromGUID(C.guids.acuity_bag)
-    endTrigger = function() updateSpellPower() end
-  elseif params.item_type == "mana" then
-    bag = getObjectFromGUID(C.guids.mana_bag)
-  elseif params.item_type == "prestige" then
-    bag = getObjectFromGUID(C.guids.prestige_bag)
-    endTrigger = function() updateScore() end
-  else
-    log(self.getName().." ERROR: unknown item type, cannot deal.")
-    return
-  end
-  if env.test.debug then log(self.getName().." placing "..params.amount .." "..params.item_type) end
-  local count = 0
-  local function deal()
-      bag.takeObject({
-      callback_function = function(obj)
-        placeObject(obj)
-        count = count + 1
-        if count == params.amount then
-          Wait.time(endTrigger, 1)
-        end
-      end
-    })
-  end
-  Wait.time(function() deal() end, .25, params.amount)
+  log("---------->>>>>> TODO: get rid of all playerBoard:dealItems() !!!!!!")
+  -- assert(params.item_type)
+  -- assert(params.amount)
+  -- local bag
+  -- local function endTrigger() end
+  -- if params.item_type == "acuity" then
+  --   bag = getObjectFromGUID(C.guids.acuity_bag)
+  --   endTrigger = function()
+  --     updateSpellPower()
+  --     -- Global.call("updateSpellButtons",GD.board.player_color)
+  --   end
+  -- elseif params.item_type == "mana" then
+  --   bag = getObjectFromGUID(C.guids.mana_bag)
+  --   endTrigger = function()
+  --     -- Global.call("updateSpellButtons",GD.board.player_color)
+  --   end
+  -- elseif params.item_type == "prestige" then
+  --   bag = getObjectFromGUID(C.guids.prestige_bag)
+  --   endTrigger = function()
+  --     updateScore()
+  --   end
+  -- else
+  --   log(self.getName().." ERROR: unknown item type, cannot deal.")
+  --   return
+  -- end
+  -- if env.test.debug then log(self.getName().." placing "..params.amount .." "..params.item_type) end
+  -- local count = 0
+  -- local function deal()
+  --     bag.takeObject({
+  --     callback_function = function(obj)
+  --       placeObject(obj)
+  --       count = count + 1
+  --       if count == params.amount then
+  --         Wait.time(endTrigger, 1)
+  --       end
+  --     end
+  --   })
+  -- end
+  -- Wait.time(function() deal() end, .25, params.amount)
 end
 
 --[[ Called from Global when this player is active. ]]
-function enableActivePlayer()
-  if env.test.trace then log(self.getName() .. ": enableActivePlayer()") end
-  UI_setAttribute("next_player_pnl", "active", "true")
-  UI_setAttribute("cleanup_pnl", "active", "true")
+function enableActivePlayer(state)
+  local state = state and true
+  if env.test.trace then log(self.getName() .. ": enableActivePlayer() "..tostring(state)) end
   local color_bar = getObjectFromGUID(C.guids.color_bars[GD.board.player_position])
-  color_bar.setInvisibleTo({})
-  color_bar.UI.setAttribute("block_panel", "active", "true")
-  GD.board.active = true
+  UI_setAttribute("next_player_pnl", "active", false)
+  UI_setAttribute("cleanup_pnl", "active", state)
+  if state then
+    color_bar.setInvisibleTo({})
+    color_bar.UI.setAttribute("block_panel", "active", "true")
+  else
+    color_bar.setInvisibleTo(Player.getColors())
+    color_bar.UI.setAttribute("block_panel", "active", "false")
+  end
+  GD.board.active = state
 end
 
 --[[ Called from Global after all players have selected a class.  Also may be called during game restore.
@@ -842,6 +851,29 @@ function getUnusedAcuityCount()
     if hits ~= nil then
       for _,h in pairs(hits) do
         if h.hit_object.hasTag("Acuity") then count = count + 1 end
+      end
+    end
+  end
+  return count
+end
+
+--[[ Return a count of unused acuity on the player class board. --]]
+function getUnusedManaCount()
+  local p = {
+    origin       = {},
+    direction    = {0,1,0},
+    type         = 2,
+    size         = {0.25,0.25,0.25},
+    max_distance = 1,
+    debug        = false,
+  }
+  local count = 0
+  for i=1,10 do
+    p.origin = self.positionToWorld(mana_local_pos[i])
+    local hits = Physics.cast(p)
+    if hits ~= nil then
+      for _,h in pairs(hits) do
+        if h.hit_object.hasTag("Mana") then count = count + 1 end
       end
     end
   end
@@ -1550,26 +1582,29 @@ end
 
 --[[ Handler for the roll dice button.  --]]
 --TODO: add xml UI for this, hide button after rolling, show button when cleanup button is hit  DONE???
-function rollAllDiceBtn(player, mouse, id)
-  if player.color == GD.board.player_color then
-    if env.test.trace then log(self.getName().." rollAllDice()") end
-    UI_setAttribute("roll_dice_pnl", "active", "false")
-    local z = getObjectFromGUID(GD.board.dice_zone)
-    if z ~= nil then
-      for _,d in pairs(z.getObjects()) do d.roll() end
-      Wait.condition(
-        function() updateSpellPower() end,
-        function()
-          local resting = true
-          for _,d in pairs(z.getObjects()) do resting = resting and d.resting end
-          return resting
-        end
-      )
-    else
-      log(self.getName().." ERROR: no dice zone for guid "..GD.board.dice_zone)
-    end
-  end
-end
+-- function rollAllDiceBtn(player, mouse, id)
+--   if player.color == GD.board.player_color then
+--     if env.test.trace then log(self.getName().." rollAllDice()") end
+--     UI_setAttribute("roll_dice_pnl", "active", "false")
+--     local z = getObjectFromGUID(GD.board.dice_zone)
+--     if z ~= nil then
+--       for _,d in pairs(z.getObjects()) do d.roll() end
+--       Wait.condition(
+--         function()
+--           updateSpellPower()
+--           Global.call("startPlayerTurn", player.color)
+--         end,
+--         function()
+--           local resting = true
+--           for _,d in pairs(z.getObjects()) do resting = resting and d.resting end
+--           return resting
+--         end
+--       )
+--     else
+--       log(self.getName().." ERROR: no dice zone for guid "..GD.board.dice_zone)
+--     end
+--   end
+-- end
 
 --[[ Called from Global when a player randomizes (rolls) one or more die by
   selecting them and hitting the 'r' button or uses the roll context menu.
