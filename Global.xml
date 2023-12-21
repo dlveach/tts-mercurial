@@ -23,7 +23,7 @@
   </Panel>
 
   <!-- Alteration card discard dialog -->
-  <Panel id="alterationDiscardPanel" active="false"
+  <!-- <Panel id="alterationDiscardPanel" active="false"
     allowDragging="true"
     returnToOriginalPositionWhenReleased="false"
     offsetXY="0 200"
@@ -38,7 +38,7 @@
         <Button id="alteration_cancel_btn" onClick="alterationActionBtn">Cancel</Button>
       </HorizontalLayout>
     </VerticalLayout>
-  </Panel>
+  </Panel> -->
 
   <!-- Select Class Board Panel -->
   <Panel id="selectClassBoardPanel" active="false"
@@ -500,6 +500,161 @@
         </Row>
       </TableLayout>
     </Panel>
+  </Panel>
+
+  <!-- Alteration card panel -->
+  <Panel id="alteration_card_panel" active="false"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
+    offsetXY="0 50"
+    color="rgb(0.7,0.3,0)"
+    image="Sprites/Layout/Viewport"
+    height="350" width="1120"
+    padding="10 10 10 10">
+    <TableLayout class="base_table" color="#301616" columnWidths="200 900">
+      <Row preferredHeight="330"  >
+        <Cell padding="5 5 5 5">
+          <Image id="alteration_card_img" preserveAspect="true" image="Alt-1" onClick="alterationDlgHandler"/>
+        </Cell>
+        <Cell>
+
+          <TableLayout id="alteration_select_action_tbl" class="base_table" ignoreLayout="true" active="true"
+            rectAlignment="UpperCenter" height="270" width="900">
+            <Row class="base_table_row" preferedHeight="100">
+              <Cell padding="20 20 10 10">
+                <HorizontalLayout spacing="20">
+                  <Panel>
+                    <Button padding="20 20 0 10" id="alteration_primary_action_btn" onClick="alterationDlgHandler">
+                      <Text id="alteration_primary_action_txt" text="Primary" fontSize="20" />
+                    </Button>
+                  </Panel>
+                  <Panel id="alteration_primary_or_action_pnl">
+                    <Button padding="20 20 0 10" id="alteration_primary_or_action_btn" onClick="alterationDlgHandler">
+                      <Text id="alteration_primary_or_action_txt" text="OR Primary" fontSize="20" />
+                    </Button>
+                  </Panel>
+                </HorizontalLayout>
+              </Cell>
+            </Row>
+            <Row class="base_table_row" preferedHeight="100">
+              <Cell padding="20 20 10 10">
+                <HorizontalLayout spacing="20">
+                  <Panel>
+                    <Button padding="20 20 0 10" id="alteration_secondary_action_btn" onClick="alterationDlgHandler">
+                      <Text id="alteration_secondary_action_txt" text="Secondary" fontSize="20" />
+                    </Button>
+                  </Panel>
+                  <Panel id="alteration_discard_action_pnl">
+                    <Button padding="20 20 0 10" id="alteration_discard_action_btn" onClick="alterationDlgHandler">
+                      <Text id="alteration_discard_action_txt" text="DISCARD: Spend one Acuity and then take another card." fontSize="20" />
+                    </Button>
+                  </Panel>
+                </HorizontalLayout>
+              </Cell>
+            </Row>
+          </TableLayout>
+
+          <TableLayout id="alteration_pay_acuity_tbl" class="base_table" ignoreLayout="true" active="false"
+            columnWidths="0 0"
+            rectAlignment="UpperCenter" height="270" width="900">
+            <Row class="base_table_row">
+              <Cell columnSpan="2">
+                <Text class="table_title_text" text="Pay Acuity"/>
+              </Cell>
+            </Row>
+            <Row class="base_table_row">
+              <Cell padding="5">
+                <VerticalLayout>
+                  <Text class="hud_header" fontSize="20" text="Available Acuity:"/>
+                  <Text id="alteration_available_acuity" fontSize="24" color="white" text="0"/>
+                </VerticalLayout>
+              </Cell>
+              <Cell padding="5">
+                <VerticalLayout>
+                  <Text class="hud_header" fontSize="20" text="Acuity to pay:"/>
+                  <Text id="alteration_available_acuity" fontSize="24" color="white" text="0"/>
+                </VerticalLayout>
+              </Cell>
+            </Row>
+            <Row class="base_table_row">
+              <Cell/>
+              <Cell>
+                <HorizontalLayout>
+                  <Panel padding="80 40 20 20">
+                    <Button padding="0 0 0 5" id="alteration_dec_acuity_btn" fontSize="40" text="-" onClick="alterationDlgHandler"/>
+                  </Panel>
+                  <Panel padding="40 80 20 20">
+                    <Button id="alteration_inc_acuity_btn" fontSize="40" text="+" onClick="alterationDlgHandler"/>
+                  </Panel>
+                </HorizontalLayout>
+              </Cell>
+            </Row>
+          </TableLayout>
+
+          <TableLayout id="alteration_convert_dice_tbl" class="base_table" ignoreLayout="true" active="false"
+            columnWidths="0 0"
+            rectAlignment="UpperCenter" height="270" width="900">
+            <Row class="base_table_row">
+              <Cell padding="0 0 10 10">
+                <TableLayout columnWidths="0 70 20 70 20 70 20 70 20 70 20 70 20 70 0">
+                  <Row>
+                    <Cell>
+                      <Text class="hud_header" fontSize="20" text="Convert from:"/>
+                    </Cell>
+                    <Cell><Image id="convert_from_die_1_img" image="Earth" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell/>
+                    <Cell><Image id="convert_from_die_2_img" image="Water" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell/>
+                    <Cell><Image id="convert_from_die_3_img" image="Water" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell/>
+                    <Cell><Image id="convert_from_die_4_img" image="Fire" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell/>
+                    <Cell><Image id="convert_from_die_5_img" image="Water" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell/>
+                    <Cell><Image id="convert_from_die_6_img" image="Lightning" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell/>
+                    <Cell><Image id="convert_from_die_7_img" image="Lightning" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell/>
+                  </Row>
+                  <Row>
+                    <Cell>
+                      <Text class="hud_header" fontSize="20" text="Convert to:"/>
+                    </Cell>
+                    <Cell><Image id="convert_to_die_1_img" image="Earth" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell/>
+                    <Cell><Image id="convert_to_die_2_img" image="Water" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell/>
+                    <Cell><Image id="convert_to_die_3_img" image="Water" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell/>
+                    <Cell><Image id="convert_to_die_4_img" image="Fire" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell/>
+                    <Cell><Image id="convert_to_die_5_img" image="Water" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell/>
+                    <Cell><Image id="convert_to_die_6_img" image="Lightning" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell/>
+                    <Cell><Image id="convert_to_die_7_img" image="Lightning" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell/>
+                  </Row>
+                </TableLayout>
+              </Cell>
+            </Row>
+          </TableLayout>
+
+          <HorizontalLayout id="alteration_card_buttons" ignoreLayout="true" active="true"
+            color="#301616" spacing="20" rectAlignment="LowerCenter" height="60" width="900">
+            <Panel/>
+            <Panel padding="10 10 5 5" id="alteration_cancel_pnl">
+              <Button padding="0 0 0 5" id="alteration_cancel_btn" text="Cancel" fontSize="20" onClick="alterationDlgHandler"/>
+            </Panel>
+            <Panel padding="10 10 5 5" id="alteration_done_pnl" active="false">
+              <Button padding="0 0 0 5" id="alteration_done_btn" text="Done" fontSize="20" onClick="alterationDlgHandler"/>
+            </Panel>
+            <Panel/>
+          </HorizontalLayout>
+
+        </Cell>
+      </Row>
+    </TableLayout>
   </Panel>
 
 

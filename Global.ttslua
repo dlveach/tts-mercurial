@@ -128,6 +128,12 @@ function onLoad(saved_data)
     if not(env.test.in_dev) then
       --TODO: anything??
     end
+    --setup UI dialogs
+    UI_setAttribute("outer_spell_cost_panel","visibility","Pink")
+    UI_setAttribute("outer_spell_cost_panel","active",true)
+    UI_setAttribute("alteration_card_panel","visibility","Pink")
+    UI_setAttribute("alteration_card_panel","active",true)
+
     UI_setAttribute("startPanel", "active", true)
   end
   math.randomseed(os.time())
@@ -931,19 +937,19 @@ function onObjectNumberTyped(o, pcol, n)
 end
 
 --[[ When die are randomized (re-rolled) by a player then trigger HUD update. ]]
-function onObjectRandomize(obj, player_color)
-  if obj.hasTag("Dice") then
-    Wait.condition(function() updateHUD(player_color) end, function() return obj.resting end)
-  end
-end
+-- function onObjectRandomize(obj, player_color)
+--   if obj.hasTag("Dice") then
+--     Wait.condition(function() updateHUD(player_color) end, function() return obj.resting end)
+--   end
+-- end
 
 --[[ Used only to trigger a wait on dice by the appropriate player board. --]]
-function onObjectRandomize(o, pcol)
-  if o.hasTag("Dice") then
-    local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
-    board.call("waitOnDiceRoll", {})
-  end
-end
+-- function onObjectRandomize(o, pcol)
+--   if o.hasTag("Dice") then
+--     local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
+--     board.call("waitOnDiceRoll", {})
+--   end
+-- end
 
 --[[ Check Alteration cards as they enter player's hand.  Assign ownership if they are not owned. ]]
 --TODO: remove this, OBE
@@ -973,25 +979,28 @@ function onObjectDrop(player_color, obj)
     local fn
     local params = {guid = obj.getGUID()}
     if obj.hasTag("Spell") then fn = "spellDrop"
-    elseif obj.hasTag("Acuity") then fn = "acuityDrop"
-    elseif obj.hasTag("Dice") then fn = "diceDrop"
+    -- elseif obj.hasTag("Acuity") then fn = "acuityDrop"
+    -- elseif obj.hasTag("Dice") then fn = "diceDrop"
     elseif obj.hasTag("Alteration") then
       if contains(Player[player_color].getHandObjects(), obj) then return end --ignore moving in hand
       if contains(GD.game.players[player_color].alteration_cards, obj.getGUID()) then
-        if alterations[tonumber(obj.getGMNotes())].discard then
-          UI.setAttribute("alterationDiscardPanel","hidden",obj.getGUID())
-          UI_setAttribute("alterationDiscardPanel","active","true")
-        else
-          params.action = "play"
-          fn = "playAlteration"
-        end
+        local index = tonumber(obj.getGMNotes())
+        obj.setLock(true)
+        showAlterationDlg(index, player_color)
+        -- if alterations[tonumber(obj.getGMNotes())].discard then
+        --   UI.setAttribute("alterationDiscardPanel","hidden",obj.getGUID())
+        --   UI_setAttribute("alterationDiscardPanel","active","true")
+        -- else
+        --   params.action = "play"
+        --   fn = "playAlteration"
+        -- end
       end
     end
-    if fn then
-      if env.test.trace then log("Global: onObjectDrop() -> "..tostring(fn)) end
-      local player_board = getObjectFromGUID(GD.game.players[player_color].board_guid)
-      player_board.call(fn, params)
-    end
+    -- if fn then
+    --   if env.test.trace then log("Global: onObjectDrop() -> "..tostring(fn)) end
+    --   local player_board = getObjectFromGUID(GD.game.players[player_color].board_guid)
+    --   player_board.call(fn, params)
+    -- end
   end
 end
 
@@ -1013,6 +1022,104 @@ function alterationActionBtn(player, button, id)
     return
   end
   if success then UI_setAttribute("alterationDiscardPanel","active","false") end
+end
+
+--[[ Show the initial Alteration card dialog when playier plays an alteration card. ]]
+function showAlterationDlg(card_index, pcol)
+  if env.test.trace then log("Global: showAlterationDlg() "..tostring(card_index)..", "..pcol) end
+  local index = card_index or 1
+  --show initial dialog set up for selection an action
+  local card = alterations[index]
+  assert(card, "showAlterationDlg(): can't find card data")
+  if card.primary then
+    UI_setAttribute("alteration_primary_action_txt","text","PRIMARY: "..card.primary.actions[1].desc)
+    local or_state = false
+    if #card.primary.actions > 1 then
+      UI_setAttribute("alteration_primary_or_action_txt","text","OR: "..card.primary.actions[2].desc)
+      or_state = true
+    end
+    UI_setAttribute("alteration_primary_or_action_pnl","active",or_state)
+  else
+    UI_setAttribute("alteration_primary_action_txt","text","undefined")
+    UI_setAttribute("alteration_primary_or_action_txt","text","undefined")
+  end
+  if card.secondary then
+    UI_setAttribute("alteration_secondary_action_txt","text","SECONDARY: "..card.secondary.desc)
+  else
+    UI_setAttribute("alteration_secondary_action_txt","text","undefined")
+  end
+  UI_setAttribute("alteration_discard_action_pnl","active",card.discard == true)
+  UI_setAttribute("alteration_card_img","image","Alt-"..tostring(index))
+  UI_setAttribute("alteration_pay_acuity_tbl","active",false)
+  UI_setAttribute("alteration_convert_dice_tbl","active",false)
+  UI_setAttribute("alteration_select_action_tbl","active",true)
+  UI_setAttribute("alteration_done_pnl","active",false)
+  UI_setAttribute("alteration_cancel_pnl","active",true)
+  UI_setAttribute("alteration_card_panel","visibility",pcol)
+  -- set up data structure
+  GD.game.alteration_action = {}
+  local alt = GD.game.alteration_action
+  alt.player_color = pcol
+  alt.card = simpleDeepCopy(card)
+  alt.action = ""
+  alt.acuity_paid = 0
+  alt.from_dice = {}
+  alt.to_dice = {}
+  if env.test.debug then log(alt) end
+end
+
+function updateAlterationDlg()
+  if env.test.trace then log("Global: alterationDlgHandler()") end
+
+end
+
+function alterationDlgHandler(player, button, id)
+  if env.test.trace then log("Global: alterationDlgHandler() "..player.color..", "..tostring(id)..", "..tostring(button)) end
+  if player.color ~= GD.game.player_order[GD.game.current_player] then return end
+  local action = Split(id,"_")[2]
+  local alt = GD.game.alteration_action
+
+  if action == "primary" then
+    log("executing primary action(s) for card "..tostring(alt.card.id))
+    if alt.card.primary.requirements then
+      for i,r in ipairs(alt.card.primary.requirements) do
+        log("TODO: check primary action requirement "..tostring(i))
+        log(r)
+      end
+    end
+    for i,a in ipairs(alt.card.primary.actions) do
+      log("TODO: "..a.desc)
+    end
+  elseif action == "secondary" then
+    log("executing secondary action for card "..tostring(alt.card.id))
+    log("TODO: "..alt.card.secondary.desc)
+  elseif action == "discard" then
+    log("executing discard action for card "..tostring(alt.card.id))
+    log("TODO: check acuity > 0 and execute discard")
+  elseif action == "done" then
+    log("TODO: alteration action done button")
+  elseif action == "cancel" then
+    local c = getObjectFromGUID(alt.card.guid)
+    assert(c, "ERROR: alterationDlgHandler(): unable to locate card object "..tostring(alt.card.guid))
+    c.setLock(false)
+    c.deal(1,player.color)
+    GD.game.alteration_action = {}
+    UI_setAttribute("alteration_card_panel","visibility","Pink")
+  else
+    log("ERROR: alterationDlgHandler() unknown action")
+  end
+
+  --TESTING
+  -- if id == "alteration_card_img" then
+  --   local index = tonumber(UI.getAttribute("alteration_card_img","hidden"))
+  --   if not(index) then index = 1 end
+  --   if button == "-1" then
+  --     if index < 44 then showAlterationDlg(index + 1, player.color) end
+  --   elseif button == "-2" then
+  --     if index > 1 then showAlterationDlg(index - 1, player.color) end
+  --   end
+  -- end
+  --/TESTING
 end
 
 --[[ Handler for Recycle Leftmost Spell button. ]]
@@ -1231,7 +1338,6 @@ function spellCostHandler(player, button, id)
   local dlg = GD.game.spell_cost
   --////////////////////////////
   local function updateSlots()
-    -- log("Global: spellCostHandler() updateSlots()")
     --initialize the table of slots
     dlg.filled = 0
     for i=1,#dlg.slots do
@@ -1332,6 +1438,7 @@ function spellCostHandler(player, button, id)
     assert(card,"spellCostHandler(): assign: missing spell card object")
     card.setLock(false)
     board.call("placeObjByGUID", {guid=card.getGUID()})
+    board.call("setUI",{id="next_player_pnl",field="active",value=true})
     GD.game.spells[dlg.card_index].card_id = 0
     GD.game.spells[dlg.card_index].card_guid = ""
     p.mana = p.mana - mana
@@ -1438,7 +1545,10 @@ function spellCostHandler(player, button, id)
   end
 end
 
---[[ Handle objects picked up in game.  Only certain object tags supported.  --]]
+--[[ Handle objects picked up in game.
+    Only for Spell card tags.  Used to support the decal label used
+    on spells with both types of spell power.
+--]]
 function onObjectPickUp(player_color, obj)
   if GD.game.started then
     if obj.hasTag("Spell") then
@@ -1453,12 +1563,33 @@ function onObjectPickUp(player_color, obj)
   end
 end
 
---[[ Handle cards leaving decks.  Set tooltip description if enabled. ]]
+--[[ Handle cards leaving decks.
+    Sets tooltip description if enabled.
+    Update guid in LUT (just in case)
+    Set name to GMNotes id just for debugging if enabled.
+--]]
 function onObjectLeaveContainer(container, obj)
   if container.tag == "Deck" then
     if obj.hasTag("Alteration") then
       local data = alterations[tonumber(obj.getGMNotes())]
-      if GD.env.card_tooltips then obj.setDescription(data.desc) end
+      if GD.env.card_tooltips then
+        local txt = ""
+        if data.primary then
+          txt = "PRIMARY: "
+          for i,a in ipairs(data.primary.actions) do
+            if i > 1 then txt = txt .. " OR: " end
+            txt = txt .. a.desc
+          end
+        end
+        if data.secondary then
+          txt = txt .. "\nSECONDARY: "..data.secondary.desc
+        end
+        if data.discard then
+          txt = txt .. "\nDISCARD: Spend one Acuity and then take another card."
+        end
+        obj.setDescription(txt)
+        data.guid = obj.getGUID()
+      end
       if env.test.debug then obj.setName(data.id)
       else obj.setName("") end
     elseif obj.hasTag("Spell") then
@@ -1466,11 +1597,13 @@ function onObjectLeaveContainer(container, obj)
       if GD.env.card_tooltips then obj.setDescription(data.desc) end
       if env.test.debug then obj.setName(data.id)
       else obj.setName("") end
+      data.guid = obj.getGUID()
     elseif obj.hasTag("Heroic") then
       local data = heroics[tonumber(obj.getGMNotes())]
       if GD.env.card_tooltips then obj.setDescription(data.desc) end
       if env.test.debug then obj.setName(data.id)
       else obj.setName("") end
+      data.guid = obj.getGUID()
     end
   end
 end
@@ -1654,20 +1787,20 @@ end
 
 --[[ ******** UTILITY ******** --]]
 
-function simpleDeepCopy(orig)
-    local orig_type = type(orig)
-    local copy
-    if orig_type == 'table' then
-        copy = {}
-        for orig_key, orig_value in next, orig, nil do
-            copy[simpleDeepCopy(orig_key)] = simpleDeepCopy(orig_value)
-        end
-        setmetatable(copy, simpleDeepCopy(getmetatable(orig)))
-    else -- number, string, boolean, etc
-        copy = orig
-    end
-    return copy
-end
+-- function simpleDeepCopy(orig)
+--     local orig_type = type(orig)
+--     local copy
+--     if orig_type == 'table' then
+--         copy = {}
+--         for orig_key, orig_value in next, orig, nil do
+--             copy[simpleDeepCopy(orig_key)] = simpleDeepCopy(orig_value)
+--         end
+--         setmetatable(copy, simpleDeepCopy(getmetatable(orig)))
+--     else -- number, string, boolean, etc
+--         copy = orig
+--     end
+--     return copy
+-- end
 
 --[[ Get obj position (DEVELOPMENT ONLY) ]]
 function savePosition(g)

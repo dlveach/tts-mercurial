@@ -342,22 +342,6 @@ function onSave()
   return saved_data
 end
 
---[[ Handler for player "Done" button. ]]
-function nextPlayerBtn(player, mouse, id)
-  if env.test.trace then log(self.getName() .. ": nextPlayerBtn()") end
-  if player.color == GD.board.player_color then
-    UI_setAttribute("next_player_pnl", "active", "false")
-    UI_setAttribute("cleanup_pnl", "active", "false")
-    local color_bar = getObjectFromGUID(C.guids.color_bars[GD.board.player_position])
-    color_bar.setInvisibleTo(Player.getColors())
-    color_bar.UI.setAttribute("block_panel", "active", "false")
-    GD.board.active = false
-    Global.call("setNextPlayer")
-  else
-    broadcastToColor("Player " .. player.color .. ": " .. self.getName() .. " is not your class.", player.color)
-  end
-end
-
 --[[ Handler for "Cleanup" button press.  Cleanup player board after a spell cast. ]]
 -- function cleanupBtn(player, mouse, id)
 function castSpellBtn(player, mouse, id)
@@ -779,6 +763,22 @@ function dealItems(params)
   --   })
   -- end
   -- Wait.time(function() deal() end, .25, params.amount)
+end
+
+--[[ Handler for player "Done" button. ]]
+function nextPlayerBtn(player, mouse, id)
+  if env.test.trace then log(self.getName() .. ": nextPlayerBtn()") end
+  if player.color == GD.board.player_color then
+    UI_setAttribute("next_player_pnl", "active", "false")
+    UI_setAttribute("cleanup_pnl", "active", "false")
+    local color_bar = getObjectFromGUID(C.guids.color_bars[GD.board.player_position])
+    color_bar.setInvisibleTo(Player.getColors())
+    color_bar.UI.setAttribute("block_panel", "active", "false")
+    GD.board.active = false
+    Global.call("setNextPlayer")
+  else
+    broadcastToColor("Player " .. player.color .. ": " .. self.getName() .. " is not your class.", player.color)
+  end
 end
 
 --[[ Called from Global when this player is active. ]]
@@ -1610,6 +1610,7 @@ end
   selecting them and hitting the 'r' button or uses the roll context menu.
   Wait on all dice player's dice area to be at rest, then update the spell.
 --]]
+--[[ DEPRECATED
 waiting_on_dice = false
 function waitOnDiceRoll()
   if waiting_on_dice then return end
@@ -1633,10 +1634,11 @@ function waitOnDiceRoll()
     log(self.getName().." ERROR: no dice zone for guid "..GD.board.dice_zone)
   end
 end
-
+--]]
 --[[ Called from Global when player drops a die.
     Ignored if not in player spell or dice zones.
 --]]
+--[[ DEPRECATED
 function diceDrop(params)
   if env.test.trace then log(self.getName().." diceDrop()") end
   assert(params.guid)
@@ -1682,6 +1684,7 @@ function diceDrop(params)
     end
   end
 end
+--]]
 
 --[[ Process a played Alteration card.
     Called from Global on card drop outside of hand.
