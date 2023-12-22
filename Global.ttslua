@@ -2,30 +2,30 @@
 
 Work items for converstion of beta to production version:
 
+  - TODO: major rewrite for UI dialogs.  No more dice, mana, acuity bags etc.
+    -- BUG: fix spell cost code now broken
+    -- TODO: remove all the unused junk from playerboard.ttslua.  Move functions back to global where possible.
+    -- TODO: complete functionality for alteration card dialog.  LOTS to do here.  Test it thoroughly.
+    -- TODO: take button for used alteration cards
+    -- TODO: enforce take and play limits
+
+  - TODO: revamp table image, redesign player areas, update playerboard local locations
+    -- TODO: make cards bigger, more visible on table?
+    -- TODO: get rid of useless graphics
+
+  --TODO: expand info on HUD
+    -- TODO: take/play actions remaining
+    -- TODO: sigils
+
   - BUG: fix arcana scoring to final rules  TESTING?
   - BUG: score display on player area doesn't update as often as it should.
 
   - TODO: start options in UI start game panel
-  - TODO: auto play alteration card if no discard power on it (starting cards and artifacts)
-  - TESTING: save/load/rewind
+  - TODO: TEST: save/load/rewind
 
 Future possible stuff for greater enhancement
-  --IN WORK: Think about a data structure to represent avaialable card positions.
-          The 6 card locations, current card guid and any Acuity or Mana guids on card.
-          Would make snap back possible and shifting much easier without using Physics.cast etc.
-          Also lock them and add a "Take" button at this time.
-            - Take buttons in xml done
-            - data structure during game start setup done
 
-  - IN WORK: HUD display???
-        - players current spell power
-        - players score
-        - player's current unallocated dice
-        - TODO: players mana & acuity?
-        - players herocs count vs max
-  --TODO: track take & play actions??? (with "Take" buttons on cards, enforce limits & requirements)
-  --TODO: Automate alteration play actions. A big one!
-  --IN WORK: automate spell cast???
+  --TODO: IN WORK: automate spell cast???
         - calcuate winnings and display "Take" buttons on Heroics/Arcanas/Prestige
         - dialog for Myst if equilibrium attained.
   --TODO: automate assinging resources to spell cards???
@@ -1060,11 +1060,16 @@ function showAlterationDlg(card_index, pcol)
   GD.game.alteration_action = {}
   local alt = GD.game.alteration_action
   alt.player_color = pcol
-  alt.card = simpleDeepCopy(card)
-  alt.action = ""
+  -- alt.card = simpleDeepCopy(card)
+  alt.card_id = card.id
   alt.acuity_paid = 0
   alt.from_dice = {}
   alt.to_dice = {}
+  alt.acuity_gained = 0
+  alt.play_gained = 0
+  alt.take_gained = {}
+  alt.opp_acuity_gained = 0
+
   if env.test.debug then log(alt) end
 end
 
@@ -1078,48 +1083,160 @@ function alterationDlgHandler(player, button, id)
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local action = Split(id,"_")[2]
   local alt = GD.game.alteration_action
+  local p_data = GD.game.players[player.color]
+  local card = alterations[alt.card_id]
+  assert(card, "ERROR: alterationsDlgHandler() cannot locate card data for id "..tostring(alt.card_id))
 
-  if action == "primary" then
-    log("executing primary action(s) for card "..tostring(alt.card.id))
-    if alt.card.primary.requirements then
-      for i,r in ipairs(alt.card.primary.requirements) do
-        log("TODO: check primary action requirement "..tostring(i))
-        log(r)
+  local close_dialog = true
+
+  --//////////////////////////////////////////////////////////////////////
+  local function execute_action(a)
+    if env.test.debug then log("execute_action(): "..a.action..", "..tostring(a.desc)) end
+    log(a)
+    if a.pre then
+      if a.pre.type == "pay_acuity" then alt.acuity_paid = a.pre.amount
       end
     end
-    for i,a in ipairs(alt.card.primary.actions) do
-      log("TODO: "..a.desc)
+    if a.action == "convert" then
+      log("TODO: setup and show dice conversion")
+      --TODO: handle reverse_mod
+      --TODO: min and max
+      --TODO: handle convert_mod
+      --TODO: handle count_mod
+      --TODO: handle n_acuity_mod
+          --TODO: configure the dialog for acuity payement
+          --TODO: enable the Next button
+
+      close_dialog = false
+
+    elseif a.action == "aetherflow" then
+      log("TODO: setup class board aetherflow conversion")
+      close_dialog = false
+
+    elseif a.action == "flip" then
+      log("TODO: setup and show dice flip")
+      --TODO: min and max
+      close_dialog = false
+
+    elseif a.action == "reroll" then
+      log("TODO: setup and show dice reroll")
+      --TODO: min and max
+      close_dialog = false
+
+    elseif a.action == "gain_spell_card" then
+      log("TODO: increment gain spell card")
+      --TODO: increment player spell take and exit immediately?
+
+    elseif a.action == "gain_spell_acuity" then
+      alt.acuity_gained = alt.acuity_gained + #p_data.active_spell
+    elseif a.action == "gain_n_acuity" then
+      alt.acuity_gained = alt.acuity_gained + a.amount
+    elseif a.action == "null" then
+      if env.test.debug then log("execute_action(): FYI: null action") end
+    else
+      log("ERROR: execute_action() unknown action type")
+      return
     end
+    if a.post then
+      log("executing post action")
+      log(a.post)
+      if a.post.type == "gain_acuity" then alt.acuity_gained = alt.acuity_gained + a.post.amount
+      elseif a.post.type == "gain_play" then alt.play_gained = alt.play_gained + a.post.amount
+      elseif a.post.type == "opp_acuity" then alt.opp_acuity_gained = alt.opp_acuity_gained + a.post.amount
+      end
+    end
+  end
+  --//////////////////////////////////////////////////////////////////////
+
+  if action == "primary" then
+    log("executing primary action(s) for card "..tostring(card.id))
+    if card.primary.requirements then
+      local satisfied = true
+      for i,r in ipairs(card.primary.requirements) do
+        log("checking primary action requirement "..tostring(i))
+        log(r)
+        if r.type == "Dice" then
+          local count = 0
+          for _,d in ipairs(p_data.dice) do
+            if contains(r.value, C.die_elements[d.value]) then count = count + 1 end
+          end
+          satisfied = satisfied and count >= r.amount
+        elseif r.type == "Acuity" then
+          satisfied = satisfied and p_data.acuity >= r.amount
+        elseif r.type == "Spell" then
+          satisfied = satisfied and #p_data.active_spell >= r.amount
+        else
+          log("ERROR: alterationDlgHandler() unknown requirement type "..tostring(r.type))
+          return
+        end
+      end
+      if not(satisfied) then
+        broadcastToColor("Requirements for primary action not met.", player.color)
+        return
+      end
+    end
+    for i,a in ipairs(card.primary.actions) do execute_action(a) end
   elseif action == "secondary" then
-    log("executing secondary action for card "..tostring(alt.card.id))
-    log("TODO: "..alt.card.secondary.desc)
+    execute_action(ald.card.secondary)
   elseif action == "discard" then
-    log("executing discard action for card "..tostring(alt.card.id))
-    log("TODO: check acuity > 0 and execute discard")
+    log("executing discard action for card "..tostring(card.id))
+    if p_data.acuity == 0 then
+      broadcastToColor("Requirements for discard action not met.", player.color)
+      return
+    end
+    log("TODO: execute discard")
+
+    --TODO: increment take
+
+  elseif action == "next" then
+    log("TODO: special case for pay n acuity for n-1 convert")
+    --TODO: setup the convert dialog with n-1 from alt data structure
+    --TODO: disable the Next button
+    close_dialog = false
+
   elseif action == "done" then
-    log("TODO: alteration action done button")
+    log("TODO: alteration action done")
+    --TODO: anything to do here?  Is it all handled below in the if close_dialog block?
   elseif action == "cancel" then
-    local c = getObjectFromGUID(alt.card.guid)
-    assert(c, "ERROR: alterationDlgHandler(): unable to locate card object "..tostring(alt.card.guid))
+    local c = getObjectFromGUID(card.guid)
+    assert(c, "ERROR: alterationDlgHandler(): unable to locate card object "..tostring(card.guid))
     c.setLock(false)
     c.deal(1,player.color)
     GD.game.alteration_action = {}
     UI_setAttribute("alteration_card_panel","visibility","Pink")
+    return
   else
     log("ERROR: alterationDlgHandler() unknown action")
+    return
   end
+  if close_dialog then
+    log("TODO: handle all the closing stuff when exiting the dialog")
 
-  --TESTING
-  -- if id == "alteration_card_img" then
-  --   local index = tonumber(UI.getAttribute("alteration_card_img","hidden"))
-  --   if not(index) then index = 1 end
-  --   if button == "-1" then
-  --     if index < 44 then showAlterationDlg(index + 1, player.color) end
-  --   elseif button == "-2" then
-  --     if index > 1 then showAlterationDlg(index - 1, player.color) end
-  --   end
-  -- end
-  --/TESTING
+      -- TODO: alt.from_dice = {}
+      -- TODO: alt.to_dice = {}
+      -- TODO: alt.take_gained = {}
+
+      -- alt.acuity_paid
+    p_data.acuity = p_data.acuity - alt.acuity_paid
+      -- alt.acuity_gained
+    p_data.acuity = p_data.acuity + alt.acuity_gained
+      -- alt.play_gained
+    p_data.actions.play = p_data.actions.play + alt.play_gained
+      -- alt.opp_acuity_gained
+    if alt.opp_acuity_gained > 0 then
+      for pcol,p in ipairs(GD.game.players) do
+        if pcol ~= player.color then
+          p.acuity = p.acuity + alt.opp_acuity_gained
+        end
+      end
+    end
+    p_data.actions.play = p_data.actions.play - 1
+    GD.game.alteration_action = {}
+    local board = getObjectFromGUID(p_data.board_guid)
+    board.call("usedAlterationCard",{guid=card.guid})
+    UI_setAttribute("alteration_card_panel","visibility","Pink")
+    updateHUD()
+  end
 end
 
 --[[ Handler for Recycle Leftmost Spell button. ]]
@@ -1280,7 +1397,8 @@ function showPaySpellDlg(card_index, pcol)
   else
     UI_setAttribute("spell_cost_card_img","image",card_image)
   end
-  UI_setAttribute("outer_spell_cost_panel","active",true)
+  -- UI_setAttribute("outer_spell_cost_panel","active",true)
+  UI_setAttribute("outer_spell_cost_panel","visibility",pcol)
   hideSpellButtons()
   enableAlterationButtons(false)
 end
@@ -1401,7 +1519,8 @@ function spellCostHandler(player, button, id)
   --////////////////////////////
   local action = Split(id,"_")[3]
   if action == "cancel" then
-    UI_setAttribute("outer_spell_cost_panel","active",false)
+    -- UI_setAttribute("outer_spell_cost_panel","active",false)
+    UI_setAttribute("outer_spell_cost_panel","visibility","Pink")
     GD.game.spell_cost = {}
     local card = getObjectFromGUID(GD.game.spells[dlg.card_index].card_guid)
     assert(card,"spellCostHandler(): missing spell card object")
@@ -1451,7 +1570,8 @@ function spellCostHandler(player, button, id)
       if take == "spell" then index=i; break end --priortize remove spell take
     end
     table.remove(p.actions.takes, index)
-    UI_setAttribute("outer_spell_cost_panel","active",false)
+    -- UI_setAttribute("outer_spell_cost_panel","active",false)
+    UI_setAttribute("outer_spell_cost_panel","visibility","Pink")
     if #p.actions.takes == 0 then
       hideSpellButtons()
       enableAlterationButtons(false)

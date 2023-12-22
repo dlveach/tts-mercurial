@@ -1686,51 +1686,66 @@ function diceDrop(params)
 end
 --]]
 
+--[[ Process a used Alteration card.
+    Called from Global on card drop outside of hand.
+--]]
+function usedAlterationCard(params)
+  assert(params, self.getName()..": ERROR: usedAlterationCard(): missing params")
+  if env.test.trace then log("playAlteration() "..tostring(params.action)..", "..tostring(params.guid)) end
+  local card = getObjectFromGUID(params.guid)
+  assert(card, self.getName()..": ERROR: usedAlterationCard(): missing card object, "..params.guid)
+  local used = self.positionToWorld(used_alterations_local_pos)
+  used.y = used.y + 3
+  card.setLock(false)
+  if not(card.is_face_down) then card.flip() end
+  card.setPosition(used)
+end
+
 --[[ Process a played Alteration card.
     Called from Global on card drop outside of hand.
 --]]
-function playAlteration(params)
-  assert(params, self.getName()..": ERROR: playAlteration(): missing params")
-  if env.test.trace then log("playAlteration() "..tostring(params.action)..", "..tostring(params.guid)) end
-  local card = getObjectFromGUID(params.guid)
-  assert(card, self.getName()..": ERROR: playAlteration(): missing card object, "..params.guid)
-  local action = params.action
-  log("action: "..tostring(action))
-  local used = self.positionToWorld(used_alterations_local_pos)
-  used.y = used.y + 3
-  if action == "play" then
-    if not(checkRequirements(card)) then return false end
-    if not(card.is_face_down) then card.flip() end
-    card.setPosition(used)
-    --TODO: automate play card
-  elseif action == "discard" then
-    if getAcuityCount() < 1 then
-      broadcastToColor("Not enough Acuity", GD.board.player_color)
-      return false
-    end
-    local deck = Global.call("getAlterationDeck")
-    if not(deck) then
-      if not(card.is_face_down) then card.flip() end
-      card.setPosition(Global.getTable("C").alteration_deck_pos)
-    elseif deck.tag == "Deck" then
-      if not(card.is_face_down) then card.flip() end
-      Wait.condition(function() deck.putObject(card) end, function() return card.resting end)
-    else
-      if not(card.is_face_down) then card.flip() end
-      Wait.condition(function()
-        local pos = Vector(deck.getPosition())
-        local raise = Vector(deck.getPosition())
-        raise.y = raise.y + 3
-        deck.setPosition(raise)
-        card.setPosition(pos)
-      end, function() return card.resting end)
-    end
-  else
-    log(self.getName()..": ERROR: playAlteration(): unknown action")
-    return false
-  end
-  return true
-end
+-- function playAlteration(params)
+--   assert(params, self.getName()..": ERROR: playAlteration(): missing params")
+--   if env.test.trace then log("playAlteration() "..tostring(params.action)..", "..tostring(params.guid)) end
+--   local card = getObjectFromGUID(params.guid)
+--   assert(card, self.getName()..": ERROR: playAlteration(): missing card object, "..params.guid)
+--   local action = params.action
+--   log("action: "..tostring(action))
+--   local used = self.positionToWorld(used_alterations_local_pos)
+--   used.y = used.y + 3
+--   if action == "play" then
+--     if not(checkRequirements(card)) then return false end
+--     if not(card.is_face_down) then card.flip() end
+--     card.setPosition(used)
+--     --TODO: automate play card
+--   elseif action == "discard" then
+--     if getAcuityCount() < 1 then
+--       broadcastToColor("Not enough Acuity", GD.board.player_color)
+--       return false
+--     end
+--     local deck = Global.call("getAlterationDeck")
+--     if not(deck) then
+--       if not(card.is_face_down) then card.flip() end
+--       card.setPosition(Global.getTable("C").alteration_deck_pos)
+--     elseif deck.tag == "Deck" then
+--       if not(card.is_face_down) then card.flip() end
+--       Wait.condition(function() deck.putObject(card) end, function() return card.resting end)
+--     else
+--       if not(card.is_face_down) then card.flip() end
+--       Wait.condition(function()
+--         local pos = Vector(deck.getPosition())
+--         local raise = Vector(deck.getPosition())
+--         raise.y = raise.y + 3
+--         deck.setPosition(raise)
+--         card.setPosition(pos)
+--       end, function() return card.resting end)
+--     end
+--   else
+--     log(self.getName()..": ERROR: playAlteration(): unknown action")
+--     return false
+--   end
+--   return true
+-- end
 
 --[[ FUTURE: check requirements met to play this card. ]]
 function checkRequirements(card)

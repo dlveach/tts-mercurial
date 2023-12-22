@@ -957,17 +957,22 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 Fire to Lightning (+1 ea Yellow Sigil) then take 1 Acuity (+1 ea Green Sigil).",
-          action = "convert_1_p1_and_acuity_1_p1",
+          action = "convert",
           from = {"Fire"},
           to = {"Lightning"},
-          convert_sigil = "yellow",
-          acuity_sigil = "green",
+          min = 1,
+          max = 1,
+          convert_mod = {sigil="yellow",mod=1},
+          post = {type="gain_acuity",amount=1,mod=1,sigil="green"},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+      action = "reroll",
+      min = 1,
+      max = 2,
+      post = {type="gain_play",amount=1},
     },
   },
   { id = 2,
@@ -985,17 +990,22 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 Earth to Fire (+1 ea Blue Sigil) then take 1 Acuity (+1 ea Red Sigil).",
-          action = "convert_1_p1_and_acuity_1_p1",
+          action = "convert",
           from = {"Earth"},
           to = {"Fire"},
-          convert_sigil = "blue",
-          acuity_sigil = "red",
+          min = 1,
+          max = 1,
+          convert_mod = {sigil="blue",mod=1},
+          post = {type="gain_acuity",amount=1,mod=1,sigil="red"},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+      action = "reroll",
+      min = 1,
+      max = 2,
+      post = {type="gain_play",amount=1},
     },
   },
   { id = 3,
@@ -1013,20 +1023,27 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 or more Earth to Water (if 2 or more Red Sigils, may convert in reverse).",
-          action = "convert_1-all_or_reverse",
+          action = "convert",
           from = {"Earth"},
           to = {"Water"},
-          convert_sigil = "red",
+          min = 1,
+          max = 7,
+          reverse_mod = {sigil="red",amount=2},
         },
         {
           desc = "Flip one die.",
-          action = "flip_die",
+          action = "flip",
+          min = 1,
+          max = 1,
         }
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+      action = "reroll",
+      min = 1,
+      max = 2,
+      post = {type="gain_play",amount=1},
      },
   },
   { id = 4,
@@ -1044,20 +1061,27 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 or more Water to Lightning (if 2 or more Yellow Sigils, may convert in reverse).",
-          action = "convert_1-all_or_reverse",
+          action = "convert",
           from = {"Water"},
           to = {"Lightning"},
-          convert_sigil = "yellow",
+          min = 1,
+          max = 7,
+          reverse_mod = {sigil="yellow",amount=2},
         },
         {
           desc = "Flip one die.",
-          action = "flip_die",
+          action = "flip",
+          min = 1,
+          max = 1,
         }
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 5,
@@ -1075,20 +1099,27 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 or more Lightning to Fire (if 2 or more Blue Sigils, may convert in reverse).",
-          action = "convert_1-all_or_reverse",
+          action = "convert",
           from = {"Lightning"},
           to = {"Fire"},
-          convert_sigil = "blue",
+          min = 1,
+          max = 7,
+          reverse_mod = {sigil="blue",amount=2},
         },
         {
           desc = "Flip one die.",
-          action = "flip_die",
+          action = "flip",
+          min = 1,
+          max = 1,
         }
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 6,
@@ -1106,20 +1137,27 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 or more Fire to Earth (if 2 or more Green Sigils, may convert in reverse).",
-          action = "convert_1-all_or_reverse",
+          action = "convert",
           from = {"Fire"},
           to = {"Earth"},
-          convert_sigil = "green",
+          min = 1,
+          max = 7,
+          reverse_mod = {sigil="green",amount=2},
         },
         {
           desc = "Flip one die.",
-          action = "flip_die",
+          action = "flip",
+          min = 1,
+          max = 1,
         }
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 7,
@@ -1137,17 +1175,22 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 Water to Earth (+1 ea Green Sigil) then take 1 Acuity (+1 ea Blue Sigil).",
-          action = "convert_1_p1_and_acuity_1_p1",
+          action = "convert",
           from = {"Water"},
           to = {"Earth"},
-          convert_sigil = "green",
-          acuity_sigil = "blue",
+          min = 1,
+          max = 1,
+          convert_mod = {sigil="green",mod=1},
+          post = {type="gain_acuity",amount=1,mod=1,sigil="blue"},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 8,
@@ -1165,17 +1208,22 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 Lightning to Water (+1 ea Red Sigil) then take 1 Acuity (+1 ea Yellow Sigil).",
-          action = "convert_1_p1_and_acuity_1_p1",
+          action = "convert",
           from = {"Lightning"},
           to = {"Water"},
-          convert_sigil = "red",
-          acuity_sigil = "yellow",
+          min = 1,
+          max = 1,
+          convert_mod = {sigil="red",mod=1},
+          post = {type="gain_acuity",amount=1,mod=1,sigil="yellow"},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 9,
@@ -1193,15 +1241,21 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 or more Aether to Void then take 2 Acuity.",
-          action = "convert_1-all_and_acuity_2",
+          action = "convert",
           from = {"Aether"},
           to = {"Void"},
+          min = 1,
+          max = 7,
+          post = {type="gain_acuity",amount=2,},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 10,
@@ -1219,16 +1273,21 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 or 2 Fire or Lightning to Void then take 2 Acuity (+1 ea Blue Sigil).",
-          action = "convert_2_and_acuity_2_p1",
+          action = "convert",
           from = {"Fire","Lightning"},
           to = {"Void"},
-          acuity_sigil = "yellow",
+          min = 1,
+          max = 2,
+          post = {type="gain_acuity",amount=1,mod=1,sigil="blue"},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 11,
@@ -1246,16 +1305,21 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 or 2 Earth or Fire to Void then take 2 Acuity (+1 ea Green Sigil).",
-          action = "convert_2_and_acuity_2_p1",
+          action = "convert",
           from = {"Earth","Fire"},
           to = {"Void"},
-          acuity_sigil = "green",
+          min = 1,
+          max = 2,
+          post = {type="gain_acuity",amount=2,mod=1,sigil="green"},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 12,
@@ -1273,16 +1337,21 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 or 2 Water or Earth to Void then take 2 Acuity (+1 ea Red Sigil).",
-          action = "convert_2_and_acuity_2_p1",
+          action = "convert",
           from = {"Water","Earth"},
           to = {"Void"},
-          acuity_sigil = "red",
+          min = 1,
+          max = 2,
+          post = {type="gain_acuity",amount=2,mod=1,sigil="red"},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 13,
@@ -1300,16 +1369,21 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 or 2 Lightning or Water to Void then take 2 Acuity (+1 ea Yellow Sigil).",
-          action = "convert_2_and_acuity_2_p1",
+          action = "convert",
           from = {"Lightning","Water"},
           to = {"Void"},
-          acuity_sigil = "yellow",
+          min = 1,
+          max = 2,
+          post = {type="gain_acuity",amount=1,mod=1,sigil="yellow"},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 14,
@@ -1327,16 +1401,21 @@ alterations = {
       actions = {
         {
           desc = "For n Fire convert any 1 to n die to Void then take 2 Acuity (+1 ea Blue Sigil).",
-          action = "convert_1-n_and_acuity_2_p1",
+          action = "convert",
           from = {"any"},
           to = {"Void"},
-          acuity_sigil = "blue",
+          min = 1,
+          count_mod = {value="Fire"},
+          post = {type="gain_acuity",amount=2,mod=1,sigil="blue"},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 15,
@@ -1354,16 +1433,21 @@ alterations = {
       actions = {
         {
           desc = "For n Water convert any 1 to n die to Void then take 2 Acuity (+1 ea Red Sigil).",
-          action = "convert_1-n_and_acuity_2_p1",
+          action = "convert",
           from = {"any"},
           to = {"Void"},
-          acuity_sigil = "red",
+          min = 1,
+          count_mod = {value="Water"},
+          post = {type="gain_acuity",amount=2,mod=1,sigil="red"},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 16,
@@ -1381,16 +1465,21 @@ alterations = {
       actions = {
         {
           desc = "For n Lightning convert any 1 to n die to Void then take 2 Acuity (+1 ea Yellow Sigil).",
-          action = "convert_1-n_and_acuity_2_p1",
+          action = "convert",
           from = {"any"},
           to = {"Void"},
-          acuity_sigil = "yellow",
+          min = 1,
+          count_mod = {value="Lightning"},
+          post = {type="gain_acuity",amount=2,mod=1,sigil="yellow"},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 17,
@@ -1408,16 +1497,21 @@ alterations = {
       actions = {
         {
           desc = "For n Earth convert any 1 to n die to Void then take 2 Acuity (+1 ea Green Sigil).",
-          action = "convert_1-n_and_acuity_2_p1",
+          action = "convert",
           from = {"any"},
           to = {"Void"},
-          acuity_sigil = "green",
+          min = 1,
+          count_mod = {value="Earth"},
+          post = {type="gain_acuity",amount=2,mod=1,sigil="green"},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 18,
@@ -1435,16 +1529,21 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 Earth to Fire or Lightning (+1 ea Yellow Sigil).",
-          action = "convert_1_p1",
+          action = "convert",
           from = {"Earth"},
           to = {"Fire","Lightning"},
-          convert_sigil = "yellow",
+          min = 1,
+          max = 1,
+          convert_mod = {sigil="yellow",mod=1},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   {
@@ -1463,16 +1562,21 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 Water to Earth or Fire (+1 ea Blue Sigil).",
-          action = "convert_1_p1",
+          action = "convert",
           from = {"Water"},
           to = {"Fire","Earth"},
-          convert_sigil = "blue",
+          min = 1,
+          max = 1,
+          convert_mod = {sigil="blue",mod=1},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 20,
@@ -1490,16 +1594,21 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 lightning to Water or Earth (+1 ea Green Sigil).",
-          action = "convert_1_p1",
+          action = "convert",
           from = {"Lightning"},
           to = {"Water","Earth"},
-          convert_sigil = "green",
+          min = 1,
+          max = 1,
+          convert_mod = {sigil="green",mod=1},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 21,
@@ -1517,16 +1626,21 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 Fire to Lightning or Water (+1 ea Red Sigil).",
-          action = "convert_1_p1",
+          action = "convert",
           from = {"Lightning"},
           to = {"Water","Lightning"},
-          convert_sigil = "red",
+          min = 1,
+          max = 1,
+          convert_mod = {sigil="red",mod=1},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 22,
@@ -1548,16 +1662,22 @@ alterations = {
       actions = {
         {
           desc = "Discard 3 Acuity.  Convert 1 or more Earth to Lightning or Water then take 2 Acuity (+1 ea Blue Sigil).",
-          action = "convert_1-all_and_acuity_2_p1",
+          action = "convert",
           from = {"Earth"},
           to = {"Water","Lightning"},
-          acuity_sigil = "blue",
+          min = 1,
+          max = 7,
+          pre = {type="pay_acuity",amount=3},
+          post = {type="gain_acuity",amount=2,mod=1,sigil="blue"},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 23,
@@ -1579,16 +1699,22 @@ alterations = {
       actions = {
         {
           desc = "Discard 3 Acuity.  Convert 1 or more Water to Fire or Lightning then take 2 Acuity (+1 ea Green Sigil).",
-          action = "convert_1-all_and_acuity_2_p1",
+          action = "convert",
           from = {"Water"},
           to = {"Fire","Lightning"},
-          acuity_sigil = "green",
+          min = 1,
+          max = 7,
+          pre = {type="pay_acuity",amount=3},
+          post = {type="gain_acuity",amount=2,mod=1,sigil="green"},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 24,
@@ -1610,16 +1736,22 @@ alterations = {
       actions = {
         {
           desc = "Discard 3 Acuity.  Convert 1 or more Lightning to Earth or Fire then take 2 Acuity (+1 ea Red Sigil).",
-          action = "convert_1-all_and_acuity_2_p1",
+          action = "convert",
           from = {"Lightning"},
           to = {"Fire","Earth"},
-          acuity_sigil = "red",
+          min = 1,
+          max = 7,
+          pre = {type="pay_acuity",amount=3},
+          post = {type="gain_acuity",amount=2,mod=1,sigil="red"},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+        action = "reroll",
+        min = 1,
+        max = 2,
+        post = {type="gain_play",amount=1},
      },
   },
   { id = 25,
@@ -1641,16 +1773,22 @@ alterations = {
       actions = {
         {
           desc = "Discard 3 Acuity.  Convert 1 or more Fire to Water or Earth then take 2 Acuity (+1 ea Yellow Sigil).",
-          action = "convert_1-all_and_acuity_2_p1",
+          action = "convert",
           from = {"Fire"},
           to = {"Water","Earth"},
-          acuity_sigil = "yellow",
+          min = 1,
+          max = 7,
+          pre = {type="pay_acuity",amount=3},
+          post = {type="gain_acuity",amount=2,mod=1,sigil="yellow"},
         },
       },
     },
     secondary = {
       desc = "Re-roll 1 or 2 dice then play one more card.",
-      action = "reroll_play"
+      action = "reroll",
+      min = 1,
+      max = 2,
+      post = {type="gain_play",amount=1},
     },
     discard = {
       desc = "Spend one Acuity and discard this card then take another card."
@@ -1671,13 +1809,14 @@ alterations = {
       actions = {
         {
           desc = "For n active spell cards take n Acuity (n > 0)",
-          action = "acuity_n",
+          action = "gain_spell_acuity",
         },
       },
     },
     secondary = {
       desc = "Take one Acuity.",
-      action = "acuity_1"
+      action = "gain_n_acuity",
+      amount = 1,
     },
 
   },
@@ -1696,15 +1835,19 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 Aether to any element you already posess (may be assigned).  Then all opponents take 1 Acuity.",
-          action = "convert_1_and_opp_acuity_1",
+          action = "convert",
           from = {"Aether"},
           to = {"any_owned"},
+          min = 1,
+          max = 1,
+          post = {type="opp_acuity",amount=1,},
         },
       },
     },
     secondary = {
       desc = "Take one Acuity.",
-      action = "acuity_1"
+      action = "gain_n_acuity",
+      amount = 1,
     },
 
   },
@@ -1722,13 +1865,16 @@ alterations = {
       actions = {
         {
           desc = "Discard 3 Acuity.  Then take 5 Acuity.",
-          action = "acuity_5",
+          action = "gain_n_acuity",
+          amouint = 5,
+          pre = {type="pay_acuity",amount=3},
         },
       },
     },
     secondary = {
       desc = "Take one Acuity.",
-      action = "acuity_1"
+      action = "gain_n_acuity",
+      amount = 1,
     },
 
   },
@@ -1747,15 +1893,18 @@ alterations = {
       actions = {
         {
           desc = "Convert 1 die to Void.",
-          action = "convert_1",
+          action = "convert",
           from = {"any"},
           to = {"Void"},
+          min = 1,
+          max = 1,
         },
       },
     },
     secondary = {
       desc = "Take one Acuity.",
-      action = "acuity_1"
+      action = "gain_n_acuity",
+      amount = 1,
     },
 
   },
@@ -1777,13 +1926,15 @@ alterations = {
       actions = {
         {
           desc = "If 2+ active spell cards, spend 3 Acuity and take one spell card (spell requirements must be met).",
-          action = "discard_acuity_3_gain_spell",
+          action = "gain_spell_card",
+          pre = {type="pay_acuity",amount=3},
         },
       },
     },
     secondary = {
       desc = "Take one Acuity.",
-      action = "acuity_1",
+      action = "gain_n_acuity",
+      amount = 1,
     },
 
   },
@@ -1805,13 +1956,17 @@ alterations = {
       actions = {
         {
           desc = "Spend one Acuity and flip one die.  Then all opponents take 1 Acuity.",
-          action = "flip_1_and_opp_acuity_1",
+          action = "flip",
+          min = 1,
+          max = 1,
+          post = {type="opp_acuity",amount=1,},
         },
       },
     },
     secondary = {
       desc = "Take one Acuity.",
-      action = "acuity_1",
+      action = "gain_n_acuity",
+      amount = 1,
     },
 
   },
@@ -1833,15 +1988,20 @@ alterations = {
       actions = {
         {
           desc = "Spend one Acuity and convert one Void to Water or Earth.  Then all opponents take 1 Acuity.",
-          action = "convert_1_and_opp_acuity_1",
+          action = "convert",
           from = {"Void"},
           to = {"Water","Earth"},
+          min = 1,
+          max = 1,
+          pre = {type="pay_acuity",amount=1},
+          post = {type="opp_acuity",amount=1,},
         },
       },
     },
     secondary = {
       desc = "Take one Acuity.",
-      action = "acuity_1"
+      action = "gain_n_acuity",
+      amount = 1,
     },
 
   },
@@ -1863,15 +2023,20 @@ alterations = {
       actions = {
         {
           desc = "Spend one Acuity and convert one Void to Fire or Lightning.  Then all opponents take 1 Acuity.",
-          action = "convert_1_and_opp_acuity_1",
+          action = "convert",
           from = {"Void"},
           to = {"Fire","Lightning"},
+          min = 1,
+          max = 1,
+          pre = {type="pay_acuity",amount=1},
+          post = {type="opp_acuity",amount=1,},
         },
       },
     },
     secondary = {
       desc = "Take one Acuity.",
-      action = "acuity_1"
+      action = "gain_n_acuity",
+      amount = 1,
     },
 
   },
@@ -1894,15 +2059,18 @@ alterations = {
       actions = {
         {
           desc = "If 2+ active spell cards, convert one die to any element you already posess (may be assigned).",
-          action = "convert_1",
+          action = "convert",
           from = {"any"},
           to = {"any_owned"},
+          min = 1,
+          max = 1,
         },
       },
     },
     secondary = {
       desc = "Take one Acuity.",
-      action = "acuity_1"
+      action = "gain_n_acuity",
+      amount = 1,
     },
 
   },
@@ -1925,17 +2093,17 @@ alterations = {
       actions = {
         {
           desc = " Spend n+1 Acuity. Convert n Void to any element(s) you already posess (may be assigned).",
-          action = "convert_n-1",
+          action = "convert",
           from = {"Void"},
           to = {"any_owned"},
+          n_acuity_mod = true, --TODO: could this just be anothe value in count_mod?
         },
       },
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow"
+      action = "aetherflow",
     },
-
   },
   { id = 36,
     guid = "4541af",
@@ -1945,15 +2113,16 @@ alterations = {
       actions = {
         {
           desc = "Take 2 Acuity then play up to 2 more cards.",
-          action = "acuity_2_and_play_2",
+          action = "gain_n_acuity",
+          amount = 2,
+          post = {type="gain_play",amount=2},
         },
       },
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow"
+      action = "aetherflow",
     },
-
   },
   { id = 37,
     guid = "1b5876",
@@ -1974,17 +2143,17 @@ alterations = {
       actions = {
         {
           desc = " Spend n+1 Acuity. Convert n Void or Aether to any element(s) you already posess (may be assigned).",
-          action = "convert_n-1",
-          from = {"Void","Aether"},
+          action = "convert",
+          from = {"Void"},
           to = {"any_owned"},
+          n_acuity_mod = true, --TODO: could this just be anothe value in count_mod?
         },
       },
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow"
+      action = "aetherflow",
     },
-
   },
   { id = 38,
     guid = "8285d7",
@@ -1994,19 +2163,20 @@ alterations = {
       actions = {
         {
           desc = "Take 1 Acuity.",
-          action = "acuity_1",
+          action = "gain_n_acuity",
+          amount = 1,
         },
         {
           desc = "Play up to 2 more cards.",
-          action = "play_2",
+          action = "null",
+          post = {type="gain_play",amount=2},
         },
       },
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow"
+      action = "aetherflow",
     },
-
   },
   { id = 39,
     guid = "309140",
@@ -2027,17 +2197,17 @@ alterations = {
       actions = {
         {
           desc = " Spend n+1 Acuity. Convert n Void to any element(s) you already posess (may be assigned).",
-          action = "convert_n-1",
+          action = "convert",
           from = {"Void"},
           to = {"any_owned"},
+          n_acuity_mod = true, --TODO: could this just be anothe value in count_mod?
         },
       },
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow"
+      action = "aetherflow",
     },
-
   },
   { id = 40,
     guid = "49fdc7",
@@ -2047,19 +2217,20 @@ alterations = {
       actions = {
         {
           desc = "Take 1 Acuity.",
-          action = "acuity_1",
+          action = "gain_n_acuity",
+          amount = 1,
         },
         {
           desc = "Play up to 2 more cards.",
-          action = "play_2",
+          action = "null",
+          post = {type="gain_play",amount=2},
         },
       },
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow"
+      action = "aetherflow",
     },
-
   },
   { id = 41,
     guid = "c4e303",
@@ -2080,17 +2251,17 @@ alterations = {
       actions = {
         {
           desc = " Spend n+1 Acuity. Convert n Void to any element(s) you already posess (may be assigned).",
-          action = "convert_n-1",
+          action = "convert",
           from = {"Void"},
           to = {"any_owned"},
+          n_acuity_mod = true, --TODO: could this just be anothe value in count_mod?
         },
       },
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow"
+      action = "aetherflow",
     },
-
   },
   { id = 42,
     guid = "ee56dd",
@@ -2100,19 +2271,20 @@ alterations = {
       actions = {
         {
           desc = "Take 1 Acuity.",
-          action = "acuity_1",
+          action = "gain_n_acuity",
+          amount = 1,
         },
         {
           desc = "Play up to 2 more cards.",
-          action = "play_2",
+          action = "null",
+          post = {type="gain_play",amount=2},
         },
       },
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow"
+      action = "aetherflow",
     },
-
   },
   { id = 43,
     guid = "61d47e",
@@ -2133,17 +2305,17 @@ alterations = {
       actions = {
         {
           desc = " Spend n+1 Acuity. Convert n Void to any element(s) you already posess (may be assigned).",
-          action = "convert_n-1",
+          action = "convert",
           from = {"Void"},
           to = {"any_owned"},
+          n_acuity_mod = true, --TODO: could this just be anothe value in count_mod?
         },
       },
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow"
+      action = "aetherflow",
     },
-
   },
   { id = 44,
     guid = "c7f1dd",
@@ -2153,18 +2325,18 @@ alterations = {
       actions = {
         {
           desc = "Take 1 Acuity.",
-          action = "acuity_1",
+          action = "acuity",
         },
         {
           desc = "Play up to 2 more cards.",
-          action = "play_2",
+          action = "null",
+          post = {type="gain_play",amount=2},
         },
       },
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow"
+      action = "aetherflow",
     },
-
   },
 }
