@@ -951,7 +951,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Fire"}
+          value = {"Fire"},
         },
       },
       actions = {
@@ -984,7 +984,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Earth"}
+          value = {"Earth"},
         },
       },
       actions = {
@@ -1017,7 +1017,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Earth","Water"}
+          value = {"Earth","Water"},
         },
       },
       actions = {
@@ -1055,7 +1055,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Water","Lightning"}
+          value = {"Water","Lightning"},
         },
       },
       actions = {
@@ -1093,7 +1093,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Lightning","Fire"}
+          value = {"Lightning","Fire"},
         },
       },
       actions = {
@@ -1131,7 +1131,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Fire","Earth"}
+          value = {"Fire","Earth"},
         },
       },
       actions = {
@@ -1169,7 +1169,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Water"}
+          value = {"Water"},
         },
       },
       actions = {
@@ -1202,7 +1202,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Lightning"}
+          value = {"Lightning"},
         },
       },
       actions = {
@@ -1235,7 +1235,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Aether"}
+          value = {"Aether"},
         },
       },
       actions = {
@@ -1267,7 +1267,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Fire","Lightning"}
+          value = {"Fire","Lightning"},
         },
       },
       actions = {
@@ -1299,7 +1299,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Fire","Earth"}
+          value = {"Fire","Earth"},
         },
       },
       actions = {
@@ -1331,7 +1331,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Water","Earth"}
+          value = {"Water","Earth"},
         },
       },
       actions = {
@@ -1363,7 +1363,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Water","Lightning"}
+          value = {"Water","Lightning"},
         },
       },
       actions = {
@@ -1395,7 +1395,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Fire"}
+          value = {"Fire"},
         },
       },
       actions = {
@@ -1427,7 +1427,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Water"}
+          value = {"Water"},
         },
       },
       actions = {
@@ -1459,7 +1459,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Lightning"}
+          value = {"Lightning"},
         },
       },
       actions = {
@@ -1491,7 +1491,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Earth"}
+          value = {"Earth"},
         },
       },
       actions = {
@@ -1523,7 +1523,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Earth"}
+          value = {"Earth"},
         },
       },
       actions = {
@@ -1556,7 +1556,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Water"}
+          value = {"Water"},
         },
       },
       actions = {
@@ -1588,7 +1588,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Lightning"}
+          value = {"Lightning"},
         },
       },
       actions = {
@@ -1620,7 +1620,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"Fire"}
+          value = {"Fire"},
         },
       },
       actions = {
@@ -1656,7 +1656,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = "Earth"
+          value = {"Earth"},
         },
       },
       actions = {
@@ -1693,7 +1693,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = "Water"
+          value = {"Water"},
         },
       },
       actions = {
@@ -1730,7 +1730,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = "Lightning"
+          value = {"Lightning"},
         },
       },
       actions = {
@@ -1767,7 +1767,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = "Fire"
+          value = {"Fire"},
         },
       },
       actions = {
@@ -1829,7 +1829,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = "Aether",
+          value = {"Aether"},
         },
       },
       actions = {
@@ -1887,7 +1887,7 @@ alterations = {
         {
           type = "Dice",
           amount = 1,
-          value = {"any"}
+          value = {"any"},
         },
       },
       actions = {
@@ -1950,7 +1950,8 @@ alterations = {
         },
         {
           type = "Dice",
-          value = {"any"}
+          amount = 1,
+          value = {"any"},
         },
       },
       actions = {
@@ -1982,7 +1983,8 @@ alterations = {
         },
         {
           type = "Dice",
-          value = {"Void"}
+          amount = 1,
+          value = {"Void"},
         },
       },
       actions = {
@@ -2017,7 +2019,8 @@ alterations = {
         },
         {
           type = "Dice",
-          value = {"Void"}
+          amount = 1,
+          value = {"Void"},
         },
       },
       actions = {
@@ -2054,7 +2057,7 @@ alterations = {
           type = "Dice",
           amount = 1,
           value = {"any"},
-        }
+        },
       },
       actions = {
         {
@@ -2096,13 +2099,16 @@ alterations = {
           action = "convert",
           from = {"Void"},
           to = {"any_owned"},
-          n_acuity_mod = true, --TODO: could this just be anothe value in count_mod?
+          n_acuity_mod = true,
         },
       },
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow",
+      action = "convert",
+      from = {"Aether"},
+      to = {"aetherflow"},
+      max = 7,
     },
   },
   { id = 36,
@@ -2121,7 +2127,10 @@ alterations = {
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow",
+      action = "convert",
+      from = {"Aether"},
+      to = {"aetherflow"},
+      max = 7,
     },
   },
   { id = 37,
@@ -2144,15 +2153,18 @@ alterations = {
         {
           desc = " Spend n+1 Acuity. Convert n Void or Aether to any element(s) you already posess (may be assigned).",
           action = "convert",
-          from = {"Void"},
+          from = {"Void","Aether"},
           to = {"any_owned"},
-          n_acuity_mod = true, --TODO: could this just be anothe value in count_mod?
+          n_acuity_mod = true,
         },
       },
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow",
+      action = "convert",
+      from = {"Aether"},
+      to = {"aetherflow"},
+      max = 7,
     },
   },
   { id = 38,
@@ -2175,7 +2187,10 @@ alterations = {
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow",
+      action = "convert",
+      from = {"Aether"},
+      to = {"aetherflow"},
+      max = 7,
     },
   },
   { id = 39,
@@ -2200,13 +2215,16 @@ alterations = {
           action = "convert",
           from = {"Void"},
           to = {"any_owned"},
-          n_acuity_mod = true, --TODO: could this just be anothe value in count_mod?
+          n_acuity_mod = true,
         },
       },
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow",
+      action = "convert",
+      from = {"Aether"},
+      to = {"aetherflow"},
+      max = 7,
     },
   },
   { id = 40,
@@ -2229,7 +2247,10 @@ alterations = {
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow",
+      action = "convert",
+      from = {"Aether"},
+      to = {"aetherflow"},
+      max = 7,
     },
   },
   { id = 41,
@@ -2254,13 +2275,16 @@ alterations = {
           action = "convert",
           from = {"Void"},
           to = {"any_owned"},
-          n_acuity_mod = true, --TODO: could this just be anothe value in count_mod?
+          n_acuity_mod = true,
         },
       },
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow",
+      action = "convert",
+      from = {"Aether"},
+      to = {"aetherflow"},
+      max = 7,
     },
   },
   { id = 42,
@@ -2283,7 +2307,10 @@ alterations = {
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow",
+      action = "convert",
+      from = {"Aether"},
+      to = {"aetherflow"},
+      max = 7,
     },
   },
   { id = 43,
@@ -2308,13 +2335,16 @@ alterations = {
           action = "convert",
           from = {"Void"},
           to = {"any_owned"},
-          n_acuity_mod = true, --TODO: could this just be anothe value in count_mod?
+          n_acuity_mod = true,
         },
       },
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow",
+      action = "convert",
+      from = {"Aether"},
+      to = {"aetherflow"},
+      max = 7,
     },
   },
   { id = 44,
@@ -2336,7 +2366,10 @@ alterations = {
     },
     secondary = {
       desc = "Activate class Aetherflow power. ",
-      action = "aetherflow",
+      action = "convert",
+      from = {"Aether"},
+      to = {"aetherflow"},
+      max = 7,
     },
   },
 }

@@ -720,51 +720,6 @@ function setPlayer(params)
   end
 end
 
---[[ Called from Global during player setup or when player types a number over a bag. ]]
---TODO: get rid of this mess, use global player data
-function dealItems(params)
-  if env.test.trace then log(self.getName() .. ": dealAcuity()") end
-  log("---------->>>>>> TODO: get rid of all playerBoard:dealItems() !!!!!!")
-  -- assert(params.item_type)
-  -- assert(params.amount)
-  -- local bag
-  -- local function endTrigger() end
-  -- if params.item_type == "acuity" then
-  --   bag = getObjectFromGUID(C.guids.acuity_bag)
-  --   endTrigger = function()
-  --     updateSpellPower()
-  --     -- Global.call("updateSpellButtons",GD.board.player_color)
-  --   end
-  -- elseif params.item_type == "mana" then
-  --   bag = getObjectFromGUID(C.guids.mana_bag)
-  --   endTrigger = function()
-  --     -- Global.call("updateSpellButtons",GD.board.player_color)
-  --   end
-  -- elseif params.item_type == "prestige" then
-  --   bag = getObjectFromGUID(C.guids.prestige_bag)
-  --   endTrigger = function()
-  --     updateScore()
-  --   end
-  -- else
-  --   log(self.getName().." ERROR: unknown item type, cannot deal.")
-  --   return
-  -- end
-  -- if env.test.debug then log(self.getName().." placing "..params.amount .." "..params.item_type) end
-  -- local count = 0
-  -- local function deal()
-  --     bag.takeObject({
-  --     callback_function = function(obj)
-  --       placeObject(obj)
-  --       count = count + 1
-  --       if count == params.amount then
-  --         Wait.time(endTrigger, 1)
-  --       end
-  --     end
-  --   })
-  -- end
-  -- Wait.time(function() deal() end, .25, params.amount)
-end
-
 --[[ Handler for player "Done" button. ]]
 function nextPlayerBtn(player, mouse, id)
   if env.test.trace then log(self.getName() .. ": nextPlayerBtn()") end
@@ -1339,18 +1294,19 @@ end
 function hasAether()
   if env.test.trace then log(self.getName() .. ": hasAether()") end
   if self.getName() == "Acranist" then return true end
-  local dice_zone = getObjectFromGUID(GD.board.dice_zone)
-  local spell_zone = getObjectFromGUID(GD.board.spells_zone)
-  for _,o in pairs(dice_zone.getObjects()) do
-    if o.hasTag("Dice") then
-      if o.getRotationValue() == 3 then return true end
-    end
-  end
-  for _,o in pairs(spell_zone.getObjects()) do
-    if o.hasTag("Dice") then
-      if o.getRotationValue() == 3 then return true end
-    end
-  end
+  log("!!!!!!!!!!!!!! TODO: move to Global")
+  -- local dice_zone = getObjectFromGUID(GD.board.dice_zone)
+  -- local spell_zone = getObjectFromGUID(GD.board.spells_zone)
+  -- for _,o in pairs(dice_zone.getObjects()) do
+  --   if o.hasTag("Dice") then
+  --     if o.getRotationValue() == 3 then return true end
+  --   end
+  -- end
+  -- for _,o in pairs(spell_zone.getObjects()) do
+  --   if o.hasTag("Dice") then
+  --     if o.getRotationValue() == 3 then return true end
+  --   end
+  -- end
   return false
 end
 
@@ -1580,112 +1536,6 @@ function getCurrentHeroics()
   return GD.board.heroics_count
 end
 
---[[ Handler for the roll dice button.  --]]
---TODO: add xml UI for this, hide button after rolling, show button when cleanup button is hit  DONE???
--- function rollAllDiceBtn(player, mouse, id)
---   if player.color == GD.board.player_color then
---     if env.test.trace then log(self.getName().." rollAllDice()") end
---     UI_setAttribute("roll_dice_pnl", "active", "false")
---     local z = getObjectFromGUID(GD.board.dice_zone)
---     if z ~= nil then
---       for _,d in pairs(z.getObjects()) do d.roll() end
---       Wait.condition(
---         function()
---           updateSpellPower()
---           Global.call("startPlayerTurn", player.color)
---         end,
---         function()
---           local resting = true
---           for _,d in pairs(z.getObjects()) do resting = resting and d.resting end
---           return resting
---         end
---       )
---     else
---       log(self.getName().." ERROR: no dice zone for guid "..GD.board.dice_zone)
---     end
---   end
--- end
-
---[[ Called from Global when a player randomizes (rolls) one or more die by
-  selecting them and hitting the 'r' button or uses the roll context menu.
-  Wait on all dice player's dice area to be at rest, then update the spell.
---]]
---[[ DEPRECATED
-waiting_on_dice = false
-function waitOnDiceRoll()
-  if waiting_on_dice then return end
-  if env.test.trace then log(self.getName().." waitOnDiceRoll()") end
-  waiting_on_dice = true
-  local z = getObjectFromGUID(GD.board.dice_zone)
-  if z ~= nil then
-    Wait.condition(
-      function()
-        waiting_on_dice = false
-        if env.test.verbose then log(self.getName().." all dice resting, update spell") end
-        updateSpellPower()
-      end,
-      function()
-        local resting = true
-        for _,d in pairs(z.getObjects()) do resting = resting and d.resting end
-        return resting
-      end
-    )
-  else
-    log(self.getName().." ERROR: no dice zone for guid "..GD.board.dice_zone)
-  end
-end
---]]
---[[ Called from Global when player drops a die.
-    Ignored if not in player spell or dice zones.
---]]
---[[ DEPRECATED
-function diceDrop(params)
-  if env.test.trace then log(self.getName().." diceDrop()") end
-  assert(params.guid)
-  if waiting_on_dice then return end
-  local found = false
-  local zone
-  local z = getObjectFromGUID(GD.board.dice_zone)
-  for _,o in pairs(z.getObjects()) do
-    if o.getGUID() == params.guid then
-      found = true
-      zone = z
-      break
-    end
-  end
-  if not(found) then
-    z = getObjectFromGUID(GD.board.spells_zone)
-    for _,o in pairs(z.getObjects()) do
-      if o.getGUID() == params.guid then
-        found = true
-        zone = z
-        break
-      end
-    end
-  end
-  if found then
-    waiting_on_dice = true
-    local die = getObjectFromGUID(params.guid)
-    if die ~= nil then
-      Wait.condition(
-        function()
-          waiting_on_dice = false
-          if env.test.verbose then log(self.getName().." all dice resting, update spell") end
-          updateSpellPower()
-        end,
-        function()
-          local resting = true
-          for _,d in pairs(zone.getObjects()) do resting = resting and d.resting end
-          return resting
-        end
-      )
-    else
-      log(self.getName().." ERROR: diceDrop(): object for guid "..params.guid.." is nil")
-    end
-  end
-end
---]]
-
 --[[ Process a used Alteration card.
     Called from Global on card drop outside of hand.
 --]]
@@ -1699,60 +1549,6 @@ function usedAlterationCard(params)
   card.setLock(false)
   if not(card.is_face_down) then card.flip() end
   card.setPosition(used)
-end
-
---[[ Process a played Alteration card.
-    Called from Global on card drop outside of hand.
---]]
--- function playAlteration(params)
---   assert(params, self.getName()..": ERROR: playAlteration(): missing params")
---   if env.test.trace then log("playAlteration() "..tostring(params.action)..", "..tostring(params.guid)) end
---   local card = getObjectFromGUID(params.guid)
---   assert(card, self.getName()..": ERROR: playAlteration(): missing card object, "..params.guid)
---   local action = params.action
---   log("action: "..tostring(action))
---   local used = self.positionToWorld(used_alterations_local_pos)
---   used.y = used.y + 3
---   if action == "play" then
---     if not(checkRequirements(card)) then return false end
---     if not(card.is_face_down) then card.flip() end
---     card.setPosition(used)
---     --TODO: automate play card
---   elseif action == "discard" then
---     if getAcuityCount() < 1 then
---       broadcastToColor("Not enough Acuity", GD.board.player_color)
---       return false
---     end
---     local deck = Global.call("getAlterationDeck")
---     if not(deck) then
---       if not(card.is_face_down) then card.flip() end
---       card.setPosition(Global.getTable("C").alteration_deck_pos)
---     elseif deck.tag == "Deck" then
---       if not(card.is_face_down) then card.flip() end
---       Wait.condition(function() deck.putObject(card) end, function() return card.resting end)
---     else
---       if not(card.is_face_down) then card.flip() end
---       Wait.condition(function()
---         local pos = Vector(deck.getPosition())
---         local raise = Vector(deck.getPosition())
---         raise.y = raise.y + 3
---         deck.setPosition(raise)
---         card.setPosition(pos)
---       end, function() return card.resting end)
---     end
---   else
---     log(self.getName()..": ERROR: playAlteration(): unknown action")
---     return false
---   end
---   return true
--- end
-
---[[ FUTURE: check requirements met to play this card. ]]
-function checkRequirements(card)
-
-  --TODO: future play alteration card requirements check here
-
-  return true
 end
 
 --[[ ***** DEVELOPMENT ONLY UTILS --]]

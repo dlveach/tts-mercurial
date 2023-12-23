@@ -49,6 +49,8 @@ C.setup={
     board_sigil = "blue",
     dice_translation = {"ruin","ruin","","","restore","restore"},
     home_position = {8.62, 1.16, -21.20},
+    aetherflow = {"Water"},
+    reroll_mod = 4,
   },
   Elementalist = {
     start_deck = "00437d",
@@ -60,6 +62,7 @@ C.setup={
     board_sigil = "yellow",
     dice_translation = {"ruin","ruin","","","restore","restore"},
     home_position = {-6.92, 1.16, -15.99},
+    aetherflow = {"Earth"},
   },
   Enchanter = {
     start_deck = "f16ace",
@@ -71,6 +74,7 @@ C.setup={
     board_sigil = "green",
     dice_translation = {"ruin","restore","","","ruin","restore"},
     home_position = {8.50, 1.16, -15.98},
+    aetherflow = {"Lightning"},
   },
   Mystcaller = {
     start_deck = "f43fab",
@@ -82,6 +86,8 @@ C.setup={
     board_sigil = "wild",
     dice_translation = {"ruin","restore","","","ruin","restore"},
     home_position = {0.94, 1.16, -18.65},
+    aetherflow = {"Fire"},
+    acuity_discount = 1,
   },
 }
 

@@ -224,9 +224,9 @@
     offsetXY="-550 350"
     color="rgb(0.7,0.3,0)"
     image="Sprites/Layout/Viewport"
-    height="300" width="420">
-    <Panel id="inner_hud_panel" height="280" width="400">
-      <TableLayout class="hud_table">
+    height="360" width="420">
+    <Panel id="inner_hud_panel" height="340" width="400">
+      <TableLayout id="hud_table" class="hud_table">
         <Row class="hud_title_row">
           <Cell><Text class="hud_header" text="Player"/></Cell>
           <Cell columnSpan="2"><Text class="hud_header" text="Spell Power"/></Cell>
@@ -261,19 +261,19 @@
           <Cell><Text id="hud_row_4_heroics" class="hud_row" text=""/></Cell>
           <Cell><Text id="hud_row_4_score" class="hud_row" text="0"/></Cell>
         </Row>
-        <Row preferredHeight="30" class="hud_title_row" visibility="Red">
-          <Cell columnSpan="5"><Text class="hud_header" text="Player Red unallocated resources"/></Cell>
+        <Row class="hud_title_row" visibility="Red">
+          <Cell columnSpan="5"><Text class="hud_header" text="Player Red resources"/></Cell>
         </Row>
-        <Row preferredHeight="30" class="hud_title_row" visibility="Blue">
-          <Cell columnSpan="5"><Text class="hud_header" text="Player Blue unallocated resources"/></Cell>
+        <Row class="hud_title_row" visibility="Blue">
+          <Cell columnSpan="5"><Text class="hud_header" text="Player Blue resources"/></Cell>
         </Row>
-        <Row preferredHeight="30" class="hud_title_row" visibility="Green">
-          <Cell columnSpan="5"><Text class="hud_header" text="Player Green unallocated resources"/></Cell>
+        <Row class="hud_title_row" visibility="Green">
+          <Cell columnSpan="5"><Text class="hud_header" text="Player Green resources"/></Cell>
         </Row>
-        <Row preferredHeight="30" class="hud_title_row" visibility="Yellow">
-          <Cell columnSpan="5"><Text class="hud_header" text="Player Yellow unallocated resources"/></Cell>
+        <Row class="hud_title_row" visibility="Yellow">
+          <Cell columnSpan="5"><Text class="hud_header" text="Player Yellow resources"/></Cell>
         </Row>
-        <Row id="Red_hud_dice_row" preferredHeight="60" visibility="Red">
+        <Row id="Red_hud_dice_row" class="hud_dice_row"  visibility="Red">
           <Cell columnSpan="5">
             <HorizontalLayout padding="10">
               <Image id="Red_hud_die_1_image" class="die_image_inactive" />
@@ -286,25 +286,65 @@
             </HorizontalLayout>
           </Cell>
         </Row>
-        <Row id="Red_hud_resource_row" preferredHeight="40" visibility="Red">
-          <Cell columnSpan="5" padding="80 80 0 0">
-            <HorizontalLayout spacing="40">
-              <Panel>
-                <HorizontalLayout spacing="10">
+        <Row id="Red_hud_resource_row" class="hud_resource_row" visibility="Red">
+          <Cell columnSpan="5" padding="20 40 0 0">
+            <TableLayout columnWidths="0 60 40 60 40 50">
+              <Row>
+                <Cell>
+                  <VerticalLayout padding="0 20 0 0">
+                      <Text class="hud_header" alignment="MiddleRight" fontSize="12" text="Takes:"/>
+                      <Text class="hud_header" alignment="MiddleRight" fontSize="12" text="Plays:"/>
+                  </VerticalLayout>
+                </Cell>
+                <Cell>
+                  <VerticalLayout>
+                    <Text id="Red_hud_takes_text" alignment="MiddleLeft" color="white" fontSize="16" text="0"/>
+                    <Text id="Red_hud_plays_text" alignment="MiddleLeft" color="white" fontSize="16" text="0"/>
+                  </VerticalLayout>
+                </Cell>
+                <Cell>
                   <Image preserveAspect="true" image="Mana"/>
-                  <Text id="Red_hud_mana_text" color="White" fontSize="24" text="0"/>
-                </HorizontalLayout>
-              </Panel>
-              <Panel>
-                <HorizontalLayout spacing="10">
+                </Cell>
+                <Cell>
+                  <Text id="Red_hud_mana_text" alignment="MiddleLeft" color="White" fontSize="20" text="10"/>
+                </Cell>
+                <Cell>
                   <Image preserveAspect="true" image="Acuity"/>
-                  <Text id="Red_hud_acuity_text" color="White" fontSize="24" text="0"/>
-                </HorizontalLayout>
-              </Panel>
+                </Cell>
+                <Cell padding="0 20 0 0">
+                  <Text id="Red_hud_acuity_text" alignment="MiddleLeft" color="White" fontSize="20" text="10"/>
+                </Cell>
+              </Row>
+            </TableLayout>
+          </Cell>
+        </Row>
+        <Row id="Red_hud_sigils_row" class="hud_sigils_row" visibility="Red">
+          <Cell columnSpan="5" padding="20 20 10 5">
+            <HorizontalLayout spacing="25">
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="YellowSigil"/>
+                <Text id="Red_hud_sigil_yellow_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="GreenSigil"/>
+                <Text id="Red_hud_sigil_green_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="RedSigil"/>
+                <Text id="Red_hud_sigil_red_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="BlueSigil"/>
+                <Text id="Red_hud_sigil_blue_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="WildSigil"/>
+                <Text id="Red_hud_sigil_wild_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
             </HorizontalLayout>
           </Cell>
         </Row>
-        <Row id="Blue_hud_dice_row" preferredHeight="60" visibility="Blue">
+        <Row id="Blue_hud_dice_row" class="hud_dice_row" visibility="Blue">
           <Cell columnSpan="5">
             <HorizontalLayout padding="10">
               <Image id="Blue_hud_die_1_image" class="die_image_inactive" />
@@ -317,25 +357,65 @@
             </HorizontalLayout>
           </Cell>
         </Row>
-        <Row id="Blue_hud_resource_row" preferredHeight="40" visibility="Blue">
-          <Cell columnSpan="5" padding="80 80 0 0">
-            <HorizontalLayout spacing="40">
-              <Panel>
-                <HorizontalLayout spacing="10">
+        <Row id="Blue_hud_resource_row" class="hud_resource_row"  visibility="Blue">
+          <Cell columnSpan="5" padding="20 40 0 0">
+            <TableLayout columnWidths="0 60 40 60 40 50">
+              <Row>
+                <Cell>
+                  <VerticalLayout padding="0 20 0 0">
+                      <Text class="hud_header" alignment="MiddleRight" fontSize="12" text="Takes:"/>
+                      <Text class="hud_header" alignment="MiddleRight" fontSize="12" text="Plays:"/>
+                  </VerticalLayout>
+                </Cell>
+                <Cell>
+                  <VerticalLayout>
+                    <Text id="Blue_hud_takes_text" alignment="MiddleLeft" color="white" fontSize="16" text="0"/>
+                    <Text id="Blue_hud_plays_text" alignment="MiddleLeft" color="white" fontSize="16" text="0"/>
+                  </VerticalLayout>
+                </Cell>
+                <Cell>
                   <Image preserveAspect="true" image="Mana"/>
-                  <Text id="Blue_hud_mana_text" color="White" fontSize="24" text="0"/>
-                </HorizontalLayout>
-              </Panel>
-              <Panel>
-                <HorizontalLayout spacing="10">
+                </Cell>
+                <Cell>
+                  <Text id="Blue_hud_mana_text" alignment="MiddleLeft" color="White" fontSize="20" text="10"/>
+                </Cell>
+                <Cell>
                   <Image preserveAspect="true" image="Acuity"/>
-                  <Text id="Blue_hud_acuity_text" color="White" fontSize="24" text="0"/>
-                </HorizontalLayout>
-              </Panel>
+                </Cell>
+                <Cell padding="0 20 0 0">
+                  <Text id="Blue_hud_acuity_text" alignment="MiddleLeft" color="White" fontSize="20" text="10"/>
+                </Cell>
+              </Row>
+            </TableLayout>
+          </Cell>
+        </Row>
+        <Row id="Blue_hud_sigils_row" class="hud_sigils_row" visibility="Blue">
+          <Cell columnSpan="5" padding="20 20 10 5">
+            <HorizontalLayout spacing="25">
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="YellowSigil"/>
+                <Text id="Blue_hud_sigil_yellow_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="GreenSigil"/>
+                <Text id="Blue_hud_sigil_green_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="RedSigil"/>
+                <Text id="Blue_hud_sigil_red_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="BlueSigil"/>
+                <Text id="Blue_hud_sigil_blue_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="WildSigil"/>
+                <Text id="Blue_hud_sigil_wild_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
             </HorizontalLayout>
           </Cell>
         </Row>
-        <Row id="Green_hud_dice_row" preferredHeight="60" visibility="Green">
+        <Row id="Green_hud_dice_row" class="hud_dice_row" visibility="Green">
           <Cell columnSpan="5">
             <HorizontalLayout padding="10">
               <Image id="Green_hud_die_1_image" class="die_image_inactive" />
@@ -348,25 +428,65 @@
             </HorizontalLayout>
           </Cell>
         </Row>
-        <Row id="Green_hud_resource_row" preferedHeight="40" visibility="Green">
-          <Cell columnSpan="5" padding="80 80 0 0">
-            <HorizontalLayout spacing="40">
-              <Panel>
-                <HorizontalLayout spacing="10">
+        <Row id="Green_hud_resource_row" class="hud_resource_row" visibility="Green">
+          <Cell columnSpan="5" padding="20 40 0 0">
+            <TableLayout columnWidths="0 60 40 60 40 50">
+              <Row>
+                <Cell>
+                  <VerticalLayout padding="0 20 0 0">
+                      <Text class="hud_header" alignment="MiddleRight" fontSize="12" text="Takes:"/>
+                      <Text class="hud_header" alignment="MiddleRight" fontSize="12" text="Plays:"/>
+                  </VerticalLayout>
+                </Cell>
+                <Cell>
+                  <VerticalLayout>
+                    <Text id="Green_hud_takes_text" alignment="MiddleLeft" color="white" fontSize="16" text="0"/>
+                    <Text id="Green_hud_plays_text" alignment="MiddleLeft" color="white" fontSize="16" text="0"/>
+                  </VerticalLayout>
+                </Cell>
+                <Cell>
                   <Image preserveAspect="true" image="Mana"/>
-                  <Text id="Green_hud_mana_text" color="White" fontSize="24" text="0"/>
-                </HorizontalLayout>
-              </Panel>
-              <Panel>
-                <HorizontalLayout spacing="10">
+                </Cell>
+                <Cell>
+                  <Text id="Green_hud_mana_text" alignment="MiddleLeft" color="White" fontSize="20" text="10"/>
+                </Cell>
+                <Cell>
                   <Image preserveAspect="true" image="Acuity"/>
-                  <Text id="Green_hud_acuity_text" color="White" fontSize="24" text="0"/>
-                </HorizontalLayout>
-              </Panel>
+                </Cell>
+                <Cell padding="0 20 0 0">
+                  <Text id="Green_hud_acuity_text" alignment="MiddleLeft" color="White" fontSize="20" text="10"/>
+                </Cell>
+              </Row>
+            </TableLayout>
+          </Cell>
+        </Row>
+        <Row id="Green_hud_sigils_row" class="hud_sigils_row" visibility="Green">
+          <Cell columnSpan="5" padding="20 20 10 5">
+            <HorizontalLayout spacing="25">
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="YellowSigil"/>
+                <Text id="Green_hud_sigil_yellow_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="GreenSigil"/>
+                <Text id="Green_hud_sigil_green_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="RedSigil"/>
+                <Text id="Green_hud_sigil_red_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="BlueSigil"/>
+                <Text id="Green_hud_sigil_blue_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="WildSigil"/>
+                <Text id="Green_hud_sigil_wild_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
             </HorizontalLayout>
           </Cell>
         </Row>
-        <Row id="Yellow_hud_dice_row" preferredHeight="60" visibility="Yellow">
+        <Row id="Yellow_hud_dice_row" class="hud_dice_row"  visibility="Yellow">
           <Cell columnSpan="5">
             <HorizontalLayout padding="10">
               <Image id="Yellow_hud_die_1_image" class="die_image_inactive" />
@@ -379,21 +499,61 @@
             </HorizontalLayout>
           </Cell>
         </Row>
-        <Row id="Yellow_hud_resource_row" preferredHeight="40" visibility="Yellow">
-          <Cell columnSpan="5" padding="80 80 0 0">
-            <HorizontalLayout spacing="40">
-              <Panel>
-                <HorizontalLayout spacing="10">
+        <Row id="Yellow_hud_resource_row" class="hud_resource_row"  visibility="Yellow">
+          <Cell columnSpan="5" padding="20 40 0 0">
+            <TableLayout columnWidths="0 60 40 60 40 50">
+              <Row>
+                <Cell>
+                  <VerticalLayout padding="0 20 0 0">
+                      <Text class="hud_header" alignment="MiddleRight" fontSize="12" text="Takes:"/>
+                      <Text class="hud_header" alignment="MiddleRight" fontSize="12" text="Plays:"/>
+                  </VerticalLayout>
+                </Cell>
+                <Cell>
+                  <VerticalLayout>
+                    <Text id="Yellow_hud_takes_text" alignment="MiddleLeft" color="white" fontSize="16" text="0"/>
+                    <Text id="Yellow_hud_plays_text" alignment="MiddleLeft" color="white" fontSize="16" text="0"/>
+                  </VerticalLayout>
+                </Cell>
+                <Cell>
                   <Image preserveAspect="true" image="Mana"/>
-                  <Text id="Yellow_hud_mana_text" color="White" fontSize="24" text="0"/>
-                </HorizontalLayout>
-              </Panel>
-              <Panel>
-                <HorizontalLayout spacing="10">
+                </Cell>
+                <Cell>
+                  <Text id="Yellow_hud_mana_text" alignment="MiddleLeft" color="White" fontSize="20" text="10"/>
+                </Cell>
+                <Cell>
                   <Image preserveAspect="true" image="Acuity"/>
-                  <Text id="Yellow_hud_acuity_text" color="White" fontSize="24" text="0"/>
-                </HorizontalLayout>
-              </Panel>
+                </Cell>
+                <Cell padding="0 20 0 0">
+                  <Text id="Yellow_hud_acuity_text" alignment="MiddleLeft" color="White" fontSize="20" text="10"/>
+                </Cell>
+              </Row>
+            </TableLayout>
+          </Cell>
+        </Row>
+        <Row id="Yellow_hud_sigils_row" class="hud_sigils_row" visibility="Yellow">
+          <Cell columnSpan="5" padding="20 20 10 5">
+            <HorizontalLayout spacing="25">
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="YellowSigil"/>
+                <Text id="Yellow_hud_sigil_yellow_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="GreenSigil"/>
+                <Text id="Yellow_hud_sigil_green_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="RedSigil"/>
+                <Text id="Yellow_hud_sigil_red_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="BlueSigil"/>
+                <Text id="Yellow_hud_sigil_blue_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
+              <HorizontalLayout spacing="5">
+                <Image preserveAspect="true" image="WildSigil"/>
+                <Text id="Yellow_hud_sigil_wild_txt" fontSize="20" color="white" text="0"/>
+              </HorizontalLayout>
             </HorizontalLayout>
           </Cell>
         </Row>
@@ -503,7 +663,7 @@
   </Panel>
 
   <!-- Alteration card panel -->
-  <Panel id="alteration_card_panel" active="false"
+  <Panel id="alteration_card_panel" active="true"
     allowDragging="true"
     returnToOriginalPositionWhenReleased="false"
     offsetXY="0 50"
@@ -539,7 +699,7 @@
             <Row class="base_table_row" preferedHeight="100">
               <Cell padding="20 20 10 10">
                 <HorizontalLayout spacing="20">
-                  <Panel>
+                  <Panel id="alteration_secondary_action_pnl">
                     <Button padding="20 20 0 10" id="alteration_secondary_action_btn" onClick="alterationDlgHandler">
                       <Text id="alteration_secondary_action_txt" text="Secondary" fontSize="20" />
                     </Button>
@@ -559,20 +719,20 @@
             rectAlignment="UpperCenter" height="270" width="900">
             <Row class="base_table_row">
               <Cell columnSpan="2">
-                <Text class="table_title_text" text="Pay Acuity"/>
+                <Text class="table_title_text" text="Pay Acuity to convert:"/>
               </Cell>
             </Row>
             <Row class="base_table_row">
               <Cell padding="5">
                 <VerticalLayout>
                   <Text class="hud_header" fontSize="20" text="Available Acuity:"/>
-                  <Text id="alteration_available_acuity" fontSize="24" color="white" text="0"/>
+                  <Text id="alteration_available_acuity_txt" fontSize="24" color="white" text="0"/>
                 </VerticalLayout>
               </Cell>
               <Cell padding="5">
                 <VerticalLayout>
                   <Text class="hud_header" fontSize="20" text="Acuity to pay:"/>
-                  <Text id="alteration_available_acuity" fontSize="24" color="white" text="0"/>
+                  <Text id="alteration_paid_acuity_txt" fontSize="24" color="white" text="0"/>
                 </VerticalLayout>
               </Cell>
             </Row>
@@ -596,11 +756,12 @@
             rectAlignment="UpperCenter" height="270" width="900">
             <Row class="base_table_row">
               <Cell padding="0 0 10 10">
-                <TableLayout columnWidths="0 70 20 70 20 70 20 70 20 70 20 70 20 70 0">
+                <TableLayout columnWidths="0 20 70 20 70 20 70 20 70 20 70 20 70 20 70 20">
                   <Row>
                     <Cell>
-                      <Text class="hud_header" fontSize="20" text="Convert from:"/>
+                      <Text class="hud_header" fontSize="24" text="Convert from:"/>
                     </Cell>
+                    <Cell/>
                     <Cell><Image id="convert_from_die_1_img" image="Earth" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
                     <Cell/>
                     <Cell><Image id="convert_from_die_2_img" image="Water" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
@@ -618,8 +779,13 @@
                   </Row>
                   <Row>
                     <Cell>
-                      <Text class="hud_header" fontSize="20" text="Convert to:"/>
+                      <VerticalLayout>
+                        <Text class="hud_header" fontSize="24" text="Convert to:"/>
+                        <Text id="convert_cycle_to_die_txt" class="hud_header" fontSize="16" text="Click to cycle elements"/>
+                        <Text class="hud_header" fontSize="16" text="Right Click to cancel die"/>
+                      </VerticalLayout>
                     </Cell>
+                    <Cell/>
                     <Cell><Image id="convert_to_die_1_img" image="Earth" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
                     <Cell/>
                     <Cell><Image id="convert_to_die_2_img" image="Water" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
@@ -648,6 +814,9 @@
             </Panel>
             <Panel padding="10 10 5 5" id="alteration_done_pnl" active="false">
               <Button padding="0 0 0 5" id="alteration_done_btn" text="Done" fontSize="20" onClick="alterationDlgHandler"/>
+            </Panel>
+            <Panel padding="10 10 5 5" id="alteration_next_pnl" active="false">
+              <Button padding="0 0 0 5" id="alteration_next_btn" text="Next" fontSize="20" onClick="alterationDlgHandler"/>
             </Panel>
             <Panel/>
           </HorizontalLayout>

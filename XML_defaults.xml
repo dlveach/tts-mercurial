@@ -135,6 +135,16 @@
   <Row class="hud_data_row"
     preferredHeight="30" />
 
+  <Row class="hud_dice_row"
+    preferredHeight="60" />
+
+  <Row class="hud_resource_row"
+    preferredHeight="40" />
+
+  <Row class="hud_sigils_row"
+    preferredHeight="60" />
+
+
   <Image class="die_image"
       preserveAspect="true" />
 
