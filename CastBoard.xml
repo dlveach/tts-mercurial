@@ -1,0 +1,76 @@
+<XmlLayout xmlns="http://www.w3schools.com"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:noNamespaceSchemaLocation="../../../Configuration/XmlLayout.xsd">
+
+   <Include src="XML_defaults.xml"/>
+
+  <Panel id="cast_panel" active="true"
+    color="#180f0b" height="135" width="155"
+    rectAlignment="MiddleCenter" position="95 -30 1"
+    rotation="180 0 0" scale="1 1">
+    <!-- <Text id="cast_panel_test_text" color="white" fontSize="12" text="TEST" /> -->
+    <TableLayout columnWidths="0 0 0 0">
+      <Row preferredHeight="50">
+        <Cell>
+          <Panel id="die_image_1_pnl" padding="2" color="#180f0b">
+            <Image id="die_image_1" preserveAspect="true" image="Any_Die"/>
+          </Panel>
+        </Cell>
+        <Cell>
+          <Panel id="die_image_2_pnl" padding="2" color="#180f0b">
+            <Image id="die_image_2" preserveAspect="true" image="Any_Die"/>
+          </Panel>
+        </Cell>
+        <Cell>
+          <Panel id="die_image_3_pnl" padding="2" color="#180f0b">
+            <Image id="die_image_3" preserveAspect="true" image="Any_Die"/>
+          </Panel>
+        </Cell>
+        <Cell>
+          <Panel id="die_image_4_pnl" padding="2" color="#180f0b">
+            <Image id="die_image_4" preserveAspect="true" image="Any_Die"/>
+          </Panel>
+        </Cell>
+      </Row>
+      <Row preferredHeight="50">
+        <Cell>
+          <Panel id="die_image_5_pnl" padding="2" color="#180f0b">
+            <Image id="die_image_5" preserveAspect="true" image="Any_Die"/>
+          </Panel>
+        </Cell>
+        <Cell>
+          <Panel id="die_image_6_pnl" padding="2" color="#180f0b">
+            <Image id="die_image_6" preserveAspect="true" image="Any_Die"/>
+          </Panel>
+        </Cell>
+        <Cell>
+          <Panel id="die_image_7_pnl" padding="2" color="#180f0b">
+            <Image id="die_image_7" preserveAspect="true" image="Any_Die"/>
+          </Panel>
+        </Cell>
+        <Cell/>
+      </Row>
+      <Row preferredHeight="35">
+        <Cell columnspan="4">
+          <TableLayout columnWidths="0 0 0 0">
+            <Row>
+              <Cell>
+                <Image preserveAspect="true" image="Mana"/>
+              </Cell>
+              <Cell>
+                <Text id="mana_text" color="white" alignment="MiddleLeft" fontSize="16" text="10"/>
+              </Cell>
+              <Cell>
+                <Image preserveAspect="true" image="Acuity"/>
+              </Cell>
+              <Cell>
+                <Text id="acuity_text" color="white" alignment="MiddleLeft" fontSize="16" text="10"/>
+              </Cell>
+            </Row>
+          </TableLayout>
+        </Cell>
+      </Row>
+    </TableLayout>
+  </Panel>
+
+</XmlLayout>

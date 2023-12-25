@@ -269,11 +269,10 @@ function startGameBtn()
   getObjectFromGUID(GD.game.spells_deck_guid).shuffle()
   getObjectFromGUID(GD.game.alterations_deck_guid).shuffle()
   getObjectFromGUID(GD.game.artifacts_deck_guid).shuffle()
-  -- Enable class select buttons
-  for class, guid in pairs(C.guids.player_boards) do
+  -- Enable class boards
+  for class, guid in pairs(C.guids.class_boards) do
     local class_board = getObjectFromGUID(guid)
     assert(class_board)
-    --class_board.call("enableClassSelectBtn")
     class_board.interactable = true
     class_board.setLock(false)
   end
@@ -351,14 +350,18 @@ function setPlayerClass(params)
     getObjectFromGUID(params.guid).setPosition(Vector(params.home_position))
     return
   else
+    local z = getObjectFromGUID(C.guids.board_zones[position])
+    if z ~= nil then z.destruct() end
     local class_board = getObjectFromGUID(params.guid)
     assert(class_board, "ERROR: Global: setPlayerClass(): Missing board object")
+    class_board.call("initialize")
     if GD.env.verbose then print("Player " .. pcol .. " selected class " .. class_board.getName()) end
     local setup = C.setup[class_board.getName()]
     assert(setup, "ERROR: Global:setPlayerClass() missing setup data for "..class_board.getName())
     GD.game.positions[position] = pcol
     player.class = class_board.getName()
-    player.board_guid = class_board.getGUID()
+    player.class_board = class_board.getGUID()
+    player.player_board = C.guids.player_boards[position]
     player.alteration_cards = {}
     player.heroics = {}
     player.active_spell = {}
@@ -370,7 +373,8 @@ function setPlayerClass(params)
     player.actions.play = 0
     player.dice = {}
     for i=1,setup.start_dice do
-      table.insert(player.dice, {value=math.random(1,6),allocated=false})
+      local val = math.random(1,6)
+      table.insert(player.dice, {value=val,allocated=false,element=C.die_elements[val]})
     end
     player.mana = setup.start_mana
     player.mana_assigned = 0
@@ -426,6 +430,9 @@ end
 function finalSetup()
   if env.test.trace then log("Global: finalSetup()") end
   --cleanup unused boards
+  for _,guid in pairs(C.guids.class_boards) do
+    getObjectFromGUID(guid).call("cleanupBoard")
+  end
   for _,guid in pairs(C.guids.player_boards) do
     getObjectFromGUID(guid).call("setupBoard")
   end
@@ -580,7 +587,7 @@ function startPlayerTurn(pcol)
   enableAlterationButtons(true)
   --set spell card take buttons based on player's avaialable resources
   updateSpellButtons(pcol)
-  getObjectFromGUID(GD.game.players[pcol].board_guid).call("enableActivePlayer")
+  getObjectFromGUID(GD.game.players[pcol].class_board).call("enableActivePlayer")
   if GD.env.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
   updateHUD()
 end
@@ -855,7 +862,7 @@ function setNextPlayer()
   end
   refillCards()
   local pcol = GD.game.player_order[GD.game.current_player]
-  local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
+  local board = getObjectFromGUID(GD.game.players[pcol].class_board)
   board.call("enableActivePlayer", true)
   if env.test.auto_switch then autoSwitch(GD.game.player_order[GD.game.current_player]) end
   if GD.env.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
@@ -878,7 +885,7 @@ function getPlayerClassBoardGUID(params)
   assert(params)
   local pdata = GD.game.players[params.player_color]
   if pdata ~= nil then
-    return pdata.board_guid
+    return pdata.class_board
   else
     log("Global: ERROR: unable to get player data")
     return ""
@@ -888,7 +895,7 @@ end
 --[[ Used only when player types a number on a die to change it.  Trigger update spell power for player. --]]
 -- function onObjectNumberTyped(o, pcol, n)
 --   if o.hasTag("Dice") and n >= 1 and n <= 6 then
---     local board = getObjectFromGUID(GD.game.players[pcol].board_guid)
+--     local board = getObjectFromGUID(GD.game.players[pcol].class_board)
 --     Wait.time(function() board.call("updateSpellPower", {}) end, 0.5)
 --   end
 -- end
@@ -913,7 +920,7 @@ end
 --       table.insert(GD.game.players[pcol].alteration_cards, obj.getGUID())
 --       if env.test.debug then log("Alteration card "..obj.getGUID().." first entered hand zone and assigned to player "..pcol) end
 --       if #alterations[tonumber(obj.getGMNotes())].sigils > 0 then
---         getObjectFromGUID(GD.game.players[pcol].board_guid).call("updateScore")
+--         getObjectFromGUID(GD.game.players[pcol].class_board).call("updateScore")
 --       end
 --       -- end
 --     end
@@ -925,7 +932,7 @@ function onObjectDrop(player_color, obj)
   if GD.game.started then
     if obj.hasTag("Spell") then
       if env.test.trace then log("Global: onObjectDrop() -> spellDrop()") end
-      local player_board = getObjectFromGUID(GD.game.players[player_color].board_guid)
+      local player_board = getObjectFromGUID(GD.game.players[player_color].class_board)
       player_board.call("spellDrop", {guid = obj.getGUID()})
     elseif obj.hasTag("Alteration") then
       if contains(Player[player_color].getHandObjects(), obj) then return end --ignore moving in hand
@@ -951,7 +958,7 @@ end
 --   local success = true
 --   local g = UI.getAttribute("alterationDiscardPanel","hidden")
 --   if action == "play" or action == "discard" then
---     local player_board = getObjectFromGUID(GD.game.players[player.color].board_guid)
+--     local player_board = getObjectFromGUID(GD.game.players[player.color].class_board)
 --     success = player_board.call("playAlteration", {guid=g,action=action})
 --   elseif action == "cancel" then
 --     local card = getObjectFromGUID(g)
@@ -1289,7 +1296,7 @@ function alterationDlgHandler(player, button, id)
       end
     end
     pdata.actions.play = pdata.actions.play - 1
-    local board = getObjectFromGUID(pdata.board_guid)
+    local board = getObjectFromGUID(pdata.class_board)
     board.call("usedAlterationCard",{guid=card.guid})
     UI_setAttribute("alteration_card_panel","visibility","Pink")
     updateHUD()
@@ -1333,7 +1340,7 @@ function recycleSpellBtn(player, button, id)
     GD.game.spells_deck_guid = card.getGUID()
   end
   -- give player one acuity
-  local board = getObjectFromGUID(GD.game.players[player.color].board_guid)
+  local board = getObjectFromGUID(GD.game.players[player.color].class_board)
   -- board.call("dealItems", {["item_type"]="acuity",["amount"]=1})
   GD.game.players[player.color].acuity = GD.game.players[player.color].acuity + 1
 end
@@ -1359,7 +1366,7 @@ function takeAlterationBtn(player, button, id)
   GD.game.alterations[index].card_guid = ""
   GD.game.alterations[index].card_id = 0
   assert(card, "ERROR: Global:takeAlterationBtn() could not locate card")
-  local board = getObjectFromGUID(GD.game.players[player.color].board_guid)
+  local board = getObjectFromGUID(GD.game.players[player.color].class_board)
   table.insert(pdata.alteration_cards, card.getGUID())
   card.deal(1,player.color)
   for _,s in ipairs(alterations[tonumber(card.getGMNotes())].sigils) do
@@ -1622,7 +1629,7 @@ function spellCostHandler(player, button, id)
       end
     end
     local p = GD.game.players[player.color]
-    local board = getObjectFromGUID(p.board_guid)
+    local board = getObjectFromGUID(p.class_board)
     assert(board, "ERROR: spellCostHandler(): assign: missing board")
     local card = getObjectFromGUID(GD.game.spells[dlg.card_index].card_guid)
     assert(card,"spellCostHandler(): assign: missing spell card object")
@@ -1868,7 +1875,7 @@ function updateHUD(player_color)
   local function updatePlayerHUD(i, pcol)
     if env.test.debug then log("updatePlayerHUD() i: "..tostring(i).." "..tostring(pcol)) end
     local pdata = GD.game.players[pcol]
-    local board = getObjectFromGUID(pdata.board_guid)
+    local board = getObjectFromGUID(pdata.class_board)
     local score = board.call("getCurrentScore")
     local spell = board.call("getCurrentSpellPower")
     local heroics = board.call("getCurrentHeroics")
@@ -1916,7 +1923,7 @@ function finalScore()
     local pdata = {}
     pdata.player = color
     pdata.class = pinfo.class
-    local board = getObjectFromGUID(pinfo.board_guid)
+    local board = getObjectFromGUID(pinfo.class_board)
     board.call("updateScore", {})
     local bd=board.getTable("GD")
     local values = bd.board.scoring.values

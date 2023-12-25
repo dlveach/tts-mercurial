@@ -1,0 +1,94 @@
+
+initialized = false
+env = {}
+C = {}
+
+--[[ TTS load function. No state is saved for this object. ]]
+function onLoad(save_state)
+  env = Global.getTable("env")
+  C = Global.getTable("C")
+  if env.test.debug then log(self.getName()..": Loading") end
+  if not(initialized) then
+    for i=1,7 do
+      if i <= start_dice then  --defined in tts object
+        self.UI.setAttribute("die_image_"..tostring(i).."_pnl","active",true)
+      else
+        self.UI.setAttribute("die_image_"..tostring(i).."_pnl","active",false)
+      end
+    end
+    self.UI.setAttribute("mana_text","text",tostring(start_mana))  --defined in tts object
+    self.UI.setAttribute("acuity_text","text",tostring(start_acuity))  --defined in tts object
+  end
+end
+
+--[[ External call: called from Global when a player selects this board.
+--]]
+function initialize()
+  if env.test.debug then log(self.getName()..": initialize()") end
+  initialized = true
+end
+
+--[[ External call: Update this board's UI with supplied player data.
+--]]
+function updateUI(pdata)
+  if env.test.debug then log(self.getName()..": updateUI()") end
+  for i=1,7 do
+    if i <= #pdata.dice then
+      self.UI.setAttribute("die_image_"..tostring(i).."_pnl","active",true)
+      self.UI.setAttribute("die_image_"..tostring(i),"image",pdata.dice[i].element)
+    else
+      self.UI.setAttribute("die_image_"..tostring(i).."_pnl","active",false)
+    end
+  end
+  self.UI.setAttribute("mana_text","text",tostring(pdata.mana))
+  self.UI.setAttribute("acuity_text","text",tostring(pdata.acuity))
+end
+
+--[[ Handler for player selecting (dropping) this board.
+    Call Global to check conditions and assign playerboard & position to player.
+--]]
+function onDrop(player_color)
+  if env.test.trace then log(self.getName().." onDrop()") end
+  for i=1,4 do
+    local zone_guid = C.guids.board_zones[i]
+    z = getObjectFromGUID(zone_guid)
+    if z ~= nil then
+      for _,o in pairs(z.getObjects()) do
+        if o.getGUID() == self.getGUID() then
+          --ensure tile is in range to be snapped by moving to center of zone
+          local pos = z.getPosition()
+          local new_pos = o.getPosition()
+          new_pos.x = pos.x
+          new_pos.z = pos.z
+          new_pos.y = 3
+          o.setPosition(new_pos)
+          --setup the board & player area after it's settled in position
+          if env.test.debug then log(self.getName()..":"..self.getGUID().." dropped in position "..tostring(i).." by "..player_color) end
+          Wait.condition(
+            function() Global.call("setPlayerClass",{
+              player = player_color,
+              guid = self.getGUID(),
+              position = i,
+              home_position = home_position,
+            }) end,
+            function() return self.resting end
+          )
+          break;
+        end
+      end
+    else
+      if env.test.debug then log(self.getName()..": onDrop(): No player position zone here") end
+    end
+  end
+end
+
+--[[ External call: Called from Global after all players have chosen a board.
+    If not initialized by a player selecting it, destroy it.
+--]]
+function cleanupBoard()
+  if env.test.trace then log(self.getName().." onDrop()") end
+  if not(initialized) then
+    if env.test.debug then log(self.getName().." not initialized, destroying it") end
+    self.destruct()
+  end
+end

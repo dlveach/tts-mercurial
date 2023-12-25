@@ -1,0 +1,194 @@
+<XmlLayout xmlns="XmlLayout"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="XmlLayout UI/XmlLayout/Configuration/XmlLayout.xsd">
+
+<Include src="XML_defaults.xml"/>
+
+<Panel  class="class_board_text"
+        id="score_panel"
+        height="30" width="30"
+        position="900 -42 -20"
+        scale = "1.4 1.4">
+  <Text id="score_text_id"
+        class="score"
+        text="0" />
+  <Button class="hidden"
+          id="update_score_btn_id"
+          onClick="updateScoreBtn" />
+</Panel>
+
+<Panel  class="class_board_text"
+        id="gross_restore_panel"
+        height="30" width="30"
+        position="-38 -221 -20"
+        scale = "1.4 1.4">
+  <Text id="gross_restore_text_id"
+        class="restore"
+        text="0" />
+</Panel>
+
+<Panel  class="class_board_text"
+        id="net_restore_panel"
+        height="30" width="30"
+        position="56 -221 -20"
+        scale = "1.4 1.4">
+  <Text id="net_restore_text_id"
+        class="restore"
+        text="0" />
+</Panel>
+
+<Panel  class="class_board_text"
+        id="gross_ruin_panel"
+        height="30" width="30"
+        position="-38 -157 -20"
+        scale = "1.4 1.4">
+  <Text id="gross_ruin_text_id"
+        class="ruin"
+        text="0" />
+</Panel>
+
+<Panel  class="class_board_text"
+        id="net_ruin_panel"
+        height="30" width="30"
+        position="56 -157 -20"
+        scale = "1.4 1.4">
+  <Text id="net_ruin_text_id"
+        class="ruin"
+        text="0" />
+</Panel>
+
+<Panel  class="class_board_text"
+        id="total_myst_panel"
+        height="30" width="30"
+        position="235 -189 -20"
+        scale = "1.4 1.4">
+  <Text id="total_myst_text_id"
+        class="myst"
+        text="0" />
+</Panel>
+
+<Panel  class="class_board_text"
+        id="dice_restore_panel"
+        height="25" width="25"
+        position="485 -212 -20"
+        scale = "1.1 1.1">
+  <Text id="dice_restore_text_id"
+        class="restore_small"
+        text="0" />
+</Panel>
+
+<Panel  class="class_board_text"
+        id="dice_ruin_panel"
+        height="25" width="25"
+        position="485 -172 -20"
+        scale = "1.1 1.1">
+  <Text id="dice_ruin_text_id"
+        class="ruin_small"
+        text="0" />
+</Panel>
+
+<Panel  class="class_board_text"
+        id="acuity_restore_panel"
+        height="25" width="25"
+        position="711 -189 -20"
+        scale = "1.2 1.2">
+  <Text id="acuity_restore_text_id"
+        class="restore_small"
+        text="0" />
+</Panel>
+
+<Panel  class="class_board_text"
+        id="acuity_ruin_panel"
+        height="25" width="25"
+        position="931 -189 -20"
+        scale = "1.2 1.2">
+  <Text id="acuity_ruin_text_id"
+        class="ruin_small"
+        text="0" />
+</Panel>
+
+<Panel  class="class_board_button"
+        id="next_player_pnl"
+        position="-240 105 -20"
+        height="20" width="80" >
+  <Button id="next_player_btn_id"
+          width="75" height="50"
+          onClick="nextPlayerBtn"
+          text="Done" />
+</Panel>
+
+<Panel  class="class_board_button"
+        id="cleanup_pnl"
+        position="300 550 -20" >
+  <Button id="cleanup_btn_id"
+          width="200" height="50"
+          onClick="cleanupBtn"
+          text="Cast Spell" />
+</Panel>
+
+<Panel  class="class_board_button"
+        id="update_spell_pnl"
+        position="-180 -190 -20" >
+  <Button class="hidden"
+          id="update_spell_btn_id"
+          onClick="updateSpellPowerBtn" />
+</Panel>
+
+<Panel  class="class_board_button"
+        id="roll_dice_pnl"
+        position="550 270 -20" >
+  <Button id="roll_dice_btn_id"
+          width="150" height="50"
+          onClick="rollAllDiceBtn"
+          text="Roll Dice" />
+</Panel>
+
+<Panel  class="class_board_text"
+        id="yellow_sigils_panel"
+        height="30" width="30"
+        position="735 480 -20"
+        scale = "1.25 1.25">
+  <Text id="yellow_sigils_text"
+        class="sigils"
+        text="0" />
+</Panel>
+<Panel  class="class_board_text"
+        id="green_sigils_panel"
+        height="30" width="30"
+        position="807 480 -20"
+        scale = "1.25 1.25">
+  <Text id="green_sigils_text"
+        class="sigils"
+        text="0" />
+</Panel>
+<Panel  class="class_board_text"
+        id="red_sigils_panel"
+        height="30" width="30"
+        position="878 480 -20"
+        scale = "1.25 1.25">
+  <Text id="red_sigils_text"
+        class="sigils"
+        text="0" />
+</Panel>
+<Panel  class="class_board_text"
+        id="blue_sigils_panel"
+        height="30" width="30"
+        position="950 480 -20"
+        scale = "1.25 1.25">
+  <Text id="blue_sigils_text"
+        class="sigils"
+        text="0" />
+</Panel>
+<Panel  class="class_board_text"
+        id="wild_sigils_panel"
+        height="30" width="30"
+        position="1025 480 -20"
+        scale = "1.25 1.25">
+  <Text id="wild_sigils_text"
+        class="sigils"
+        text="0" />
+</Panel>
+
+
+
+</XmlLayout>

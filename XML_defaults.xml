@@ -1,15 +1,5 @@
 <Defaults>
 
-  <Panel  class="class_board_text"
-          active="false"
-          rectAlignment="middleCenter"
-          rotation="180 0 0"  />
-
-  <Panel  class="class_board_button"
-          active="false"
-          rotation="180 0 0"
-          height="10" width="15"  />
-
   <Panel  class="title"
           color="rgb(0.8,0.4,0)"
           preferredHeight="16"
@@ -50,41 +40,6 @@
         font="Arial Bold"
         color="rgb(.9,0.9,0)"
         shadow="rgba(0,0,0,1)" />
-
-  <Text class="restore"
-        fontSize="25"
-        color="#08A4C1"
-        alignment="MiddleCenter"  />
-
-  <Text class="restore_small"
-        fontSize="20"
-        color="#08A4C1"
-        alignment="MiddleCenter"  />
-
-  <Text class="ruin"
-        fontSize="25"
-        color="#B81717"
-        alignment="MiddleCenter"  />
-
-  <Text class="ruin_small"
-        fontSize="20"
-        color="#B81717"
-        alignment="MiddleCenter"  />
-
-  <Text class="myst"
-        fontSize="25"
-        color="#099139"
-        alignment="MiddleCenter"  />
-
-  <Text class="score"
-        fontSize="25"
-        color="#aaa9ad"
-        alignment="MiddleCenter"  />
-
-  <Text class="sigils"
-        fontSize="25"
-        color="rgb(0.74,0.74,0.31)"
-        alignment="MiddleCenter"  />
 
   <TableLayout class="base_table"
       image="Sprites/Layout/Viewport"
