@@ -5,8 +5,6 @@ Work items for converstion of beta to production version:
   --BUG: Mana discount not working when more than one flex spot,
           --TODO: test Mystcaller innate acuity discount.
 
-  --BUG: Some Alteration actions don't work or not yet implemented (re-roll etc.)
-
   - BUG: fix arcana scoring to final rules
 
   --TODO: automate spell cast
@@ -623,11 +621,50 @@ end
 
 --[[ --TODO: implement-- Handler for Take used Alterations button on player boards. ]]
 function takeUsedAlterationsBtn(player, button, id)
-  if env.test.trace then log("Global: alterationDlgHandler() "..player.color..", "..tostring(id)) end
+  if env.test.trace then log("Global: takeUsedAlterationsBtn() "..player.color..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
-
-  --TODO: implement--
-
+  local pdata = GD.game.players[player.color]
+  local index = indexOf(pdata.actions.take, "any")
+  if not(index > 0) then
+    --shouldn't happen if we're disabling the button correctly
+    if env.test.debug then log("WARN: takeUsedAlterationsBtn() player has no take actions, ignoring") end
+    return
+  end
+  local player_board = getObjectFromGUID(GD.game.players[player.color].player_board)
+  local used = player_board.call("getUsedAlterations")
+  if used then
+    if env.test.debug then log("Global: takeUsedAlterationsBtn(): processing used alterations") end
+    assert(used.tag == "Deck" or used.tag == "Card", "takeUsedAlterationsBtn() unexpected object, not card or deck.")
+    if used.tag == "Deck" then
+      local cards = used.getObjects()
+      used.deal(#cards, player.color)
+      Wait.condition(function()           --TODO: Wait.time here?
+        for _,c in ipairs(cards) do
+          local card = getObjectFromGUID(c.guid)
+          assert(card, "takeUsedAlterationsBtn(): no card "..c.guid)
+          local memo = JSON.decode(card.memo)
+          assert(memo, "takeUsedAlterationsBtn(): no memo for card "..c.guid)
+          memo.used = false
+          card.memo = JSON.encode(memo)
+        end
+      end, function() return used.isDestroyed() end)
+    elseif used.tag == "Card" then
+      local card = used
+      assert(card.memo, "takeUsedAlterationsBtn(): no memo for card "..card.getGUID())
+      local memo = JSON.decode(card.memo)
+      memo.used = false
+      card.memo = JSON.encode(memo)
+      card.deal(1, player.color)
+    end
+    --remove a take from player
+    local index = indexOf(pdata.actions.take, "any")
+    if index > 0 then
+      table.remove(pdata.actions.take, index)
+    else
+      log("WARN: takeUsedAlterationsBtn(): unable to decrement take actions")
+    end
+    updateHUD()
+  end
 end
 
 --[[ Handler for Done button on player boards. ]]
@@ -931,8 +968,8 @@ function getCardSpellPower(card, pcol)
       ruin = spell.count.ruin * #GD.game.players[pcol].active_spell_cards
     end
   elseif spell.acuity then
-    restore = spell.acuity.restore * #GD.game.players[pcol].acuity
-    ruin = spell.acuity.ruin * #GD.game.players[pcol].acuity
+    restore = spell.acuity.restore * GD.game.players[pcol].acuity
+    ruin = spell.acuity.ruin * GD.game.players[pcol].acuity
   end
   if spell.option then
     if card.memo == "Restore" then ruin = 0
@@ -1167,6 +1204,7 @@ function cardButton(card, player_color, mouse)
       log("Global: cardButton() ERROR: unidentified decal on card")
     end
     updateSpellPower(player_color)
+    updateHUD()
   end
 end
 
@@ -1210,14 +1248,16 @@ function showAlterationDlg(guid, card_index, pcol)
   alt.card_id = card_index
   alt.card_guid = guid
   alt.acuity_available = GD.game.players[pcol].acuity
-  alt.acuity_paid = 0
-  alt.from_dice = {}
-  alt.to_dice = {}
-  alt.acuity_gained = 0
-  alt.play_gained = 0
-  alt.take_gained = {}
-  alt.opp_acuity_gained = 0
-  alt.state = "select_action"
+  alt.acuity_paid = 0   --Acuity to be deducted from player for the action if any.
+  alt.from_dice = {}  --Dice matching card criteria for possible conversion.
+  alt.to_dice = {}    --Dice that have been selected to convert.
+  alt.min = 1   --Min dice to convert.  Always 1.
+  alt.max = 0   --Max dice allowed to convert.  Will be set from card data + any mods
+  alt.acuity_gained = 0   --Will be acuity player gains if any for the action.
+  alt.play_gained = 0   --Will be number of plays gained from the action if any.
+  alt.take_gained = {}  --Will contain any takes gained for the action.
+  alt.opp_acuity_gained = 0   --If opponents get any Acuity for the action.
+  alt.state = "select_action"   --State machine for dialog.
   if env.test.debug then log(alt) end
   updateAlterationDlg()
   UI_setAttribute("alteration_card_panel","visibility",pcol)
@@ -1268,6 +1308,7 @@ function updateAlterationDlg()
     UI_setAttribute("alteration_cancel_pnl","active",true)
 
   elseif alt.state == "convert" then
+    UI_setAttribute("convert_to_dice_title_txt","text","Converted Dice:")
     UI_setAttribute("alteration_select_action_tbl","active",false)
     UI_setAttribute("alteration_pay_acuity_tbl","active",false)
     for i=1,7 do
@@ -1284,21 +1325,48 @@ function updateAlterationDlg()
         UI.setClass("convert_to_die_"..tostring(i).."_img","die_image_inactive")
       end
     end
+    UI_setAttribute("convert_cycle_to_die_txt","active",(#alt.to > 1))
     UI_setAttribute("alteration_convert_dice_tbl","active",true)
     UI_setAttribute("alteration_done_pnl","active", #alt.to_dice > 0 )
     UI_setAttribute("alteration_cancel_pnl","active",true)
     UI_setAttribute("alteration_next_pnl","active",false)
 
-  elseif alt.state == "reroll" then
-
-    --TODO:
+  elseif alt.state == "reroll" or alt.state == "flip" then
+    if alt.state == "reroll" then
+      UI_setAttribute("convert_to_dice_title_txt","text","Dice to Re-Roll:")
+    else
+      UI_setAttribute("convert_to_dice_title_txt","text","Dice to Flip:")
+    end
+    UI_setAttribute("alteration_select_action_tbl","active",false)
+    for i=1,7 do
+      if alt.from_dice[i] and not(alt.from_dice[i].assigned) then
+        UI_setAttribute("convert_from_die_"..tostring(i).."_img","image",alt.from_dice[i].element)
+        UI.setClass("convert_from_die_"..tostring(i).."_img","die_image_active")
+      else
+        UI.setClass("convert_from_die_"..tostring(i).."_img","die_image_inactive")
+      end
+      if alt.to_dice[i] then
+        UI_setAttribute("convert_to_die_"..tostring(i).."_img","image",alt.to_dice[i].element)
+        UI.setClass("convert_to_die_"..tostring(i).."_img","die_image_active")
+      else
+        UI.setClass("convert_to_die_"..tostring(i).."_img","die_image_inactive")
+      end
+    end
+    UI_setAttribute("convert_cycle_to_die_txt","active",false)
+    UI_setAttribute("alteration_convert_dice_tbl","active",true)
+    UI_setAttribute("alteration_done_pnl","active", #alt.to_dice > 0 )
+    UI_setAttribute("alteration_cancel_pnl","active",true)
+    UI_setAttribute("alteration_next_pnl","active",false)
 
   else
     log("ERROR: updateAlterationDlg() unknown alteration dialog state")
   end
 end
 
---[[ Alteration card play dialog handler. --]]
+--[[ Alteration card play dialog handler.
+    This thing is a beast.  See Cards.ttslua for some help.
+    Also see showAlterationDlg() for data structure reference.
+--]]
 function alterationDlgHandler(player, button, id)
   if env.test.trace then log("Global: alterationDlgHandler() "..player.color..", "..tostring(id)..", "..tostring(button)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
@@ -1321,8 +1389,17 @@ function alterationDlgHandler(player, button, id)
       log("setup and show dice conversion")
       alt.min = 1 --always
       if a.max ~= nil then alt.max = a.max else alt.max = 1 end
-      alt.from = simpleDeepCopy(a.from)
       alt.to = simpleDeepCopy(a.to)
+      if contains(a.from, "any") then
+        alt.from = {}
+        for i,d in ipairs(pdata.dice) do
+          if not(d.allocated) then
+            if #alt.to > 1 or not(contains(alt.to, d.element)) then table.insert(alt.from, d.element) end
+          end
+        end
+      else
+        alt.from = simpleDeepCopy(a.from)
+      end
       local any = contains(alt.to, "any_owned")
       if any then alt.to = {} end
       if contains(alt.to, "aetherflow") then alt.to = simpleDeepCopy(pdata.aetherflow) end
@@ -1336,40 +1413,53 @@ function alterationDlgHandler(player, button, id)
       alt.state = "convert"
       --check for special modification conditions
       if a.n_acuity_mod then
-        log("special case: pay n+1 acuity before convert n dice")
+        -- special case: pay n+1 acuity before convert n dice
         alt.state = "pay_acuity"
-        alt.acuity_min = 2
-        alt.acuity_max = #alt.from_dice + 1
-      elseif a.reverse_mod then  --TODO: TEST handle reverse_mod
+        alt.acuity_min = 2  --pay at least 2 to convert 1 die (the minimum)
+        alt.acuity_max = #alt.from_dice + 1 --can't pay more than available dice to convert (+1)
+      elseif a.reverse_mod then  --TODO: TEST THIS handle reverse_mod
         if pdata.sigils[a.reverse_mod.sigil] >= a.reverse_mod.amount then
           for _,e in ipairs(a.from) do table.insert(alt.to, e) end
           for _,e in ipairs(a.to) do table.insert(alt.from, e) end
         end
-      elseif a.convert_mod then  --TODO: TEST handle convert_mod
+      elseif a.convert_mod then
         local n = pdata.sigils[a.convert_mod.sigil]
         alt.max = alt.max + n * a.convert_mod.mod
-      elseif a.count_mod then  --TODO: TEST handle count_mod
+      elseif a.count_mod then
         local n = 0
-        local val = indexOf(C.die_elements, a.count_mod.value)
         for _,d in ipairs(pdata.dice) do
-          if d.value == val then n = n + 1 end
+          if d.element == a.count_mod.value then n = n + 1 end
         end
         alt.max = n
       end
       close_dialog = false
 
     elseif a.action == "flip" then
-      log("TODO: setup and show dice flip")
-
-      --TODO: min and max
-
+      log("TESTING !!!!!!!!!  dice flip")
+      alt.from = {}
+      for i,d in ipairs(pdata.dice) do
+        if not(d.allocated) then
+          table.insert(alt.from_dice, {index=i,element=d.element,value=d.value,assigned=false})
+        end
+      end
+      alt.to = {}  --doesn't matter
+      alt.min = 1
+      alt.max = a.max
+      alt.state = "flip"
       close_dialog = false
     elseif a.action == "reroll" then
-      log("TODO: setup and show dice reroll")
-
-      --TODO: min and max
-      --TODO: handle chaosmancer class power (reroll 4 vs 2)
-
+      log("TESTING !!!!!!!! dice reroll")
+      alt.from = {}
+      for i,d in ipairs(pdata.dice) do
+        if not(d.allocated) then
+          table.insert(alt.from_dice, {index=i,element=d.element,value=d.value,assigned=false})
+        end
+      end
+      alt.to = {}  --doesn't matter
+      alt.min = 1
+      alt.max = a.max
+      if alt.secondary and pdata.class == "Chaosmancer" then alt.max = 4 end
+      alt.state = "reroll"
       close_dialog = false
     elseif a.action == "gain_spell_card" then
       table.insert(alt.take_gained,"spell")
@@ -1443,17 +1533,30 @@ function alterationDlgHandler(player, button, id)
       log("ERROR: alterationDlgHandler() unnexpected number of primary actions for card "..tostring(card.id))
       return
     end
-
   elseif action == "secondary" then
     if env.test.debug then log("executing secondary action for card "..tostring(card.id)) end
-    if card.secondary then --TODO: shoudn't ever happen??? (button not shown)
-      if card.secondary.aetherflow and not(pdata.aetherflow) then
+    --all cards should have a secondary
+    assert(card.secondary, "alterationDlgHandler(): missing secondary action for card "..tostring(card.id))
+    if card.secondary.to and contains(card.secondary.to, "aetherflow") then
+      if not(pdata.aetherflow) then
         broadcastToColor("You have no Aetherflow power", player.color)
         return
       end
-    else
-      log("ERROR: alterationDlgHandler(): invalid secondary action")  --shouldn't happen, here for debug
+      --check dice for aetherflow
+      local satisfied = false
+      for _,d in ipairs(pdata.dice) do
+        if d.element == "Aether" and not(d.assigned) then  --TODO: aether/void can never be assigned???
+          satisfied = true
+          break
+        end
+      end
+      if not(satisfied) then
+        if env.test.debug then log("alterationDlgHandler() player does not have Aether die for Aetherflow power.") end
+        if GD.env.verbose then broadcastToColor("Requirements for secondary action not met.", player.color) end
+        return
+      end
     end
+    alt.secondary = true --needed for Chaosmancer special case on secondary rerolls
     execute_action(card.secondary)
   elseif action == "discard" then
     if env.test.debug then log("executing discard action for card "..tostring(card.id)) end
@@ -1481,7 +1584,13 @@ function alterationDlgHandler(player, button, id)
     end
     close_dialog = false
   elseif action == "done" then
-    --TODO: anything to do here?  All handled below in the 'if close_dialog' block?
+    -- handle re-roll randomization before dialog closing processing
+    if alt.state == "reroll" then
+      for i,d in ipairs(alt.to_dice) do
+        d.value = math.random(1,6)
+        d.element = C.die_elements[d.value]
+      end
+    end
   elseif action == "cancel" then
     local c = getObjectFromGUID(card.guid)
     assert(c, "ERROR: alterationDlgHandler(): unable to locate card object "..tostring(card.guid))
@@ -1497,6 +1606,12 @@ function alterationDlgHandler(player, button, id)
         from_index = index,
         element = alt.to[1],
       }
+      if alt.state == "reroll" then
+        d.element = alt.from_dice[index].element
+      elseif alt.state == "flip" then
+        local v = C.die_flip[alt.from_dice[index].value]
+        d.element = C.die_elements[v]
+      end
       table.insert(alt.to_dice,d)
       alt.from_dice[index].assigned = true
     end
@@ -1504,7 +1619,7 @@ function alterationDlgHandler(player, button, id)
   elseif action == "to" then
     local index = tonumber(Split(id,"_")[4])
     if button == "-1" then
-      if #alt.to > 1 then
+      if #alt.to > 1 and alt.state == "convert" then
         local d = alt.to_dice[index]
         local n = indexOf(alt.to, d.element)
         if n == #alt.to then n = 1 else n = n + 1 end
@@ -1522,16 +1637,16 @@ function alterationDlgHandler(player, button, id)
   end
   if close_dialog then
     if env.debug then log("closing stuff when exiting the dialog"); log(alt) end
-    for _,d in ipairs(alt.to_dice) do -- alt.to_dice = {}
+    for _,d in ipairs(alt.to_dice) do
       local index = alt.from_dice[d.from_index].index
       pdata.dice[index].value = indexOf(C.die_elements, d.element)
     end
-    for _,t in ipairs(alt.take_gained) do table.insert(pdata.actions.take,t) end -- alt.take_gained = {}
-    pdata.acuity = pdata.acuity - alt.acuity_paid  -- alt.acuity_paid
-    pdata.acuity = pdata.acuity + alt.acuity_gained  -- alt.acuity_gained
+    for _,t in ipairs(alt.take_gained) do table.insert(pdata.actions.take,t) end
+    pdata.acuity = pdata.acuity - alt.acuity_paid
+    pdata.acuity = pdata.acuity + alt.acuity_gained
     if pdata.acuity > 10 then pdata.acuity = 10 end
-    pdata.actions.play = pdata.actions.play + alt.play_gained  -- alt.play_gained
-    if alt.opp_acuity_gained > 0 then  -- alt.opp_acuity_gained
+    pdata.actions.play = pdata.actions.play + alt.play_gained
+    if alt.opp_acuity_gained > 0 then
       for pcol,p in ipairs(GD.game.players) do
         if pcol ~= player.color then
           p.acuity = p.acuity + alt.opp_acuity_gained
@@ -1553,6 +1668,7 @@ function alterationDlgHandler(player, button, id)
     board.call("placeUsedAlterationCard",{guid=card.guid})
     UI_setAttribute("alteration_card_panel","visibility","Pink")
     updateHUD()
+    updateAlterationButtons(true)
     updateSpellButtons(true)
     GD.game.alteration_action = {}
   else
@@ -1819,13 +1935,33 @@ function spellCostHandler(player, button, id)
       end
     end
     local p = GD.game.players[player.color]
-    local board = getObjectFromGUID(p.player_board)                                  --TODO: convert to player board
+    local board = getObjectFromGUID(p.player_board)
     assert(board, "ERROR: spellCostHandler(): assign: missing board")
     local card = getObjectFromGUID(GD.game.spells[dlg.card_index].card_guid)
     assert(card,"spellCostHandler(): assign: missing spell card object")
     card.setLock(false)
     board.call("placeSpellCard", {guid=card.getGUID()})
     table.insert(p.active_spell_cards, {card_id=GD.game.spells[dlg.card_index].card_id})
+
+    log("probe 1")
+    --TESTING auto place card (at least primitively)
+    local data = spells[tonumber(card.getGMNotes())]
+    local params = {
+      guid = card.getGUID(),
+      map = p.spell_power.card_map,
+      card_data = data
+    }
+    if data.option then setSpellCardDecal(card, player.color) end
+    Wait.condition(function()
+      local map = board.call("locateSpell", params)
+      assert(map, "Global:spellCostHandler(): player_board locateSpell() did not return a map")
+      GD.game.players[player.color].spell_power.card_map = simpleDeepCopy(map)
+      updateSpellPower(player.color)
+      updateHUD()
+    end, function() return card.resting end)
+    --/TESTING
+    log("probe after")
+
     GD.game.spells[dlg.card_index].card_id = 0
     GD.game.spells[dlg.card_index].card_guid = ""
     p.mana = p.mana - mana
@@ -1946,7 +2082,8 @@ function updateSpellButtons(state)
   end
   for i=1,6 do
     local s = state and true
-    if GD.game.spells[i].card_id > 0 then s = s and checkSpellRequirements(i, pcol) end
+    if GD.game.spells[i].card_id > 0 then s = s and checkSpellRequirements(i, pcol)
+    else s = false end
     object_UI_setAttribute(g_lower, "spells_button_"..tostring(i).."_pnl", "active", s)
   end
   object_UI_setAttribute(g_lower, "recycle_spell_pnl", "active", state)

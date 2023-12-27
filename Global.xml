@@ -798,7 +798,7 @@
                 <TableLayout columnWidths="0 20 70 20 70 20 70 20 70 20 70 20 70 20 70 20">
                   <Row>
                     <Cell>
-                      <Text class="hud_header" fontSize="24" text="Convert from:"/>
+                      <Text class="hud_header" fontSize="24" text="Available Dice:"/>
                     </Cell>
                     <Cell/>
                     <Cell><Image id="convert_from_die_1_img" image="Earth" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
@@ -819,9 +819,11 @@
                   <Row>
                     <Cell>
                       <VerticalLayout>
-                        <Text class="hud_header" fontSize="24" text="Convert to:"/>
-                        <Text id="convert_cycle_to_die_txt" class="hud_header" fontSize="16" text="Click to cycle elements"/>
-                        <Text class="hud_header" fontSize="16" text="Right Click to cancel die"/>
+                        <Text id="convert_to_dice_title_txt" class="hud_header" fontSize="24" text="Converted Dice:"/>
+                        <Text class="hud_header" fontSize="16" text="Right Click to return a die"/>
+                        <Panel id="convert_cycle_to_die_pnl">
+                          <Text id="convert_cycle_to_die_txt" class="hud_header" fontSize="16" text="Click to cycle elements"/>
+                        </Panel>
                       </VerticalLayout>
                     </Cell>
                     <Cell/>

@@ -241,3 +241,4 @@ C.pos.heroics[6] = {6.40, 1.07, 3.25}
 C.pos.myst_rune = {2.51, 1.06, 12.54}
 C.rot.myst_rune = {0.00, 180.00, 0.00}
 C.die_elements = {"Fire", "Earth", "Aether", "Void", "Lightning", "Water"}
+C.die_flip = {6,5,4,3,2,1}

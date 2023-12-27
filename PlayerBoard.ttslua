@@ -158,6 +158,26 @@ function cleanupBoard()
   if not(GD.initialized) then self.destruct() end
 end
 
+--[[ Place a newly acquired spell card.
+For now just place on class board and let user pick best spot.
+TODO: algorithm to determine best spot.
+--]]
+function placeSpellCard(params)
+  assert(params, board_name..": placeSpellCard(): missing params")
+  if env.test.trace then log(board_name..": placeSpellCard() "..tostring(params.guid)) end
+
+  log("TODO: figure out best place to put new spell card")
+
+  --Just drop on class board
+  local card = getObjectFromGUID(params.guid)
+  assert(card, board_name..": failed to locate card for guid "..tostring(params.guid))
+  card.setLock(false)
+  if card.is_face_down then card.flip() end
+  local pos = self.positionToWorld(card_drop_local_pos)
+  pos.y = pos.y + 3
+  card.setPosition(pos)
+end
+
 --[[ Called from global on spell card drop by player for this board.
     Place the card in the closest valid Spell location.
     Then update the map and return it.
@@ -214,11 +234,9 @@ end
 --]]
 function getUsedAlterations()
   if env.test.trace then log(board_name..": getUsedAlterations()") end
-  local result
-
-  --TODO: implement.
-      -- physics cast to get deck(card)
-
+  local pos = self.positionToWorld(used_alterations_local_pos)
+  local result = findObject(pos, {"Deck","Card"}, {1,1,1}, env.test.debug)
+  if env.test.debug then log(result) end
   return result
 end
 
@@ -326,26 +344,6 @@ end
 -- end
 
 --/////////// TODO: move this stuff to Global and/or remove OBE code
-
---[[ TODO: is this OBE????  Place a newly acquired spell card.
-For now just place on class board and let user pick best spot.
-TODO: algorithm to determine best spot.
---]]
--- function placeSpellCard(params)
---   assert(params, board_name..": placeSpellCard(): missing params")
---   if env.test.trace then log(board_name..": placeSpellCard() "..tostring(params.guid)) end
---
---   log("TODO: figure out best place to put new spell card")
---
---   --Just drop on class board for now
---   local card = getObjectFromGUID(params.guid)
---   assert(card, board_name..": failed to locate card for guid "..tostring(params.guid))
---   card.setLock(false)
---   if card.is_face_down then card.flip() end
---   local pos = self.positionToWorld(card_drop_local_pos)
---   pos.y = pos.y + 3
---   card.setPosition(pos)
--- end
 
 
 -- function castCleanup()          --TODO: OBE / move to global
