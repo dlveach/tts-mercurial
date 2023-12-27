@@ -1,0 +1,5 @@
+
+
+function onLoad(save_state)
+  log("LowerCards loading ... "..self.getGUID())
+end

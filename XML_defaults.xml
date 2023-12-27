@@ -50,13 +50,13 @@
     dontUseTableRowBackground="true"
     color="#301616" />
 
-  <!-- Cell dontUseTableCellBackground false during dev to show lines -->
+  <!-- Cell dontUseTableCellBackground false during dev to show lines TODO: move to files-->
   <Cell
     dontUseTableCellBackground="true"
     color="rgba(0,0,0,0)"
     padding="0 0 0 0" />
 
-  <!-- HUD stuffs -->
+  <!-- HUD stuffs TODO: move to Global.xml-->
   <Text class="hud_header"
     fontSize="14"
     font="Arial Bold"
@@ -100,43 +100,21 @@
     preferredHeight="60" />
 
 
-  <Image class="die_image"
-      preserveAspect="true" />
 
-  <Image class="die_image_active"
-    preserveAspect="true"
-    active = "true" />
-
-  <Image class="die_image_inactive"
-    preserveAspect="true"
-    active = "false" />
-
-  <!-- Pay spell cost dialog -->
+  <!-- Pay spell cost dialog TODO: move to Global.xml-->
   <TableLayout class="spell_cost"
     autoCalculateHeight="true"
     image="Sprites/Layout/Viewport"
     useGlobalCellPadding="false"
     color="#301616" />
 
-  <!-- Heroic panel stuff -->
+  <!-- Heroic panel stuff TODO: move to Global.xml-->
   <TableLayout class="heroics_table"
     autoCalculateHeight="true"
     image="Sprites/Layout/Viewport"
     useGlobalCellPadding="false"
     color="#301616" />
 
-  <!-- Heroic card buttons -->
-  <Button class="heroic_button"
-    fontSize="40"
-    text="Claim"
-    onClick="Global/heroicsBtn"/>
-
-  <!-- Alteration card stuffs -->
-  <Panel class="alteration_card_acuity_panel"
-    color="rgb(0.7,0.3,0)"
-    raycastTarget="false"
-    image="Sprites/Layout/Viewport"
-    />
 
   <!-- Score table styles -->
   <TableLayout class="score_table"

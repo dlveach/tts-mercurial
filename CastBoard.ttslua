@@ -36,6 +36,13 @@ function updateUI(pdata)
     if i <= #pdata.dice then
       self.UI.setAttribute("die_image_"..tostring(i).."_pnl","active",true)
       self.UI.setAttribute("die_image_"..tostring(i),"image",pdata.dice[i].element)
+      if pdata.dice[i].allocated then
+        self.UI.setAttribute("die_image_"..tostring(i).."_pnl","color","rgb(0.4,0.4,0.4)")
+        self.UI.setAttribute("die_image_"..tostring(i), "color", "rgb(0.4,0.4,0.4)")
+      else
+        self.UI.setAttribute("die_image_"..tostring(i).."_pnl","color","#180f0b")
+        self.UI.setAttribute("die_image_"..tostring(i), "color", "white")
+      end
     else
       self.UI.setAttribute("die_image_"..tostring(i).."_pnl","active",false)
     end
@@ -49,6 +56,7 @@ end
 --]]
 function onDrop(player_color)
   if env.test.trace then log(self.getName().." onDrop()") end
+  self.setVelocity({0,0,0})
   for i=1,4 do
     local zone_guid = C.guids.board_zones[i]
     z = getObjectFromGUID(zone_guid)
@@ -61,16 +69,20 @@ function onDrop(player_color)
           new_pos.x = pos.x
           new_pos.z = pos.z
           new_pos.y = 3
-          o.setPosition(new_pos)
+          self.setPosition(new_pos)
           --setup the board & player area after it's settled in position
           if env.test.debug then log(self.getName()..":"..self.getGUID().." dropped in position "..tostring(i).." by "..player_color) end
           Wait.condition(
-            function() Global.call("setPlayerClass",{
-              player = player_color,
-              guid = self.getGUID(),
-              position = i,
-              home_position = home_position,
-            }) end,
+            function()
+              Global.call("setPlayerClass",{
+                player = player_color,
+                guid = self.getGUID(),
+                position = i,
+              })
+              self.setLock(true)
+              self.tooltip = false
+              -- self.interactable = false
+            end,
             function() return self.resting end
           )
           break;

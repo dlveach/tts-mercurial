@@ -24,6 +24,7 @@ enchantment_spells_local_pos[3] = { -1.450565, 0.063605, 1.12034 }
 spell_discards_local_pos = { -1.275969, 0.063605, -0.579609 }
 arcanas_local_pos = { -1.276696, 0.063605, 0.212467 }
 used_alterations_local_pos = { -0.112517, 0.063605, -0.625641 }
+card_drop_local_pos = { 1.386483, 0.263604, -0.623906 }
 
 env = {}
 C = {}
@@ -35,13 +36,12 @@ function onLoad(saved_data)
   C = Global.getTable("C")
   self.setLock(true)
   if saved_data ~= "" then
-    if env.test.trace then log("Player Board " .. self.getName() .. " saved load") end
+    if env.test.trace then log("Player Board " .. board_name .. " saved load") end
     local restore_data = JSON.decode(saved_data)
     GD = restore_data
     restoreBoardState()
   else
-    if env.test.trace then log("Player Board " .. self.getName() .. " fresh load") end
-    GD.UI = {}
+    if env.test.trace then log("Player Board " .. board_name .. " fresh load") end
     GD.initialized = false
   end
   loading = false
@@ -49,24 +49,10 @@ end
 
 --[[ Restore this board's state during a load from saved data. ]]
 function restoreBoardState()
-  if env.test.trace then log(self.getName()..":restoreBoardState()") end
+  if env.test.trace then log(board_name..":restoreBoardState()") end
   if GD.initialized then
-    --restore UI state
-    for key,value in pairs(GD.UI) do
-      local id = Split(key, ':')[1]
-      local field = Split(key, ':')[2]
-      self.UI.setAttribute(id, field, value)
-    end
+    --TODO: anything?
   end
-end
-
---[[  Wrapper function for saving UI attributes for game restore. ]]
-function UI_setAttribute(id, field, value)
-  if env.test.trace and env.game.verbose then log(self.getName() .. ": UI_setAttribute()") end
-  assert(type(id) == "string", "id must be a string")
-  assert(type(field) == "string", "field must be a string")
-  self.UI.setAttribute(id, field, value)
-  GD.UI[id..":"..field] = value
 end
 
 --[[ Save game state ]]
@@ -77,38 +63,85 @@ function onSave()
   return saved_data
 end
 
---[[ Called from Global after it checks to ensure player has not already selected a class.
-      Sets up player for this class.  ]]
-function setPlayer(pdata)
-  if env.test.trace then log(self.getName() .. ": setPlayer()") end
-  assert(pdata,self.getName()..": setPlayer() missing player data")
-  UI_setAttribute("gross_restore_panel", "active", "true")
-  UI_setAttribute("gross_ruin_panel", "active", "true")
-  UI_setAttribute("net_restore_panel", "active", "true")
-  UI_setAttribute("net_ruin_panel", "active", "true")
-  UI_setAttribute("total_myst_panel", "active", "true")
-  UI_setAttribute("dice_restore_panel", "active", "true")
-  UI_setAttribute("dice_ruin_panel", "active", "true")
-  UI_setAttribute("acuity_restore_panel", "active", "true")
-  UI_setAttribute("acuity_ruin_panel", "active", "true")
-  UI_setAttribute("update_spell_pnl", "active", "true")
-  UI_setAttribute("score_panel", "active", "true")
-  UI_setAttribute("yellow_sigils_panel", "active", "true")
-  UI_setAttribute("green_sigils_panel", "active", "true")
-  UI_setAttribute("red_sigils_panel", "active", "true")
-  UI_setAttribute("blue_sigils_panel", "active", "true")
-  UI_setAttribute("wild_sigils_panel", "active", "true")
+--[[ Called from Global during class board selection after it
+Initialize state and UI stuffs.
+--]]
+function initialize(pdata)
+  if env.test.trace then log(board_name..": initialize()") end
+  assert(pdata,board_name..": setPlayer() missing player data")
+  GD.player_color = pdata.player_color
   GD.initialized = true
+  self.tooltip = false
+  self.interactable = false
+  self.UI.setAttribute("gross_restore_panel", "active", "true")
+  self.UI.setAttribute("gross_ruin_panel", "active", "true")
+  self.UI.setAttribute("net_restore_panel", "active", "true")
+  self.UI.setAttribute("net_ruin_panel", "active", "true")
+  self.UI.setAttribute("total_myst_panel", "active", "true")
+  self.UI.setAttribute("dice_restore_panel", "active", "true")
+  self.UI.setAttribute("dice_ruin_panel", "active", "true")
+  self.UI.setAttribute("acuity_restore_panel", "active", "true")
+  self.UI.setAttribute("acuity_ruin_panel", "active", "true")
+  -- self.UI.setAttribute("edit_acuity_pnl", "active", "true")
+  self.UI.setAttribute("prestige_panel", "active", "true")
+  self.UI.setAttribute("yellow_sigils_panel", "active", "true")
+  self.UI.setAttribute("green_sigils_panel", "active", "true")
+  self.UI.setAttribute("red_sigils_panel", "active", "true")
+  self.UI.setAttribute("blue_sigils_panel", "active", "true")
+  self.UI.setAttribute("wild_sigils_panel", "active", "true")
+  -- updateUI(pdata)
+end
+
+--[[ Called from Global to refresh UI.
+Player data table for update is passed as a parameter.
+--]]
+function updateUI(pdata)
+  if env.test.trace then log(board_name..": updateUI()") end
+  assert(pdata,board_name..": setPlayer() missing player data")
+  self.UI.setAttribute("edit_acuity_pnl", "active", "true")
+  self.UI.setAttribute("gross_restore_txt", "text", tostring(pdata.spell_power.gross_restore))
+  self.UI.setAttribute("gross_ruin_txt", "text", tostring(pdata.spell_power.gross_ruin))
+  self.UI.setAttribute("net_restore_txt", "text", tostring(pdata.spell_power.net_restore))
+  self.UI.setAttribute("net_ruin_txt", "text", tostring(pdata.spell_power.net_ruin))
+  self.UI.setAttribute("total_myst_txt", "text", tostring(pdata.spell_power.myst))
+  self.UI.setAttribute("dice_restore_txt", "text", tostring(pdata.spell_power.dice.restore))
+  self.UI.setAttribute("dice_ruin_txt", "text", tostring(pdata.spell_power.dice.ruin))
+  self.UI.setAttribute("acuity_restore_txt", "text", tostring(pdata.spell_power.acuity.restore))
+  self.UI.setAttribute("acuity_ruin_txt", "text", tostring(pdata.spell_power.acuity.ruin))
+  self.UI.setAttribute("prestige_txt", "text", tostring(pdata.prestige))
+  --Sigils
+  self.UI.setAttribute("yellow_sigils_txt", "text", tostring(pdata.sigils.yellow))
+  self.UI.setAttribute("green_sigils_txt", "text", tostring(pdata.sigils.green))
+  self.UI.setAttribute("red_sigils_txt", "text", tostring(pdata.sigils.red))
+  self.UI.setAttribute("blue_sigils_txt", "text", tostring(pdata.sigils.blue))
+  if pdata.class == "Mystcaller" then
+    self.UI.setAttribute("wild_sigils_txt", "text", "1")
+  else
+    self.UI.setAttribute("wild_sigils_txt", "text", "0")
+  end
+  if pdata.active then
+    self.UI.setAttribute("active_player_pnl", "active", true)
+    local state = indexOf(pdata.actions.take,"any") > 0
+    if not(state) then state = state and indexOf(pdata.actions.take,"spell") > 0 end
+    self.UI.setAttribute("take_alterations_pnl","active",state)
+    self.UI.setAttribute("cast_spell_pnl","active",state)
+    self.UI.setAttribute("player_done_pnl","active",not(state))
+  else
+    self.UI.setAttribute("active_player_pnl", "active", false)
+    self.UI.setAttribute("take_alterations_pnl","active",false)
+    self.UI.setAttribute("cast_spell_pnl","active",false)
+    self.UI.setAttribute("player_done_pnl","active",false)
+  end
 end
 
 --[[ Process a used Alteration card.
-    Called from Global on card drop outside of hand.
+Called from Global on card drop outside of hand.
 --]]
-function placeusedAlterationCard(params)
-  assert(params, self.getName()..": ERROR: placeusedAlterationCard(): missing params")
-  if env.test.trace then log("playAlteration() "..tostring(params.action)..", "..tostring(params.guid)) end
+function placeUsedAlterationCard(params)
+  assert(params, board_name..": placeUsedAlterationCard(): missing params")
+  if env.test.trace then log(board_name..": playAlteration() "..tostring(params.guid)) end
   local card = getObjectFromGUID(params.guid)
-  assert(card, self.getName()..": ERROR: placeusedAlterationCard(): missing card object, "..params.guid)
+  assert(card, board_name..": placeusedAlterationCard(): missing card object, "..params.guid)
   local used = self.positionToWorld(used_alterations_local_pos)
   used.y = used.y + 3
   card.setLock(false)
@@ -116,72 +149,93 @@ function placeusedAlterationCard(params)
   card.setPosition(used)    --TODO: check this      --TODO: check this
 end
 
---[[ Called from Global after all players have selected a class.  Also may be called during game restore.
-      If this board is unnassigned, clear all the stuff for it (dice etc.) from the game. ]]
-function setupBoard()
-  if env.test.trace then log(self.getName() .. ": setupBoard()") end
-  if not(GD.initialized) then
-      getObjectFromGUID(start_deck).destruct()
-      self.destruct()
-  end
+--[[ Place a newly acquired spell card.
+For now just place on class board and let user pick best spot.
+TODO: algorithm to determine best spot.
+--]]
+function placeSpellCard(params)
+  assert(params, board_name..": placeSpellCard(): missing params")
+  if env.test.trace then log(board_name..": placeSpellCard() "..tostring(params.guid)) end
+
+  log("TODO: figure out best place to put new spell card")
+
+  --Just drop on class board for now
+  local card = getObjectFromGUID(params.guid)
+  assert(card, board_name..": failed to locate card for guid "..tostring(params.guid))
+  card.setLock(false)
+  if card.is_face_down then card.flip() end
+  local pos = self.positionToWorld(card_drop_local_pos)
+  pos.y = pos.y + 3
+  card.setPosition(pos)
 end
 
---[[ Called from global on spell card drop by player for this board. --TODO: major overhaul
-      TODO: overhaul this to just place spell cards in empty spot.
-  --]]
-function spellDrop(params)
-  if env.test.trace then log(self.getName() .. ": spellDrop()") end
-  local card_guid = params.guid
-  local card = getObjectFromGUID(card_guid)
-  if card == nil then
-    --card could be in a deck already??? unlikely but log it for debug
-    log(self.getName().." spellDrop() WARN: Player dropped card "..card_guid.." but object is nil now.")
-    return
+--[[ Called from Global after all players have selected a class.
+Also may be called during game restore.
+If this board is unnassigned, desroy it.
+--]]
+function cleanupBoard()
+  if env.test.trace then log(board_name .. ": cleanupBoard()") end
+  if not(GD.initialized) then self.destruct() end
+end
+
+--[[ Called from global on spell card drop by player for this board.
+    Place the card in the closest valid Spell location.
+    Then update the map and return it.
+--]]
+function locateSpell(params)
+  if env.test.trace then log(board_name .. ": locateSpell()") end
+  if env.test.debug then log(params) end
+  local card = getObjectFromGUID(params.guid)
+  assert(card, board_name.." locateSpell() WARN: Player dropped card "..params.guid.." but object is nil now.")
+  local map = simpleDeepCopy(params.map)
+  local cdata = params.card_data
+  local spots = spells_local_pos
+  local type = "base_spells"
+  if cdata.enchant ~= nil then
+    spots = enchantment_spells_local_pos
+    type = "enchant_spells"
+  elseif cdata.link ~= nil then
+    spots = link_spells_local_pos
+    type = "link_spells"
   end
-  local spells = Global.getTable("spells")
-  local data = spells[tonumber(card.getGMNotes())]
-  assert(data, "ERROR: "..self.getName()..": spellDrop(): no data found for card, "..card.getGUID())
-  local z = getObjectFromGUID(GD.board.spells_zone)
-  for _,o in pairs(z.getObjects()) do
-    if o.getGUID() == card_guid then
-      Wait.condition(
-        function()
-          if data ~= nil and not(card.isDestroyed()) then --avoid cases of link spells in a deck
-            if data.option then
-              if card.memo ~= nil then
-                --Set decal based on previous setting stored in card memo
-                if card.memo == "Restore" then
-                  card.addDecal(card_decals["Restore"])
-                elseif card.memo == "Ruin" then
-                  card.addDecal(card_decals["Ruin"])
-                else
-                  log(self.getName().." ERROR: unexpected memo value on card "..card.getGUID())
-                end
-              else
-                --Default initial decal by which card spell power is greater right now
-                if GD.board.power.ruin.cards > GD.board.power.restore.cards then
-                  card.addDecal(card_decals["Ruin"])
-                  card.memo = "Ruin"
-                else
-                  card.addDecal(card_decals["Restore"])
-                  card.memo = "Restore"
-                end
-              end
-              createCardButton(card)
-            end
-          end
-          updateSpellPower()
-        end,
-        function() return( card.isDestroyed() or card.resting) end)
-      return
+  local index = 0
+  local shortest = nil
+  local pos = Vector(self.positionToLocal(card.getPosition()))
+  for i,spot in ipairs(spots) do
+    if type == "link_spells" or map[type][i].guid == "" then
+      local dist = Vector.sqrDistance(pos, Vector(spot))
+      -- log("dist for spot "..tostring(i).." is "..tostring(dist))
+      if shortest then
+        if dist < shortest then
+          shortest = dist
+          index = i
+        end
+      else
+        -- log("set shortest first time at spot "..tostring(i))
+        shortest = dist
+        index = i
+      end
     end
   end
+  assert(index > 0, board_name..": locateSpell() failed to find a valid spell card location")
+  card.setPosition(self.positionToWorld(spots[index]))
+  if type == "link_spells" then
+    table.insert(map.link_spells[index], {guid=card.getGUID(),id=cdata.id})
+  else
+    map[type][index].guid = card.getGUID()
+    map[type][index].id = cdata.id
+  end
+  -- log("locateSpell() returning")
+  return map
 end
 
---[[ Called from Global when this play  --TODO: check this, maybe just activate buttons with player data? ]]
+
+--[[ Called from Global when this play
+TODO: check this, maybe just activate buttons with player data?
+--]]
 function enableActivePlayer(state)
   local state = state and true
-  if env.test.trace then log(self.getName() .. ": enableActivePlayer() "..tostring(state)) end
+  if env.test.trace then log(board_name .. ": enableActivePlayer() "..tostring(state)) end
   local color_bar = getObjectFromGUID(C.guids.color_bars[GD.board.player_position])
   UI_setAttribute("next_player_pnl", "active", false)
   UI_setAttribute("cleanup_pnl", "active", state)
@@ -197,48 +251,84 @@ end
 function updateState(pdata, active_player)
 end
 
+--[[ Handler for the edit acuity spell power dialog.
+Dialog is not persistent across save/restore.
+Gets data from Global on activation.
+Local object UI handler for dialog buttons then update Global data when done.
+--]]
+function editAcuityHandler(player, button, id)
+  if env.test.debug then log(board_name..": editAcuityBtn() "..player.color..", "..id) end
+  if player.color ~= GD.player_color then return end
+  if id == "edit_acuity_btn" then
+    local acuity_spell = Global.call("getAcuitySpell",player.color)
+    --setup dialog data struct (not persistent)
+    dlg = {
+      player_color = player.color,
+      acuity = acuity_spell.acuity,
+      restore = acuity_spell.restore,
+      ruin = acuity_spell.ruin,
+    }
+    if dlg.acuity < 3 then
+      if dlg.restore + dlg.ruin == 0 then
+        if env.test.debug then log("not enough acuity") end
+        return
+      end
+    end
+    self.UI.setAttribute("edit_acuity_pnl","active",false)
+    self.UI.setAttribute("acuity_edit_pnl","active",true)
+  elseif id == "dec_restore_acuity_btn" then
+    if dlg.restore == 0 then return end
+    dlg.acuity = dlg.acuity + 3
+    dlg.restore = dlg.restore - 1
+  elseif id == "inc_restore_acuity_btn" then
+    if dlg.acuity < 3 then return end
+    dlg.acuity = dlg.acuity - 3
+    dlg.restore = dlg.restore + 1
+  elseif id == "dec_ruin_acuity_btn" then
+    if dlg.ruin == 0 then return end
+    dlg.acuity = dlg.acuity + 4
+    dlg.ruin = dlg.ruin - 1
+  elseif id == "inc_ruin_acuity_btn" then
+    if dlg.acuity < 4 then return end
+    dlg.acuity = dlg.acuity - 4
+    dlg.ruin = dlg.ruin + 1
+  elseif id == "cancel_acuity_btn" then
+    acuity_edit = {}
+    self.UI.setAttribute("acuity_edit_pnl","active",false)
+    self.UI.setAttribute("edit_acuity_pnl","active",true)
+    return
+  elseif id == "done_acuity_btn" then
+    Global.call("updateAcuitySpell",dlg)
+    self.UI.setAttribute("acuity_edit_pnl","active",false)
+    self.UI.setAttribute("edit_acuity_pnl","active",true)
+    return
+  end
+  self.UI.setAttribute("available_acuity_txt","text",tostring(dlg.acuity))
+  self.UI.setAttribute("restore_acuity_txt","text",tostring(dlg.restore))
+  self.UI.setAttribute("ruin_acuity_txt","text",tostring(dlg.ruin))
+end
+
 --//////////// Button wrappers, local validation then pass through to Global.
 
 function playerDoneBtn(player, button, id)
-  if env.test.debug then log(self.getName()..": playerDoneBtn() "..player.color..", "..id) end
-  --TODO; check player color
-  --TODO: call global
+  if env.test.debug then log(board_name..": playerDoneBtn() "..player.color..", "..id) end
+  if player.color ~= GD.player_color then return end
+  Global.call("setNextPlayer")
+  --TODO: anything else?
 end
 
 function castSpellBtn(player, button, id)
-  if env.test.debug then log(self.getName()..": castSpellBtn() "..player.color..", "..id) end
+  if env.test.debug then log(board_name..": castSpellBtn() "..player.color..", "..id) end
   --TODO; check player color
   --TODO: call global
 end
 
 function takeAlterationsBtn(player, button, id)
-  if env.test.debug then log(self.getName()..": takeAlterationsBtn() "..player.color..", "..id) end
+  if env.test.debug then log(board_name..": takeAlterationsBtn() "..player.color..", "..id) end
   --TODO; check player color
   --TODO: call global
 end
 
-function editAcuityBtn(player, button, id)
-  if env.test.debug then log(self.getName()..": editAcuityBtn() "..player.color..", "..id) end
-  --TODO; check player color
-  --TODO: setup dialog data struct (not persistent)
-  if id == "edit_acuity_btn" then
-    self.UI.setAttribute("edit_acuity_pnl","active",false)
-    self.UI.setAttribute("acuity_edit_pnl","active",true)
-    edit_data = {}
-  elseif id == "dec_restore_acuity_btn" then
-  elseif id == "inc_restore_acuity_btn" then
-    --TODO: check player data acuity
-  elseif id == "dec_ruin_acuity_btn" then
-  elseif id == "inc_ruin_acuity_btn" then
-    --TODO: check player data acuity
-  elseif id == "cancel_acuity_btn" then
-    edit_data = {}
-    self.UI.setAttribute("acuity_edit_pnl","active",false)
-    self.UI.setAttribute("edit_acuity_pnl","active",true)
-  elseif id == "done_acuity_btn" then
-    --TODO: call global on done to update player data
-  end
-end
 
 
 
@@ -246,15 +336,17 @@ end
 
 
 
---/////////// TODO: move this stuff to Global
+
+
+--/////////// TODO: move this stuff to Global and/or remove OBE code
 
 function castCleanup()          --TODO: move to global
-  if env.test.trace then log(self.getName()..": castCleanup()") end
+  if env.test.trace then log(board_name..": castCleanup()") end
   local dice = {}
   local spells = {}
   local mana = {}
   local zone = getObjectFromGUID(GD.board.spells_zone)
-  assert(zone, self.getName().." ERROR castSpellBtn() no board spell zone.")
+  assert(zone, board_name.." ERROR castSpellBtn() no board spell zone.")
   local stuff = zone.getObjects()
   for _,o in pairs(stuff) do
     if o.hasTag("Dice") then table.insert(dice, o)
@@ -265,7 +357,7 @@ function castCleanup()          --TODO: move to global
       o.clearButtons()
     elseif o.hasTag("Acuity") then o.destruct()
     else
-      if env.test.debug then log(self.getName().." castSpellBtn() Unknown object in zone: "..o.getGUID()) end
+      if env.test.debug then log(board_name.." castSpellBtn() Unknown object in zone: "..o.getGUID()) end
       if env.test.debug then log(o.getTags()) end
     end
   end
@@ -293,10 +385,10 @@ function castCleanup()          --TODO: move to global
   if GD.board.power.myst >= 8 then
     local acuity_bag = getObjectFromGUID(C.guids.acuity_bag)
     if GD.board.power.myst >= 8 and GD.board.power.myst <= 9 then
-      print(self.getName().." recieves one Acuity for Myst bonus")
+      print(board_name.." recieves one Acuity for Myst bonus")
       acuity_bag.takeObject({ callback_function = function(obj) placeObject(obj) end })
     elseif GD.board.power.myst >= 10 and GD.board.power.myst <= 11 then
-      print(self.getName().." recieves two Acuity for Myst bonus")
+      print(board_name.." recieves two Acuity for Myst bonus")
       local function acuity()
         acuity_bag.takeObject({
           callback_function = function(obj) placeObject(obj) end
@@ -304,7 +396,7 @@ function castCleanup()          --TODO: move to global
       end
       Wait.time(function() acuity() end, .25, 2)
     elseif GD.board.power.myst >=12 then
-      print(self.getName().." recieves two Acuity and one Prestigefor Myst bonus")
+      print(board_name.." recieves two Acuity and one Prestigefor Myst bonus")
       local function acuity()
         acuity_bag.takeObject({
           callback_function = function(obj) placeObject(obj) end
@@ -345,12 +437,12 @@ function placeObjects(list)
       break;
     end
   end
-  Wait.frames(function() placeObjects(list) end, 30)  --TODO: move to global
+  Wait.frames(function() placeObjects(list) end, 30)  --TODO: move to global    --TODO: OBE
 end
 
 --[[ Document --]]
 function placeObject(obj)
-  if env.test.trace then log(self.getName() .. ":placeObject()") end
+  if env.test.trace then log(board_name .. ":placeObject()") end
   local p = {
     origin       = {},
     direction    = {0,1,0},
@@ -366,8 +458,8 @@ function placeObject(obj)
     local mana = mana_acuity_zone.getObjects()
     -- log("mana count in zone is "..tostring(#mana))
     if #mana == 10 then
-      if env.test.debug then log(self.getName().." mana full, destroy Mana") end
-      if env.game.verbose then print(self.getName().." Mana is full, throwing one away.") end
+      if env.test.debug then log(board_name.." mana full, destroy Mana") end
+      if env.game.verbose then print(board_name.." Mana is full, throwing one away.") end
       obj.destroy()
     else
       local index = 1
@@ -400,8 +492,8 @@ function placeObject(obj)
     local acuity = mana_acuity_zone.getObjects()
     -- log("acuity count in zone is "..tostring(#acuity))
     if #acuity == 10 then
-      if env.test.debug then log(self.getName().." acuity full, destroy Acuity") end
-      if env.game.verbose then print(self.getName().." Acuity is full, throwing one away.") end
+      if env.test.debug then log(board_name.." acuity full, destroy Acuity") end
+      if env.game.verbose then print(board_name.." Acuity is full, throwing one away.") end
       obj.destroy()
     else
       local index = 1
@@ -446,7 +538,7 @@ function placeObject(obj)
       pos.y = 3
       obj.setPositionSmooth(pos, false, true)
     else
-      log(self.getName()..": ERROR: placeObject() invalid action for spell card")
+      log(board_name..": ERROR: placeObject() invalid action for spell card")
     end
   elseif obj.hasTag("Arcana") then
     local pos = Vector(self.positionToWorld(spell_discards_local_pos))
@@ -481,37 +573,23 @@ function placeObject(obj)
     obj.setPositionSmooth(pos, false, true)
   else
     log("ERROR: unhandled object")
-  end    --TODO: remove OBE code, move to global, major overhaul for spell placement
-end
-
---[[ Handler for player "Done" button. ]]
-function nextPlayerBtn(player, mouse, id)
-  if env.test.trace then log(self.getName() .. ": nextPlayerBtn()") end
-  if player.color == GD.board.player_color then
-    UI_setAttribute("next_player_pnl", "active", "false")
-    UI_setAttribute("cleanup_pnl", "active", "false")
-    local color_bar = getObjectFromGUID(C.guids.color_bars[GD.board.player_position])
-    color_bar.setInvisibleTo(Player.getColors())
-    color_bar.UI.setAttribute("block_panel", "active", "false")
-    GD.board.active = false
-    Global.call("setNextPlayer")
-  else
-    broadcastToColor("Player " .. player.color .. ": " .. self.getName() .. " is not your class.", player.color)
-  end     --TODO: move to global
+  end    --TODO: remove OBE code, move to global, major overhaul for spell placement    --TODO: OBE
 end
 
 --[[ Button handler to trigger spell power update --]]     --TODO: move to global if needed???
 function updateSpellPowerBtn(player, mouse, id)
   local pcol = player.color
-  if env.test.trace then log(self.getName() .. ": updateSpellPowerBtn() "..pcol) end
-  if player.color == GD.board.player_color then
-    updateSpellPower()
-  end
+  if env.test.trace then log(board_name .. ": updateSpellPowerBtn() "..pcol) end
+  log("------ TODO: is this needed?  Does spell card dropping handle everything?")
+
+  -- if player.color == GD.player_color then
+  --   updateSpellPower() <<< TODO: move to Global if needed
+  -- end
 end
 
---[[ Calculate spell power for this player board and update UI elements --]]
+--[[ Calculate spell power for this player board and update UI elements --]]     --TODO: move to global
 function updateSpellPower()
-  if env.test.trace then log(self.getName() .. ": updateSpellPower()") end
+  if env.test.trace then log(board_name .. ": updateSpellPower()") end
   local total_restore = 0
   local total_ruin = 0
   local total_myst = 0
@@ -576,7 +654,7 @@ function updateSpellPower()
           elseif card.memo == "Restore" then
             GD.board.power.restore.cards = GD.board.power.restore.cards + restore
           else
-            log(self.getName().." ERROR: unexpected memo value on card "..card.getGUID())
+            log(board_name.." ERROR: unexpected memo value on card "..card.getGUID())
           end
         end
       else
@@ -609,11 +687,11 @@ function updateSpellPower()
           total_restore = total_restore + (total_ruin * data.enchant.restore)
           total_ruin = 0
         else
-          log(self.getName().." ERROR: unexpected enchantment type")
+          log(board_name.." ERROR: unexpected enchantment type")
         end
       else
-        log(self.getName().." WARN: non-enchantment spell in enchantment space.")
-        broadcastToColor((self.getName().." has a non-enchantment spell in an enchantment space."), GD.board.player_color)
+        log(board_name.." WARN: non-enchantment spell in enchantment space.")
+        broadcastToColor((board_name.." has a non-enchantment spell in an enchantment space."), GD.board.player_color)
       end
     end
   end
@@ -650,7 +728,7 @@ function updateSpellPower()
   Global.call("updateHUD")  --TODO: move to global ???
 end
 
---[[ Create a button on an option spell card to toggle it's type --]]
+--[[ Create a button on an option spell card to toggle it's type --]]     --TODO: move to global
 function createCardButton(card)
   assert(card)
   if card ~= nil then
@@ -678,31 +756,31 @@ function t_createCardButton(params)
   createCardButton(card)
 end
 
---[[ Button handler for card type toggle button ]]
-function cardButton(card, player_color, mouse)
-  local decals = card.getDecals()
-  if decals ~= nil then
-    card.setDecals({})
-    if decals[1].name == "Restore" then
-      card.addDecal(card_decals["Ruin"])
-      card.memo = "Ruin"
-    elseif decals[1].name == "Ruin" then
-      card.addDecal(card_decals["Restore"])
-      card.memo = "Restore"
-    else
-      log(self.getName().."cardButton() ERROR: unidentified decal on card")
-    end
-    updateSpellPower()
-  end     --TODO: move to global?
-end
+--[[ Button handler for card type toggle button ]]     --TODO: move to global
+-- function cardButton(card, player_color, mouse)
+--   local decals = card.getDecals()
+--   if decals ~= nil then
+--     card.setDecals({})
+--     if decals[1].name == "Restore" then
+--       card.addDecal(card_decals["Ruin"])
+--       card.memo = "Ruin"
+--     elseif decals[1].name == "Ruin" then
+--       card.addDecal(card_decals["Restore"])
+--       card.memo = "Restore"
+--     else
+--       log(board_name.."cardButton() ERROR: unidentified decal on card")
+--     end
+--     updateSpellPower()
+--   end     --TODO: move to global?
+-- end
 
---[[ Process a given spell card and return the restore power and ruin power of the card. --]]
+--[[ Process a given spell card and return the restore power and ruin power of the card. --]]     --TODO: move to global
 function getSpellPower(card)
-  if env.test.trace then log(self.getName() .. ": getSpellPower()") end
-  assert(card, self.getName().." getSpellPower(): card object is missing")
+  if env.test.trace then log(board_name .. ": getSpellPower()") end
+  assert(card, board_name.." getSpellPower(): card object is missing")
   if env.test.debug then log(card) end
   if not(card.hasTag("Spell")) then
-    if env.test.debug then log(self.getName() .. ": getSpellPower(): Not a spell card, "..card.getGUID()) end
+    if env.test.debug then log(board_name .. ": getSpellPower(): Not a spell card, "..card.getGUID()) end
     return
   end
   local spells = Global.getTable("spells")
@@ -742,7 +820,7 @@ function getSpellPower(card)
       elseif data.aether.ruin ~= nil and data.aether.ruin > 0 then
         ruin = data.aether.ruin * count
       else
-        log(self.getName()..": ERROR invalid spell card aether count data, "..card.getGUID())
+        log(board_name..": ERROR invalid spell card aether count data, "..card.getGUID())
       end
     else
       if env.test.debug then log("counting count * cards") end
@@ -751,7 +829,7 @@ function getSpellPower(card)
       elseif data.count.ruin ~= nil and data.count.ruin > 0 then
         ruin = data.count.ruin * count
       else
-        log(self.getName()..": ERROR invalid spell card count data, "..card.getGUID())
+        log(board_name..": ERROR invalid spell card count data, "..card.getGUID())
       end
     end
 
@@ -836,9 +914,9 @@ Parameters:
   pos: Local to self Vector of location to search.
   tag: The tag of the card object to filter on.
   debug: Optional flag, defaults to false.
---]]
+--]]     --TODO: use lib function, move to Global
 function getCardByTag(pos, tag, debug)
-  if env.test.trace then log(self.getName() .. ": getCardByTag()") end
+  if env.test.trace then log(board_name .. ": getCardByTag()") end
   assert(tag)
   assert(type(pos) == "table")
   assert(#pos == 3)
@@ -871,17 +949,9 @@ function t_getCardByTag(params)
   return getCardByTag(pos, params.tag)
 end
 
---[[ Button handler to updater score --]]
-function updateScoreBtn(player, mouse, id)
-  if env.test.trace then log(self.getName() .. ": updateScoreBtn() "..player.color) end
-  if player.color == GD.board.player_color then
-    updateScore()
-  end     --TODO: move to global, if needed????
-end
-
---[[ Calculate current score adn update display --]]
+--[[ Calculate current score adn update display --]]      --TODO: OBE? move to Global if needed
 function updateScore()
-  if env.test.trace then log(self.getName() .. ": updateScore()") end
+  if env.test.trace then log(board_name .. ": updateScore()") end
   local sigils = { red = 0, blue = 0, green = 0, yellow = 0 }
   local heroics_score = 0
   local prestige_score = 0
@@ -905,14 +975,14 @@ function updateScore()
           heroics_score = heroics_score + data.vp
           for _,sigil in ipairs(data.sigils) do sigils[sigil] = sigils[sigil] + 1 end
         else
-          log("ERROR: "..self.getName()..": updateScore(): no data found for Heroic card, "..h.getGUID())
+          log("ERROR: "..board_name..": updateScore(): no data found for Heroic card, "..h.getGUID())
         end
       else
-        log("WARN: "..self.getName()..": updateScore(): ignoring unknown object found in Heroics stack, "..h.getGUID())
+        log("WARN: "..board_name..": updateScore(): ignoring unknown object found in Heroics stack, "..h.getGUID())
       end
     end
   else
-    log("ERROR: "..self.getName()..": heroics zone not found")
+    log("ERROR: "..board_name..": heroics zone not found")
   end
   if env.test.debug then log("Heroics score: "..heroics_score) end
   GD.board.scoring.values.heroics = heroics_score

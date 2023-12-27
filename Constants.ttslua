@@ -38,6 +38,8 @@ C.guids.artifacts_deck = "5e6187"
 C.guids.myst_rune_1 = "3444cf"
 C.guids.myst_rune_2 = "8b61f9"
 C.guids.table_UI = "ba7e59"  --TODO: fix UI
+C.guids.lower_cards = "4635ee"
+C.guids.upper_cards = "2f3d61"
 
 C.setup={
   Arcanist = {
@@ -107,7 +109,7 @@ C.setup={
 card_decal_pos = {0,0.364,-1.124}
 card_decal_rot = {90,180,0}
 card_decal_scale = {0.97,0.81,11.54}
-card_decals = {
+C.card_decals = {
   ["Restore"] = {
     ["name"] = "Restore",
     ["url"] = "http://cloud-3.steamusercontent.com/ugc/1742350294911075097/FDF248479EFF91425AB8D2AE1644D31DFE43ACB1/",

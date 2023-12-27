@@ -4,6 +4,21 @@
 
   <Include src="XML_defaults.xml"/>
 
+<Defaults>
+
+  <Image class="die_image"
+      preserveAspect="true" />
+
+  <Image class="die_image_active"
+    preserveAspect="true"
+    active = "true" />
+
+  <Image class="die_image_inactive"
+    preserveAspect="true"
+    active = "false" />
+
+</Defaults>
+
   <!-- Start Panel -->
   <Panel id="startPanel" active="false"
     height="160" width="300"
@@ -262,16 +277,16 @@
           <Cell><Text id="hud_row_4_score" class="hud_row" text="0"/></Cell>
         </Row>
         <Row class="hud_title_row" visibility="Red">
-          <Cell columnSpan="5"><Text class="hud_header" text="Player Red resources"/></Cell>
+          <Cell columnSpan="5"><Text class="hud_header" text="Player Red detail"/></Cell>
         </Row>
         <Row class="hud_title_row" visibility="Blue">
-          <Cell columnSpan="5"><Text class="hud_header" text="Player Blue resources"/></Cell>
+          <Cell columnSpan="5"><Text class="hud_header" text="Player Blue detail"/></Cell>
         </Row>
         <Row class="hud_title_row" visibility="Green">
-          <Cell columnSpan="5"><Text class="hud_header" text="Player Green resources"/></Cell>
+          <Cell columnSpan="5"><Text class="hud_header" text="Player Green detail"/></Cell>
         </Row>
         <Row class="hud_title_row" visibility="Yellow">
-          <Cell columnSpan="5"><Text class="hud_header" text="Player Yellow resources"/></Cell>
+          <Cell columnSpan="5"><Text class="hud_header" text="Player Yellow detail"/></Cell>
         </Row>
         <Row id="Red_hud_dice_row" class="hud_dice_row"  visibility="Red">
           <Cell columnSpan="5">
@@ -287,8 +302,8 @@
           </Cell>
         </Row>
         <Row id="Red_hud_resource_row" class="hud_resource_row" visibility="Red">
-          <Cell columnSpan="5" padding="20 40 0 0">
-            <TableLayout columnWidths="0 60 40 60 40 50">
+          <Cell columnSpan="5" padding="0 20 0 0">
+            <TableLayout columnWidths="0 60 40 60 40 50 50">
               <Row>
                 <Cell>
                   <VerticalLayout padding="0 20 0 0">
@@ -313,6 +328,12 @@
                 </Cell>
                 <Cell padding="0 20 0 0">
                   <Text id="Red_hud_acuity_text" alignment="MiddleLeft" color="White" fontSize="20" text="10"/>
+                </Cell>
+                <Cell>
+                  <VerticalLayout>
+                    <Text class="hud_header" fontSize="12" text="Hand:"/>
+                    <Text id="Red_hud_hand_text" color="white" fontSize="16" text="0 / 10"/>
+                  </VerticalLayout>
                 </Cell>
               </Row>
             </TableLayout>
@@ -358,8 +379,8 @@
           </Cell>
         </Row>
         <Row id="Blue_hud_resource_row" class="hud_resource_row"  visibility="Blue">
-          <Cell columnSpan="5" padding="20 40 0 0">
-            <TableLayout columnWidths="0 60 40 60 40 50">
+          <Cell columnSpan="5" padding="0 20 0 0">
+            <TableLayout columnWidths="0 60 40 60 40 50 50">
               <Row>
                 <Cell>
                   <VerticalLayout padding="0 20 0 0">
@@ -384,6 +405,12 @@
                 </Cell>
                 <Cell padding="0 20 0 0">
                   <Text id="Blue_hud_acuity_text" alignment="MiddleLeft" color="White" fontSize="20" text="10"/>
+                </Cell>
+                <Cell>
+                  <VerticalLayout>
+                    <Text class="hud_header" fontSize="12" text="Hand:"/>
+                    <Text id="Blue_hud_hand_text" color="white" fontSize="16" text="0 / 10"/>
+                  </VerticalLayout>
                 </Cell>
               </Row>
             </TableLayout>
@@ -429,8 +456,8 @@
           </Cell>
         </Row>
         <Row id="Green_hud_resource_row" class="hud_resource_row" visibility="Green">
-          <Cell columnSpan="5" padding="20 40 0 0">
-            <TableLayout columnWidths="0 60 40 60 40 50">
+          <Cell columnSpan="5" padding="0 20 0 0">
+            <TableLayout columnWidths="0 60 40 60 40 50 50">
               <Row>
                 <Cell>
                   <VerticalLayout padding="0 20 0 0">
@@ -455,6 +482,12 @@
                 </Cell>
                 <Cell padding="0 20 0 0">
                   <Text id="Green_hud_acuity_text" alignment="MiddleLeft" color="White" fontSize="20" text="10"/>
+                </Cell>
+                <Cell>
+                  <VerticalLayout>
+                    <Text class="hud_header" fontSize="12" text="Hand:"/>
+                    <Text id="Green_hud_hand_text" color="white" fontSize="16" text="0 / 10"/>
+                  </VerticalLayout>
                 </Cell>
               </Row>
             </TableLayout>
@@ -500,8 +533,8 @@
           </Cell>
         </Row>
         <Row id="Yellow_hud_resource_row" class="hud_resource_row"  visibility="Yellow">
-          <Cell columnSpan="5" padding="20 40 0 0">
-            <TableLayout columnWidths="0 60 40 60 40 50">
+          <Cell columnSpan="5" padding="0 20 0 0">
+            <TableLayout columnWidths="0 60 40 60 40 50 50">
               <Row>
                 <Cell>
                   <VerticalLayout padding="0 20 0 0">
@@ -526,6 +559,12 @@
                 </Cell>
                 <Cell padding="0 20 0 0">
                   <Text id="Yellow_hud_acuity_text" alignment="MiddleLeft" color="White" fontSize="20" text="10"/>
+                </Cell>
+                <Cell>
+                  <VerticalLayout>
+                    <Text class="hud_header" fontSize="12" text="Hand:"/>
+                    <Text id="Yellow_hud_hand_text" color="white" fontSize="16" text="0 / 10"/>
+                  </VerticalLayout>
                 </Cell>
               </Row>
             </TableLayout>
@@ -663,7 +702,7 @@
   </Panel>
 
   <!-- Alteration card panel -->
-  <Panel id="alteration_card_panel" active="true"
+  <Panel id="alteration_card_panel" active="false"
     allowDragging="true"
     returnToOriginalPositionWhenReleased="false"
     offsetXY="0 50"

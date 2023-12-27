@@ -1,0 +1,170 @@
+<XmlLayout xmlns="XmlLayout"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="XmlLayout UI/XmlLayout/Configuration/XmlLayout.xsd">
+
+<Include src="XML_defaults.xml"/>
+
+<Defaults>
+  <!-- overall defaults -->
+  <Panel class="main" active="false"
+    height="40" width="640"
+    rotation="0 0 180"
+    scale="0.5 0.5" />
+  <Panel class="inner"
+    padding="10 5 0 0" />
+  <Button class="take_button"
+    fontSize="20"
+    text="Take" />
+  <!-- Alterations acuity -->
+  <Panel class="alt_acuity"
+    padding="5 10 0 0" />
+  <Text class="alt_acuity"
+    color="rgb(1,1,0)"
+    alignment="MiddleLeft"
+    fontSize="20"
+    text="00" />
+  <HorizontalLayout class="alt_acuity"
+    spacing="0"
+    padding="0 10 7 7"
+    color="rgb(0.7,0.3,0)"
+    image="Sprites/Layout/Viewport"/>
+  <!-- Recycle leftmost spell button -->
+  <Panel class="recycle" active="false"
+    height="40" width="100"
+    rotation="0 0 180"
+    scale="0.5 0.5" />
+
+</Defaults>
+
+<Panel id="alterations_acuity_pnl" class="main" position="22 -110 -6" active="false">
+  <HorizontalLayout>
+    <Panel  >
+      <Panel id="alterations_acuity_1_pnl" class="alt_acuity">
+        <HorizontalLayout class="alt_acuity">
+          <Image preserveAspect="true" image="Acuity"/>
+          <Text id="alterations_acuity_1_text" class="alt_acuity"/>
+        </HorizontalLayout>
+      </Panel>
+    </Panel>
+    <Panel  >
+      <Panel id="alterations_acuity_2_pnl" class="alt_acuity">
+        <HorizontalLayout class="alt_acuity">
+          <Image preserveAspect="true" image="Acuity"/>
+          <Text id="alterations_acuity_2_text" class="alt_acuity"/>
+        </HorizontalLayout>
+      </Panel>
+    </Panel>
+    <Panel  >
+      <Panel id="alterations_acuity_3_pnl" class="alt_acuity">
+        <HorizontalLayout class="alt_acuity">
+          <Image preserveAspect="true" image="Acuity"/>
+          <Text id="alterations_acuity_3_text" class="alt_acuity"/>
+        </HorizontalLayout>
+      </Panel>
+    </Panel>
+    <Panel  >
+      <Panel id="alterations_acuity_4_pnl" class="alt_acuity">
+        <HorizontalLayout class="alt_acuity">
+          <Image preserveAspect="true" image="Acuity"/>
+          <Text id="alterations_acuity_4_text" class="alt_acuity"/>
+        </HorizontalLayout>
+      </Panel>
+    </Panel>
+    <Panel  >
+      <Panel id="alterations_acuity_5_pnl" class="alt_acuity">
+        <HorizontalLayout class="alt_acuity">
+          <Image preserveAspect="true" image="Acuity"/>
+          <Text id="alterations_acuity_5_text" class="alt_acuity"/>
+        </HorizontalLayout>
+      </Panel>
+    </Panel>
+    <Panel  >
+      <Panel id="alterations_acuity_6_pnl" class="alt_acuity">
+        <HorizontalLayout class="alt_acuity">
+          <Image preserveAspect="true" image="Acuity"/>
+          <Text id="alterations_acuity_6_text" class="alt_acuity"/>
+        </HorizontalLayout>
+      </Panel>
+    </Panel>
+  </HorizontalLayout>
+</Panel>
+
+<Panel id="alterations_buttons_pnl" class="main" position="25 0 -6" >
+  <HorizontalLayout spacing="0">
+    <Panel>
+      <Panel id="alterations_button_1_pnl" class="inner">
+        <Button id="alterations_button_1_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      </Panel>
+    </Panel>
+    <Panel>
+      <Panel id="alterations_button_2_pnl" class="inner">
+        <Button id="alterations_button_2_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      </Panel>
+    </Panel>
+    <Panel>
+      <Panel id="alterations_button_3_pnl" class="inner">
+        <Button id="alterations_button_3_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      </Panel>
+    </Panel>
+    <Panel>
+      <Panel id="alterations_button_4_pnl" class="inner">
+        <Button id="alterations_button_4_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      </Panel>
+    </Panel>
+    <Panel>
+      <Panel id="alterations_button_5_pnl" class="inner">
+        <Button id="alterations_button_5_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      </Panel>
+    </Panel>
+    <Panel>
+      <Panel id="alterations_button_6_pnl" class="inner">
+        <Button id="alterations_button_6_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      </Panel>
+    </Panel>
+  </HorizontalLayout>
+</Panel>
+
+<Panel id="spells_buttons_pnl" class="main" position="25 130 -6" >
+  <HorizontalLayout spacing="0">
+    <Panel>
+      <Panel id="spells_button_1_pnl" class="inner">
+        <Button id="spells_button_1_btn" class="take_button" onClick="Global/takeSpellBtn"/>
+      </Panel>
+    </Panel>
+    <Panel>
+      <Panel id="spells_button_2_pnl" class="inner">
+        <Button id="spells_button_2_btn" class="take_button" onClick="Global/takeSpellBtn"/>
+      </Panel>
+    </Panel>
+    <Panel>
+      <Panel id="spells_button_3_pnl" class="inner">
+        <Button id="spells_button_3_btn" class="take_button" onClick="Global/takeSpellBtn"/>
+      </Panel>
+    </Panel>
+    <Panel>
+      <Panel id="spells_button_4_pnl" class="inner">
+        <Button id="spells_button_4_btn" class="take_button" onClick="Global/takeSpellBtn"/>
+      </Panel>
+    </Panel>
+    <Panel>
+      <Panel id="spells_button_5_pnl" class="inner">
+        <Button id="spells_button_5_btn" class="take_button" onClick="Global/takeSpellBtn"/>
+      </Panel>
+    </Panel>
+    <Panel>
+      <Panel id="spells_button_6_pnl" class="inner">
+        <Button id="spells_button_6_btn" class="take_button" onClick="Global/takeSpellBtn"/>
+      </Panel>
+    </Panel>
+  </HorizontalLayout>
+</Panel>
+
+<Panel id="recycle_spell_pnl" class="recycle" position="155 180 0" >
+  <Button id="recycle_spell_btn"
+    onClick="Global/recycleSpellBtn"
+    fontSize="20"
+    text="Recycle" />
+</Panel>
+
+
+</XmlLayout>
