@@ -4,17 +4,20 @@ Work items for converstion of beta to production version:
 
   --BUG: Mana discount not working when more than one flex spot,
           --TODO: test Mystcaller innate acuity discount.
+
   --BUG: Some Alteration actions don't work or not yet implemented (re-roll etc.)
 
   - BUG: fix arcana scoring to final rules
-  - BUG: score display on player area doesn't update as often as it should.
-
-  - TODO: start options in UI start game panel
-  - TODO: TEST: save/load/rewind
 
   --TODO: automate spell cast
         - calcuate winnings and display "Take" buttons on Heroics/Arcanas/Prestige
         - dialog for Myst if equilibrium attained.
+        - take heroics
+
+  --TODO: final scoring
+
+  - TODO: start options in UI start game panel
+  - TODO: TEST: save/load/rewind
 
 Future possible stuff for greater enhancement
 
@@ -210,6 +213,8 @@ function restoreGameState()
   end
 end
 
+--////////// Game Setup ////////////
+
 --[[ Button handler for "Start Game".  Setup player order and
     enable class board selection. ]]
 function startGameBtn()
@@ -284,26 +289,6 @@ function startGameBtn()
   end
 end
 
---[[TESTING ONLY: Facilitate testing.  Switch test player color to game active player color.]]
-function autoSwitch(pcol)
-  if env.test.trace then log("Global: autoSwitch() "..tostring(pcol)) end
-  local players = Player.getPlayers()
-  if #players == 1 then
-    if env.test.debug then log("Test player current color: "..tostring(players[1].color)) end
-    if pcol then
-      if players[1].color ~= pcol then
-        if env.test.debug then log("Switching color to pcol: "..tostring(pcol)) end
-        players[1].changeColor(pcol)
-      end
-    else
-      if players[1].color ~= GD.game.player_order[GD.game.current_player] then
-        if env.test.debug then log("Switching color to: "..GD.game.player_order[GD.game.current_player]) end
-        players[1].changeColor(GD.game.player_order[GD.game.current_player])
-      end
-    end
-  end
-end
-
 --[[ Called from player board on class select.
     If player is unnassigned, set associations to player board.
     Otherwise show error message and return with no action.
@@ -352,7 +337,7 @@ function setPlayerClass(params)
     player.player_board = C.guids.player_boards[position]
     player.alteration_cards = {}
     player.heroics = {}
-    player.active_spell = {}
+    player.active_spell_cards = {}
     player.cast_spells = {}
     player.arcanas = {}
     player.prestige = 0
@@ -634,6 +619,54 @@ function finalSetup()
   end,2)
 end
 
+--////////// Game Flow ////////////
+
+--[[ --TODO: implement-- Handler for Take used Alterations button on player boards. ]]
+function takeUsedAlterationsBtn(player, button, id)
+  if env.test.trace then log("Global: alterationDlgHandler() "..player.color..", "..tostring(id)) end
+  if player.color ~= GD.game.player_order[GD.game.current_player] then return end
+
+  --TODO: implement--
+
+end
+
+--[[ Handler for Done button on player boards. ]]
+function playerDoneBtn(player, button, id)
+  if env.test.trace then log("Global: playerDoneBtn() "..player.color..", "..tostring(id)) end
+  if player.color ~= GD.game.player_order[GD.game.current_player] then return end
+  setNextPlayer()
+  --TODO: anything else?
+end
+
+--[[ --TODO: implement-- Handler for Cast button on player boards. ]]
+function castSpellBtn(player, button, id)
+  if env.test.trace then log("Global: castSpellBtn() "..player.color..", "..tostring(id)) end
+  if player.color ~= GD.game.player_order[GD.game.current_player] then return end
+
+  --TODO: implement--
+
+end
+
+--[[TESTING ONLY: Facilitate testing.  Switch test player color to game active player color.]]
+function autoSwitch(pcol)
+  if env.test.trace then log("Global: autoSwitch() "..tostring(pcol)) end
+  local players = Player.getPlayers()
+  if #players == 1 then
+    if env.test.debug then log("Test player current color: "..tostring(players[1].color)) end
+    if pcol then
+      if players[1].color ~= pcol then
+        if env.test.debug then log("Switching color to pcol: "..tostring(pcol)) end
+        players[1].changeColor(pcol)
+      end
+    else
+      if players[1].color ~= GD.game.player_order[GD.game.current_player] then
+        if env.test.debug then log("Switching color to: "..GD.game.player_order[GD.game.current_player]) end
+        players[1].changeColor(GD.game.player_order[GD.game.current_player])
+      end
+    end
+  end
+end
+
 --[[ Setup stuff at beginning of player turn. ]]
 function startPlayerTurn(pcol)
   if env.test.trace then log("Global:startPlayerTurn() "..tostring(pcol)) end
@@ -674,82 +707,6 @@ function setNextPlayer()
   if GD.env.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
   --TODO: figure out how to wait for refillCards()
   Wait.time(function() startPlayerTurn(pcol) end,2)
-end
-
---[[ Set spell card take button states as specified
-    'state' defaults to true.  If false all buttons are disabled.
-    If state is true then check each spell requirement against player resources.
-    If current player has no takes all buttons are disabled.
-  --]]
-function updateSpellButtons(state)
-  if env.test.trace then log("Global:updateSpellButtons()") end
-  local state = state and true
-  local pcol = GD.game.player_order[GD.game.current_player]
-  state = state and indexOf(GD.game.players[pcol].actions.take,"any") > 0
-  if not(state) then
-    state = state and indexOf(GD.game.players[pcol].actions.take,"spell") > 0
-  end
-  for i=1,6 do
-    local s = state and true
-    if GD.game.spells[i].card_id > 0 then s = s and checkSpellRequirements(i, pcol) end
-    object_UI_setAttribute(g_lower, "spells_button_"..tostring(i).."_pnl", "active", s)
-  end
-  object_UI_setAttribute(g_lower, "recycle_spell_pnl", "active", state)
-end
-
---[[ Set alteration card take button states as specified.  Defaults to true.
-    'state' defaults to true.  If false all buttons are disabled.
-    If current player has no takes all buttons are disabled.
-  --]]
-function updateAlterationButtons(state)
-  if env.test.trace then log("Global:updateAlterationButtons()") end
-  local state = state and true
-  local pcol = GD.game.player_order[GD.game.current_player]
-  state = state and indexOf(GD.game.players[pcol].actions.take,"any") > 0
-  for i=1,6 do
-    local s = state and true
-    if GD.game.alterations[i].card_id == 0 then state = false end
-    object_UI_setAttribute(g_lower, "alterations_button_"..tostring(i).."_pnl", "active", s)
-  end
-end
-
---[[ Check a spell card at a given location to see if a player can take it. --]]
-function checkSpellRequirements(loc, pcol)
-  if env.test.trace then log("Global:checkSpellRequirements() "..tostring(loc)..", "..tostring(pcol)) end
-  local id = GD.game.spells[loc].card_id
-  local mana = GD.game.players[pcol].mana
-  if loc == 1 then mana = mana + 1 end  --discount
-  local acuity = GD.game.players[pcol].acuity
-  if loc == 2 then acuity = acuity + 1 end  --discount
-  local flex_die = math.floor(mana / 2) + math.floor(acuity / 4)
-  local dice = {}
-  for _,d in ipairs(GD.game.players[pcol].dice) do
-    if not(d.allocated) then
-      local element = C.die_elements[d.value]
-      if dice[element] then dice[element] = dice[element] + 1
-      else dice[element] = 1 end
-    end
-  end
-  local spell = spells[id]
-  local flex = spell.flex
-  local physical = spell.slots - flex
-  if physical == 0 then
-    if flex_die >= spell.slots then
-      return true
-    end
-  end
-  for _,element in ipairs(spell.dice) do
-    if dice[element] then
-      if dice[element] >= spell.slots then
-        return true
-      elseif dice[element] >= physical then
-        if dice[element] + flex_die >= spell.slots then
-          return true
-        end
-      end
-    end
-  end
-  return false
 end
 
 --[[ Called from setNextPlayer (on turn "done") --]]
@@ -940,128 +897,9 @@ function refillHeroics()
   end
 end
 
-function getAcuitySpell(pcol)
-  if env.test.trace then log("Global: getAcuitySpell() "..tostring(pcol)) end
-  local pdata = GD.game.players[pcol]
-  local acuity_spell = {
-    acuity = pdata.acuity,
-    restore = pdata.spell_power.acuity.restore,
-    ruin = pdata.spell_power.acuity.ruin,
-  }
-  return acuity_spell
-end
-
---[[ Update HUD UI with current data.
-Parameters:
-  player_color: (opt) if supplied update only this players info
-NOTE: this function triggers updates to the following things:
-    player spell power recalculation
-    player score recalculation
-    player class board object UI update
-    player board object UI update
-TODO: evaluate if there's any duplication going on with those updates.
+--[[ Calculate the spell power of an active spell card for specified player.
+    Returns tuple:  Restore, Ruin
 --]]
-function updateHUD(player_color)
-  if env.test.trace then log("Global: updateHUD() "..tostring(player_color)) end
-  local max_heroics = 4
-  if GD.game.player_count == 3 then  max_heroics = 3
-  elseif GD.game.player_count == 4 then max_heroics = 2 end
-  local function updatePlayerHUD(i, pcol)
-    if env.test.debug then log("updatePlayerHUD() i: "..tostring(i).." "..tostring(pcol)) end
-    local pdata = GD.game.players[pcol]
-
-    -- local score = board.call("getCurrentScore")
-    updateScore(pcol)
-    local score = -1
-
-    -- calculate potential spell cast for display
-    updateSpellPower(pcol)
-    local spell = {power=0,type="None"}
-    if pdata.spell_power.net_restore > pdata.spell_power.net_ruin then
-      spell = {
-        power = pdata.spell_power.net_restore,
-        type = "Restore",
-      }
-    elseif pdata.spell_power.net_ruin > pdata.spell_power.net_restore then
-      spell = {
-        power = pdata.spell_power.net_ruin,
-        type = "Ruin",
-      }
-    elseif pdata.spell_power.myst > 0 then
-      spell = {
-        power = pdata.spell_power.myst,
-        type = "Myst",
-      }
-    end
-
-    local heroics = #pdata.heroics
-    UI_setAttribute("hud_row_"..tostring(i).."_spell", "text", tostring(spell.power))
-    if spell.type ~= "None" then
-      UI_setAttribute("hud_row_"..tostring(i).."_image", "image", tostring(spell.type))
-      UI_setAttribute("hud_row_"..tostring(i).."_image", "active", "true")
-    else
-      UI_setAttribute("hud_row_"..tostring(i).."_image", "active", "false")
-    end
-    UI_setAttribute("hud_row_"..tostring(i).."_heroics", "text", tostring(heroics).." / "..tostring(max_heroics))
-    UI_setAttribute("hud_row_"..tostring(i).."_score", "text", tostring(score))
-    for i,d in ipairs(pdata.dice) do
-      local id = pcol.."_hud_die_"..tostring(i).."_image"
-      UI.setAttribute(id,"image",C.die_elements[d.value])
-      UI.setClass(id, "die_image_active")
-      if d.allocated then
-        -- UI.setClass(id, "die_image_inactive")
-        UI.setAttribute(id, "color", "rgb(0.4,0.4,0.4)")
-      else
-        -- UI.setAttribute(id,"image",C.die_elements[d.value])
-        -- UI.setClass(id, "die_image_active")
-        UI.setAttribute(id, "color", "white")
-      end
-    end
-    for sigil,count in pairs(pdata.sigils) do
-      UI_setAttribute(pcol.."_hud_sigil_"..sigil.."_txt","text",tostring(count))
-    end
-    UI_setAttribute(pcol.."_hud_takes_text","text",tostring(#pdata.actions.take))
-    UI_setAttribute(pcol.."_hud_plays_text","text",tostring(pdata.actions.play))
-    UI_setAttribute(pcol.."_hud_mana_text","text",tostring(pdata.mana))
-    UI_setAttribute(pcol.."_hud_acuity_text","text",tostring(pdata.acuity))
-    -- UI_setAttribute(pcol.."_hud_hand_text","text",sizeOf(pdata.alteration_cards).." / 10")
-    UI_setAttribute(pcol.."_hud_hand_text","text",tostring(#pdata.alteration_cards).." / 10")
-    local class_board = getObjectFromGUID(pdata.class_board)
-    class_board.call("updateUI",pdata)
-    local player_board = getObjectFromGUID(pdata.player_board)
-    player_board.call("updateUI",pdata)
-  end
-  if player_color ~= nil then
-    updatePlayerHUD(indexOf(GD.game.player_order, player_color), player_color)
-  else
-    for i,pcol in ipairs(GD.game.player_order) do
-      updatePlayerHUD(i, pcol)
-    end
-  end
-end
-
---[[ Called from player board edit acuity spell dialog.
-Update player data with edited acuity spell info.
---]]
-function updateAcuitySpell(params)
-  if env.test.trace then log("Global: updateAcuitySpell()") end
-  log(params)
-  local pdata = GD.game.players[params.player_color]
-  pdata.acuity = params.acuity
-  pdata.spell_power.acuity.restore = params.restore
-  pdata.spell_power.acuity.ruin = params.ruin
-  updateHUD()
-end
-
-function hasAether(pcol)
-  local pdata = GD.game.players[pcol]
-  if pdata.class == "Arcanist" then return true end
-  for _,d in ipairs(pdata.dice) do
-    if d.element == "Aether" then return true end
-  end
-  return false
-end
-
 function getCardSpellPower(card, pcol)
   local spell = spells[tonumber(card.getGMNotes())]
   assert(spell, "getCardSpellPower(): failed to locate card data")
@@ -1082,15 +920,15 @@ function getCardSpellPower(card, pcol)
   elseif spell.count then
     if spell.aether_mod then
       if hasAether(pcol) then
-        restore = spell.aether.restore * #GD.game.players[pcol].active_spell
-        ruin = spell.aether.ruin * #GD.game.players[pcol].active_spell
+        restore = spell.aether.restore * #GD.game.players[pcol].active_spell_cards
+        ruin = spell.aether.ruin * #GD.game.players[pcol].active_spell_cards
       else
-        restore = spell.count.restore * #GD.game.players[pcol].active_spell
-        ruin = spell.count.ruin * #GD.game.players[pcol].active_spell
+        restore = spell.count.restore * #GD.game.players[pcol].active_spell_cards
+        ruin = spell.count.ruin * #GD.game.players[pcol].active_spell_cards
       end
     else
-      restore = spell.count.restore * #GD.game.players[pcol].active_spell
-      ruin = spell.count.ruin * #GD.game.players[pcol].active_spell
+      restore = spell.count.restore * #GD.game.players[pcol].active_spell_cards
+      ruin = spell.count.ruin * #GD.game.players[pcol].active_spell_cards
     end
   elseif spell.acuity then
     restore = spell.acuity.restore * #GD.game.players[pcol].acuity
@@ -1198,6 +1036,7 @@ function updateSpellPower(pcol)
   if env.test.debug then log(s) end
 end
 
+--TODO: implement
 function updateScore(pcol)
   if env.test.trace then log("Global: updateScore()") end
   log("------- TODO: implement updateScore()")
@@ -1254,6 +1093,11 @@ function onObjectDrop(pcol, obj)
   end
 end
 
+--[[ Set the Restore/Ruin decal on an active spell card.
+    Also creates the button on the card for switching types.
+    Only for spells that can switch types (data.option == true)
+    Also See Related functions: onObjectPickUp() and cardButton().
+--]]
 function setSpellCardDecal(card, pcol)
   local data = spells[tonumber(card.getGMNotes())]
   assert(data, "setSpellCardDecal() no data for card "..card.getGUID())
@@ -1454,6 +1298,7 @@ function updateAlterationDlg()
   end
 end
 
+--[[ Alteration card play dialog handler. --]]
 function alterationDlgHandler(player, button, id)
   if env.test.trace then log("Global: alterationDlgHandler() "..player.color..", "..tostring(id)..", "..tostring(button)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
@@ -1529,7 +1374,7 @@ function alterationDlgHandler(player, button, id)
     elseif a.action == "gain_spell_card" then
       table.insert(alt.take_gained,"spell")
     elseif a.action == "gain_spell_acuity" then
-      alt.acuity_gained = alt.acuity_gained + #pdata.active_spell
+      alt.acuity_gained = alt.acuity_gained + #pdata.active_spell_cards
     elseif a.action == "gain_n_acuity" then
       alt.acuity_gained = alt.acuity_gained + a.amount
     elseif a.action == "null" then
@@ -1572,7 +1417,7 @@ function alterationDlgHandler(player, button, id)
         elseif r.type == "Acuity" then
           satisfied = satisfied and pdata.acuity >= r.amount
         elseif r.type == "Spell" then
-          satisfied = satisfied and #pdata.active_spell >= r.amount
+          satisfied = satisfied and #pdata.active_spell_cards >= r.amount
         else
           log("ERROR: alterationDlgHandler() unknown requirement type "..tostring(r.type))
           return
@@ -1712,6 +1557,22 @@ function alterationDlgHandler(player, button, id)
     GD.game.alteration_action = {}
   else
     updateAlterationDlg()
+  end
+end
+
+--[[ Set alteration card take button states as specified.  Defaults to true.
+    'state' defaults to true.  If false all buttons are disabled.
+    If current player has no takes all buttons are disabled.
+  --]]
+function updateAlterationButtons(state)
+  if env.test.trace then log("Global:updateAlterationButtons()") end
+  local state = state and true
+  local pcol = GD.game.player_order[GD.game.current_player]
+  state = state and indexOf(GD.game.players[pcol].actions.take,"any") > 0
+  for i=1,6 do
+    local s = state and true
+    if GD.game.alterations[i].card_id == 0 then state = false end
+    object_UI_setAttribute(g_lower, "alterations_button_"..tostring(i).."_pnl", "active", s)
   end
 end
 
@@ -1964,7 +1825,7 @@ function spellCostHandler(player, button, id)
     assert(card,"spellCostHandler(): assign: missing spell card object")
     card.setLock(false)
     board.call("placeSpellCard", {guid=card.getGUID()})
-    table.insert(p.active_spell, {card_id=GD.game.spells[dlg.card_index].card_id})
+    table.insert(p.active_spell_cards, {card_id=GD.game.spells[dlg.card_index].card_id})
     GD.game.spells[dlg.card_index].card_id = 0
     GD.game.spells[dlg.card_index].card_guid = ""
     p.mana = p.mana - mana
@@ -2070,6 +1931,66 @@ function spellCostHandler(player, button, id)
   end
 end
 
+--[[ Set spell card take button states as specified
+    'state' defaults to true.  If false all buttons are disabled.
+    If state is true then check each spell requirement against player resources.
+    If current player has no takes all buttons are disabled.
+  --]]
+function updateSpellButtons(state)
+  if env.test.trace then log("Global:updateSpellButtons()") end
+  local state = state and true
+  local pcol = GD.game.player_order[GD.game.current_player]
+  state = state and indexOf(GD.game.players[pcol].actions.take,"any") > 0
+  if not(state) then
+    state = state and indexOf(GD.game.players[pcol].actions.take,"spell") > 0
+  end
+  for i=1,6 do
+    local s = state and true
+    if GD.game.spells[i].card_id > 0 then s = s and checkSpellRequirements(i, pcol) end
+    object_UI_setAttribute(g_lower, "spells_button_"..tostring(i).."_pnl", "active", s)
+  end
+  object_UI_setAttribute(g_lower, "recycle_spell_pnl", "active", state)
+end
+
+--[[ Check a spell card at a given location to see if a player can take it. --]]
+function checkSpellRequirements(loc, pcol)
+  if env.test.trace then log("Global:checkSpellRequirements() "..tostring(loc)..", "..tostring(pcol)) end
+  local id = GD.game.spells[loc].card_id
+  local mana = GD.game.players[pcol].mana
+  if loc == 1 then mana = mana + 1 end  --discount
+  local acuity = GD.game.players[pcol].acuity
+  if loc == 2 then acuity = acuity + 1 end  --discount
+  local flex_die = math.floor(mana / 2) + math.floor(acuity / 4)
+  local dice = {}
+  for _,d in ipairs(GD.game.players[pcol].dice) do
+    if not(d.allocated) then
+      local element = C.die_elements[d.value]
+      if dice[element] then dice[element] = dice[element] + 1
+      else dice[element] = 1 end
+    end
+  end
+  local spell = spells[id]
+  local flex = spell.flex
+  local physical = spell.slots - flex
+  if physical == 0 then
+    if flex_die >= spell.slots then
+      return true
+    end
+  end
+  for _,element in ipairs(spell.dice) do
+    if dice[element] then
+      if dice[element] >= spell.slots then
+        return true
+      elseif dice[element] >= physical then
+        if dice[element] + flex_die >= spell.slots then
+          return true
+        end
+      end
+    end
+  end
+  return false
+end
+
 --[[ Handler for Recycle Leftmost Spell button. ]]
 function recycleSpellBtn(player, button, id)
   if env.test.trace then log("Global: recycleSpellBtn() "..tostring(player.color)) end
@@ -2105,6 +2026,149 @@ function recycleSpellBtn(player, button, id)
   end
   -- give player one acuity
   GD.game.players[player.color].acuity = GD.game.players[player.color].acuity + 1
+end
+
+--////////// Spell Cast stuffs ////////////
+
+--[[ TODO: implement
+ Handler for the take Heroic button. ]]
+function takeHeroicBtn(player, button, id)
+  if env.test.trace then log("Global: heroicsBtn() "..tostring(player.color)..", "..tostring(id)) end
+  if player.color ~= GD.game.player_order[GD.game.current_player] then return end
+  local index = tonumber(Split(id,"_")[3])
+  local card = getObjectFromGUID(GD.game.heroics[index].card_guid)
+  assert(card, "ERROR: Global:takeHeroicBtn() could not locate card")
+
+  --TODO:
+end
+
+--////////// Support Functions ////////////
+
+--[[ Called from playerBoard.  Used in the edit acuity spell dialog.
+    See Related: updateAcuitySpell()
+--]]
+function getAcuitySpell(pcol)
+  if env.test.trace then log("Global: getAcuitySpell() "..tostring(pcol)) end
+  local pdata = GD.game.players[pcol]
+  local acuity_spell = {
+    acuity = pdata.acuity,
+    restore = pdata.spell_power.acuity.restore,
+    ruin = pdata.spell_power.acuity.ruin,
+  }
+  return acuity_spell
+end
+
+--[[ Called from player board edit acuity spell dialog.
+    Update player data with edited acuity spell info.
+    See Related: getAcuitySpell()
+--]]
+function updateAcuitySpell(params)
+  if env.test.trace then log("Global: updateAcuitySpell()") end
+  log(params)
+  local pdata = GD.game.players[params.player_color]
+  pdata.acuity = params.acuity
+  pdata.spell_power.acuity.restore = params.restore
+  pdata.spell_power.acuity.ruin = params.ruin
+  updateHUD()
+end
+
+--[[ Update HUD and board UIs with current data.
+Parameters:
+  player_color: (opt) if supplied update only this players info
+NOTE: this function triggers updates to the following things:
+    player spell power recalculation
+    player score recalculation
+    player class board object UI update
+    player board object UI update
+TODO: evaluate if there's any duplication going on with those updates.
+--]]
+function updateHUD(player_color)
+  if env.test.trace then log("Global: updateHUD() "..tostring(player_color)) end
+  local max_heroics = 4
+  if GD.game.player_count == 3 then  max_heroics = 3
+  elseif GD.game.player_count == 4 then max_heroics = 2 end
+  local function updatePlayerHUD(i, pcol)
+    if env.test.debug then log("updatePlayerHUD() i: "..tostring(i).." "..tostring(pcol)) end
+    local pdata = GD.game.players[pcol]
+
+    -- local score = board.call("getCurrentScore")
+    updateScore(pcol)
+    local score = -1
+
+    -- calculate potential spell cast for display
+    updateSpellPower(pcol)
+    local spell = {power=0,type="None"}
+    if pdata.spell_power.net_restore > pdata.spell_power.net_ruin then
+      spell = {
+        power = pdata.spell_power.net_restore,
+        type = "Restore",
+      }
+    elseif pdata.spell_power.net_ruin > pdata.spell_power.net_restore then
+      spell = {
+        power = pdata.spell_power.net_ruin,
+        type = "Ruin",
+      }
+    elseif pdata.spell_power.myst > 0 then
+      spell = {
+        power = pdata.spell_power.myst,
+        type = "Myst",
+      }
+    end
+
+    local heroics = #pdata.heroics
+    UI_setAttribute("hud_row_"..tostring(i).."_spell", "text", tostring(spell.power))
+    if spell.type ~= "None" then
+      UI_setAttribute("hud_row_"..tostring(i).."_image", "image", tostring(spell.type))
+      UI_setAttribute("hud_row_"..tostring(i).."_image", "active", "true")
+    else
+      UI_setAttribute("hud_row_"..tostring(i).."_image", "active", "false")
+    end
+    UI_setAttribute("hud_row_"..tostring(i).."_heroics", "text", tostring(heroics).." / "..tostring(max_heroics))
+    UI_setAttribute("hud_row_"..tostring(i).."_score", "text", tostring(score))
+    for i,d in ipairs(pdata.dice) do
+      local id = pcol.."_hud_die_"..tostring(i).."_image"
+      UI.setAttribute(id,"image",C.die_elements[d.value])
+      UI.setClass(id, "die_image_active")
+      if d.allocated then
+        -- UI.setClass(id, "die_image_inactive")
+        UI.setAttribute(id, "color", "rgb(0.4,0.4,0.4)")
+      else
+        -- UI.setAttribute(id,"image",C.die_elements[d.value])
+        -- UI.setClass(id, "die_image_active")
+        UI.setAttribute(id, "color", "white")
+      end
+    end
+    for sigil,count in pairs(pdata.sigils) do
+      UI_setAttribute(pcol.."_hud_sigil_"..sigil.."_txt","text",tostring(count))
+    end
+    UI_setAttribute(pcol.."_hud_takes_text","text",tostring(#pdata.actions.take))
+    UI_setAttribute(pcol.."_hud_plays_text","text",tostring(pdata.actions.play))
+    UI_setAttribute(pcol.."_hud_mana_text","text",tostring(pdata.mana))
+    UI_setAttribute(pcol.."_hud_acuity_text","text",tostring(pdata.acuity))
+    -- UI_setAttribute(pcol.."_hud_hand_text","text",sizeOf(pdata.alteration_cards).." / 10")
+    UI_setAttribute(pcol.."_hud_hand_text","text",tostring(#pdata.alteration_cards).." / 10")
+    local class_board = getObjectFromGUID(pdata.class_board)
+    class_board.call("updateUI",pdata)
+    local player_board = getObjectFromGUID(pdata.player_board)
+    player_board.call("updateUI",pdata)
+  end
+  if player_color ~= nil then
+    updatePlayerHUD(indexOf(GD.game.player_order, player_color), player_color)
+  else
+    for i,pcol in ipairs(GD.game.player_order) do
+      updatePlayerHUD(i, pcol)
+    end
+  end
+end
+
+--[[ Return true if player has Aether.  False if not.]]
+function hasAether(pcol)
+  local pdata = GD.game.players[pcol]
+  if pdata.class == "Arcanist" then return true end
+  for _,d in ipairs(pdata.dice) do
+    if d.element == "Aether" then return true end
+  end
+  return false
 end
 
 --[[ Don't allow player's to deal cards by typing a number on them. --]]
@@ -2208,46 +2272,9 @@ function onObjectPickUp(player_color, obj)
   end
 end
 
+--////////// Deck Management ////////////
 
-
-
-
-
-
-
-
-
---////////// Old stuff to evaluate ////////////
-
---[[ Used by player boards during scoring --]]       --TODO: OBE???
--- function getPlayerCount()
---   return #GD.game.player_order
--- end
-
---[[ Return player class board guid. --]]        --TODO: OBE???
-function getPlayerClassBoardGUID(params)
-  assert(params)
-  local pdata = GD.game.players[params.player_color]
-  if pdata ~= nil then
-    return pdata.class_board
-  else
-    log("Global: ERROR: unable to get player data")
-    return ""
-  end
-end
-
---[[ Handler for the take Heroic button. ]]
-function takeHeroicBtn(player, button, id)
-  if env.test.trace then log("Global: heroicsBtn() "..tostring(player.color)..", "..tostring(id)) end
-  if player.color ~= GD.game.player_order[GD.game.current_player] then return end
-  local index = tonumber(Split(id,"_")[3])
-  local card = getObjectFromGUID(GD.game.heroics[index].card_guid)
-  assert(card, "ERROR: Global:takeHeroicBtn() could not locate card")
-
-  --TODO:
-end
-
---[[ Locate Heroics deck.
+--[[ Locate and return Heroics deck.
   Update to new GUID if deck guid changed (or only one card)
   Return deck object if found (will be single card if only one left).
   Log error and return nil if no more heroics.]]                            --TODO: convert to findObject()
@@ -2274,7 +2301,7 @@ function getHeroicsDeck()
   return nil
 end
 
---[[ Locate Alterations deck.
+--[[ Locate and return Alterations deck.
   Update to new GUID if deck guid changed (or only one card)
   Return deck object if found (will be single card if only one left).
   Log error and return nil if no card or deck.]]
@@ -2289,7 +2316,7 @@ function getAlterationsDeck()
   return deck
 end
 
---[[ Locate Spells deck.
+--[[ Locate and return Spells deck.
   Update to new GUID if deck guid changed (or only one card)
   Return deck object if found (will be single card if only one left).
   Log error and return nil if no more heroics.]]
@@ -2304,7 +2331,10 @@ function getSpellsDeck()
   return deck
 end
 
---[[ Final game scoring.
+--////////// End Game ////////////
+
+--[[ TODO: revamp for new redesign
+Final game scoring.
   tiebreaker: first #arcanas, then #spells --]]           --TODO: redesign this !!!
 function finalScore()
   if env.test.trace then log("Global: finalScore()") end
@@ -2380,6 +2410,34 @@ function finalScore()
   broadcastToAll(scores[1].player.." wins the game!!!")
   UI_setAttribute("score_panel","active",true)
 end
+
+
+
+
+
+
+
+
+
+--////////// TODO: Old stuff to evaluate ////////////
+
+--[[ Used by player boards during scoring --]]       --TODO: OBE???
+-- function getPlayerCount()
+--   return #GD.game.player_order
+-- end
+
+--[[ Return player class board guid. --]]        --TODO: OBE???
+-- function getPlayerClassBoardGUID(params)
+--   assert(params)
+--   local pdata = GD.game.players[params.player_color]
+--   if pdata ~= nil then
+--     return pdata.class_board
+--   else
+--     log("Global: ERROR: unable to get player data")
+--     return ""
+--   end
+-- end
+
 
 --[[ ******** UTILITY ******** --]]
 
