@@ -7,7 +7,6 @@ Work items for converstion of beta to production version:
         --TODO: lots to do around myst ruin, design a UI for it showing both actions,
         --TODO: have buttons to activate conversion power, hopefully reuse alteration dialog!
         --TODO: take into account when designing spell cast
-  --BUG: fix 'preferedHeight' in Global xml (should be preferredHeight)
   --BUG: Mana discount not working when more than one flex spot,
           --TODO: test Mystcaller innate acuity discount.
 
@@ -334,6 +333,7 @@ function setPlayerClass(params)
     if GD.env.verbose then print("Player " .. pcol .. " selected class " .. class_board.getName()) end
     GD.game.positions[position] = pcol
     player.player_color = pcol
+    player.name = Player[pcol].steam_name
     player.active = false
     player.class = class_board.getName()
     player.color_bar = C.guids.color_bars[position]
@@ -398,7 +398,7 @@ function setPlayerClass(params)
     --setup position color bar
     local color_bar = getObjectFromGUID(player.color_bar)
     assert(color_bar,"Global:setPlayerClass(): unable to get color bar "..tostring(player.color_bar))
-    object_UI_setAttribute(player.color_bar, "block_text_id", "text", player.class)
+    object_UI_setAttribute(player.color_bar, "block_text_id", "text", player.name)
     color_bar.setColorTint(pcol)
     color_bar.setInvisibleTo({})
     --deal start cards to player and assign them

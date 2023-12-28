@@ -123,9 +123,10 @@ function updateUI(pdata)
     self.UI.setAttribute("active_player_pnl", "active", true)
     local state = indexOf(pdata.actions.take,"any") > 0
     if not(state) then state = state and indexOf(pdata.actions.take,"spell") > 0 end
-    self.UI.setAttribute("take_alterations_pnl","active",state)
     self.UI.setAttribute("cast_spell_pnl","active",state)
     self.UI.setAttribute("player_done_pnl","active",not(state))
+    state = state and getUsedAlterations() ~= nil
+    self.UI.setAttribute("take_alterations_pnl","active",state)
   else
     self.UI.setAttribute("active_player_pnl", "active", false)
     self.UI.setAttribute("take_alterations_pnl","active",false)
