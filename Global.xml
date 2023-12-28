@@ -6,13 +6,17 @@
 
 <Defaults>
 
+  <TableLayout class="spell_cost"
+    autoCalculateHeight="true"
+    image="Sprites/Layout/Viewport"
+    useGlobalCellPadding="false"
+    color="#301616" />
+
   <Image class="die_image"
       preserveAspect="true" />
-
   <Image class="die_image_active"
     preserveAspect="true"
     active = "true" />
-
   <Image class="die_image_inactive"
     preserveAspect="true"
     active = "false" />
@@ -233,7 +237,7 @@
   </Panel>
 
   <!-- HUD panel -->
-  <Panel id="outer_hud_panel" active="false"
+  <Panel id="hud_panel" active="false"
     allowDragging="true"
     returnToOriginalPositionWhenReleased="false"
     offsetXY="-550 350"
@@ -601,7 +605,7 @@
   </Panel>
 
   <!-- Pay Spell cost panel -->
-  <Panel id="outer_spell_cost_panel" active="false"
+  <Panel id="spell_card_panel" active="false"
     allowDragging="true"
     returnToOriginalPositionWhenReleased="false"
     offsetXY="0 250"
@@ -611,20 +615,20 @@
     <Panel id="inner_spell_cost_pnl"
       height="330" width="1100">
       <TableLayout class="spell_cost" columnWidths="200 900">
-        <Row preferedHeight="330">
+        <Row preferredHeight="330">
           <Cell padding="5 5 5 5">
             <Image id="spell_cost_card_img" preserveAspect="true" image="" />
           </Cell>
           <Cell>
             <TableLayout class="spell_cost">
-              <Row preferedHeight="60" class="hud_title_row">
+              <Row preferredHeight="30" class="hud_title_row">
                 <Cell>
                   <Text fontSize="20" class="hud_header" text="Available resources to pay for spell:"/>
                 </Cell>
               </Row>
-              <Row preferedHeight="95">
+              <Row preferredHeight="80">
                 <Cell padding="0 0 10 10">
-                  <TableLayout columnWidths="20 60 30 30 60 30 40 70 20 70 20 70 20 70 20 70 20 70 20 70">
+                  <TableLayout columnWidths="40 40 30 50 40 30 40 70 20 70 20 70 20 70 20 70 20 70 20 70">
                     <Row>
                       <Cell/>
                       <Cell><Image id="spell_cost_mana_img" image="Mana" class="die_image_active" onClick="spellCostHandler"/></Cell>
@@ -650,14 +654,14 @@
                   </TableLayout>
                 </Cell>
               </Row>
-              <Row preferedHeight="60" class="hud_title_row">
+              <Row preferredHeight="30" class="hud_title_row">
                 <Cell>
                   <Text fontSize="20" class="hud_header" text="Selected resources:"/>
                 </Cell>
               </Row>
-              <Row preferedHeight="95">
+              <Row preferredHeight="80">
                 <Cell padding="0 0 10 10">
-                  <TableLayout columnWidths="90 60 30 30 60 30 40 70 20 70 20 70 20 70 20 70 20 70 0">
+                  <TableLayout columnWidths="110 40 30 50 40 30 40 70 20 70 20 70 20 70 20 70 20 70 0">
                     <Row>
                       <Cell/>
                       <Cell><Image id="spell_assigned_mana_img" image="Mana" class="die_image_active" onClick="spellCostHandler"/></Cell>
@@ -680,17 +684,49 @@
                   </TableLayout>
                 </Cell>
               </Row>
-              <Row preferedHeight="40">
-                <Cell padding="0 0 20 10">
+              <Row preferredHeight="110">
+                <Cell padding="0 0 0 0">
                   <HorizontalLayout spacing="60">
-                    <Panel/>
-                    <Panel><Panel id="spell_cost_cancel_pnl">
+                    <Panel>
+                      <TableLayout columnWidths="0 40">
+                        <Row preferredHeight="30">
+                          <Cell columnspan="2">
+                            <Text class="hud_header" fontSize="16" text="Discounts:"/>
+                          </Cell>
+                        </Row>
+                        <Row preferredHeight="30">
+                          <Cell><Text class="hud_header" alignment="MiddleRight" fontSize="14" text="Mana:  "/></Cell>
+                          <Cell><Text id="spell_cost_mana_disc_txt" alignment="MiddleLeft" fontSize="16" color="white" text="0"/></Cell>
+                        </Row>
+                        <Row preferredHeight="30">
+                          <Cell><Text class="hud_header" alignment="MiddleRight" fontSize="14" text="Acuity:  "/></Cell>
+                          <Cell><Text id="spell_cost_acuity_disc_txt" alignment="MiddleLeft" fontSize="16" color="white" text="0"/></Cell>
+                        </Row>
+                      </TableLayout>
+                    </Panel>
+                    <Panel><Panel id="spell_cost_cancel_pnl" padding="0 0 25 25">
                         <Button id="spell_cost_cancel_btn" text="Cancel" fontSize="24" onClick="spellCostHandler"/>
                     </Panel></Panel>
-                    <Panel><Panel id="spell_cost_assign_pnl">
+                    <Panel><Panel id="spell_cost_assign_pnl" padding="0 0 25 25">
                         <Button id="spell_cost_assign_btn" text="Assign" fontSize="24" onClick="spellCostHandler"/>
                     </Panel></Panel>
-                    <Panel/>
+                    <Panel padding="0 40 0 0">
+                      <TableLayout id="spell_cost_excess_tbl" columnWidths="0 40">
+                        <Row preferredHeight="30">
+                          <Cell columnspan="2">
+                            <Text class="hud_header" fontSize="16" text="Excess:"/>
+                          </Cell>
+                        </Row>
+                        <Row preferredHeight="30">
+                          <Cell><Text class="hud_header" alignment="MiddleRight" fontSize="14" text="Mana:  "/></Cell>
+                          <Cell><Text id="spell_cost_mana_excess_txt" alignment="MiddleLeft" fontSize="16" color="white" text="0"/></Cell>
+                        </Row>
+                        <Row preferredHeight="30">
+                          <Cell><Text class="hud_header" alignment="MiddleRight" fontSize="14" text="Acuity:  "/></Cell>
+                          <Cell><Text id="spell_cost_acuity_excess_txt" alignment="MiddleLeft" fontSize="16" color="white" text="0"/></Cell>
+                        </Row>
+                      </TableLayout>
+                    </Panel>
                   </HorizontalLayout>
                 </Cell>
               </Row>

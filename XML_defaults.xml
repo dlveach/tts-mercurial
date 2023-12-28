@@ -101,12 +101,6 @@
 
 
 
-  <!-- Pay spell cost dialog TODO: move to Global.xml-->
-  <TableLayout class="spell_cost"
-    autoCalculateHeight="true"
-    image="Sprites/Layout/Viewport"
-    useGlobalCellPadding="false"
-    color="#301616" />
 
   <!-- Heroic panel stuff TODO: move to Global.xml-->
   <TableLayout class="heroics_table"

@@ -2,6 +2,12 @@
 
 Work items for converstion of beta to production version:
 
+  --BUG: something wrong with image asset "Spell-4".  Will not load.
+  --BUG: mystcaller doesn't get myst ruin on start
+        --TODO: lots to do around myst ruin, design a UI for it showing both actions,
+        --TODO: have buttons to activate conversion power, hopefully reuse alteration dialog!
+        --TODO: take into account when designing spell cast
+  --BUG: fix 'preferedHeight' in Global xml (should be preferredHeight)
   --BUG: Mana discount not working when more than one flex spot,
           --TODO: test Mystcaller innate acuity discount.
 
@@ -19,7 +25,7 @@ Work items for converstion of beta to production version:
 
 Future possible stuff for greater enhancement
 
-  --TODO: automate assinging resources to spell cards???
+  --TODO: automate assinging resources to spell cards???  At least for fixed dice slots.
 
 ****************************************************************************** ]]
 
@@ -125,10 +131,10 @@ function onLoad(saved_data)
       GD.game.positions[i] = ""
     end
     --setup UI dialogs
-    UI_setAttribute("outer_spell_cost_panel","visibility","Pink")
+    UI_setAttribute("spell_card_panel","visibility","Pink")
     UI_setAttribute("alteration_card_panel","visibility","Pink")
     Wait.frames(function()
-      UI_setAttribute("outer_spell_cost_panel","active",true)
+      UI_setAttribute("spell_card_panel","active",true)
       UI_setAttribute("alteration_card_panel","active",true)
     end, 10)
     UI_setAttribute("startPanel", "active", true)
@@ -348,7 +354,7 @@ function setPlayerClass(params)
       table.insert(player.dice, {value=val,allocated=false,element=C.die_elements[val]})
     end
     player.mana = setup.start_mana
-    player.mana_assigned = 0
+    -- player.mana_assigned = 0
     player.acuity = setup.start_acuity
     player.sigils = { red = 0, blue = 0, green = 0, yellow = 0 }
     player.sigils[setup.board_sigil] = 1
@@ -600,13 +606,13 @@ function finalSetup()
   local inner_hud_panel_size = 220 + (num_players * 30)
   local outer_hud_panel_size = inner_hud_panel_size + 20
   UI_setAttribute("inner_hud_panel","height",tostring(inner_hud_panel_size))
-  UI_setAttribute("outer_hud_panel","height",tostring(outer_hud_panel_size))
+  UI_setAttribute("hud_panel","height",tostring(outer_hud_panel_size))
   for _,pcol in ipairs(env.game.player_table_order) do
     for i=1,7 do
       UI_setAttribute(pcol.."_hud_die_"..tostring(i).."_image","actve","false")
     end
   end
-  UI_setAttribute("outer_hud_panel","active","true")
+  UI_setAttribute("hud_panel","active","true")
 
   --done with final setup
   GD.game.started = true
@@ -681,7 +687,7 @@ function castSpellBtn(player, button, id)
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
 
   --TODO: implement--
-
+  log("------- TODO: implement castSpellBtn() ----------")
 end
 
 --[[TESTING ONLY: Facilitate testing.  Switch test player color to game active player color.]]
@@ -1782,7 +1788,7 @@ function showPaySpellDlg(card_index, pcol)
   else
     UI_setAttribute("spell_cost_card_img","image",card_image)
   end
-  UI_setAttribute("outer_spell_cost_panel","visibility",pcol)
+  UI_setAttribute("spell_card_panel","visibility",pcol)
   updateSpellButtons(false)
   updateAlterationButtons(false)
 end
@@ -1815,7 +1821,6 @@ function updateSpellCostDlg()
       end
     else
       if slot.flex then
-        --TODO: use unfilled flex slot image
         UI_setAttribute("spell_assigned_die_"..tostring(i).."_img","image","Empty-flex")
         UI.setClass("spell_assigned_die_"..tostring(i).."_img","die_image_active")
       else
@@ -1824,13 +1829,16 @@ function updateSpellCostDlg()
       end
     end
   end
-  local state = false
-  if dlg.filled == dlg.flex_spots + dlg.fixed_spots then
-    if dlg.excess_mana == 0 and dlg.excess_acuity == 0 then
-      state = true
-    end
+  UI_setAttribute("spell_cost_mana_disc_txt","text",tostring(dlg.mana_discount))
+  UI_setAttribute("spell_cost_acuity_disc_txt","text",tostring(dlg.acuity_discount))
+  if dlg.excess_mana > 0 or dlg.excess_acuity > 0 then
+    UI_setAttribute("spell_cost_excess_tbl","active",true)
+    UI_setAttribute("spell_cost_mana_excess_txt","text",tostring(dlg.excess_mana))
+    UI_setAttribute("spell_cost_acuity_excess_txt","text",tostring(dlg.excess_acuity))
+  else
+    UI_setAttribute("spell_cost_excess_tbl","active",false)
   end
-  UI_setAttribute("spell_cost_assign_pnl","active",state)
+  UI_setAttribute("spell_cost_assign_pnl","active",dlg.filled == dlg.flex_spots + dlg.fixed_spots)
 end
 
 --[[ Handler for pay spell cost dialog --]]
@@ -1840,6 +1848,7 @@ function spellCostHandler(player, button, id)
   local dlg = GD.game.spell_cost
   --////////////////////////////
   local function updateSlots()
+    log("*********** updateSlots() ***************")
     --initialize the table of slots
     dlg.filled = 0
     for i=1,#dlg.slots do
@@ -1850,61 +1859,75 @@ function spellCostHandler(player, button, id)
         dlg.slots[i].acuity = 0
       end
     end
-    --fill with fixed die first
+    --fill with fixed die first from back to front
     for i,die in ipairs(dlg.assigned_dice) do
-      local s = dlg.slots[#dlg.slots - (i-1)] --fill in reverse order
+      local s = dlg.slots[#dlg.slots - (i-1)] --reverse order
       s.filled = true
       s.die = die.index
       dlg.filled = dlg.filled + 1
     end
-    --fill flex slots with mana next
-    local mana_discount = dlg.mana_discount
+    -- calculate # slots to fill with mana/acuity
+    local _mana = dlg.assigned_mana + dlg.mana_discount
+    local _acuity = dlg.assigned_acuity + dlg.acuity_discount
+    local _eff = _mana + math.floor(_acuity / 2)
+    log("Mana to use: "..tostring(_mana))
+    log("Acuity to use: "..tostring(_acuity))
+    log("Total effective mana: "..tostring(_eff))
+    -- fill unfilled slots front to back now with mana / acuity
     local mana_used = 0
-    for i,slot in ipairs(dlg.slots) do
-      if not(slot.filled) and slot.flex then
-        if mana_discount > 0 then
-          slot.mana = slot.mana + 1
-          mana_discount = 0  --use only once
-        end
-        for n=1,2 do
-          if dlg.assigned_mana > mana_used then
-            mana_used = mana_used + 1
-            slot.mana = slot.mana + 1
-          end
-        end
-        if math.floor((slot.mana*2 + slot.acuity) / 2) >= 2 then
-          slot.filled = true
-          dlg.filled = dlg.filled + 1
-        end
-      end
-    end
-    --fill flex slots with acuity last
-    local acuity_discount = dlg.acuity_discount
     local acuity_used = 0
     for i,slot in ipairs(dlg.slots) do
+      log("--- process slot "..tostring(i))
       if not(slot.filled) and slot.flex then
-        for n=1,4 do
-          if acuity_discount > 0 then
-            slot.acuity = slot.acuity + 1
-            acuity_discount = 0  --use only once
-          end
-          if dlg.assigned_acuity > acuity_used then
-            acuity_used = acuity_used + 1 --first mana spot in slot
-            slot.acuity = slot.acuity + 1
-          end
-        end
-        if math.floor((slot.mana*2 + slot.acuity) / 2) >= 2 then
+        if _mana - mana_used >= 2 then --fill with 2 mana
+          log("   --- filled, with 2 mana ")
+          slot.mana = 2
           slot.filled = true
-          dlg.filled = dlg.filled + 1
+        elseif _mana - mana_used == 1 then
+          slot.mana = 1
+          if _acuity - acuity_used >= 2 then  -- fill with 1 mana and 2 acuity
+            log("   --- filled, with 1 mana, 2 acuity ")
+            slot.acuity = 2
+            slot.filled = true
+          elseif _acuity - acuity_used == 1 then  --not filled
+            log("   --- unfilled, with 1 mana, 1 acuity ")
+            slot.acuity = 1
+            slot.filled = false
+          end
+        elseif _acuity - acuity_used >= 4 then  -- fill with 4 acuity
+          log("   --- filled, with 4 acuity ")
+          slot.acuity = 4
+          slot.filled = true
+        elseif _acuity - acuity_used > 0 then  -- not filled
+          log("   --- unfilled, with remaining acuity")
+          slot.acuity = _acuity - acuity_used
+          slot.filled = false
         end
+        if slot.filled then dlg.filled = dlg.filled + 1 end
+        mana_used = mana_used + slot.mana
+        acuity_used = acuity_used + slot.acuity
+      else
+        if slot.filled then log("   --- slot filled")
+        elseif not(slot.flex) then log("   --- not flex") end
       end
     end
+    log("After processing:")
+    log(dlg.slots)
+    log("   mana_used: "..tostring(mana_used))
+    log("   acuity_used "..tostring(acuity_used))
+    local actual_used = mana_used - dlg.mana_discount
+    if actual_used < 0 then actual_used = 0 end
+    dlg.excess_mana = dlg.assigned_mana - actual_used
+    actual_used = acuity_used - dlg.acuity_discount
+    if actual_used < 0 then actual_used = 0 end
+    dlg.excess_acuity = dlg.assigned_acuity - actual_used
+    log("   excess mana: "..tostring(dlg.excess_mana))
+    log("   excess acuity: "..tostring(dlg.excess_acuity))
   end
   --////////////////////////////
   local action = Split(id,"_")[3]
   if action == "cancel" then
-    -- UI_setAttribute("outer_spell_cost_panel","active",false)
-    UI_setAttribute("outer_spell_cost_panel","visibility","Pink")
+    UI_setAttribute("spell_card_panel","visibility","Pink")
     GD.game.spell_cost = {}
     local card = getObjectFromGUID(GD.game.spells[dlg.card_index].card_guid)
     assert(card,"spellCostHandler(): missing spell card object")
@@ -1936,15 +1959,13 @@ function spellCostHandler(player, button, id)
     end
     local p = GD.game.players[player.color]
     local board = getObjectFromGUID(p.player_board)
-    assert(board, "ERROR: spellCostHandler(): assign: missing board")
+    assert(board, "Global:spellCostHandler(): assign: missing board")
     local card = getObjectFromGUID(GD.game.spells[dlg.card_index].card_guid)
-    assert(card,"spellCostHandler(): assign: missing spell card object")
+    assert(card,"Global:spellCostHandler(): assign: missing spell card object")
     card.setLock(false)
     board.call("placeSpellCard", {guid=card.getGUID()})
     table.insert(p.active_spell_cards, {card_id=GD.game.spells[dlg.card_index].card_id})
-
-    log("probe 1")
-    --TESTING auto place card (at least primitively)
+    --auto place card (TODO: primitively for now)
     local data = spells[tonumber(card.getGMNotes())]
     local params = {
       guid = card.getGUID(),
@@ -1953,15 +1974,14 @@ function spellCostHandler(player, button, id)
     }
     if data.option then setSpellCardDecal(card, player.color) end
     Wait.condition(function()
+      --after card rests on class board, auto locate in 1st available spell position
       local map = board.call("locateSpell", params)
       assert(map, "Global:spellCostHandler(): player_board locateSpell() did not return a map")
       GD.game.players[player.color].spell_power.card_map = simpleDeepCopy(map)
       updateSpellPower(player.color)
       updateHUD()
     end, function() return card.resting end)
-    --/TESTING
-    log("probe after")
-
+    --player data adustments and UI updates
     GD.game.spells[dlg.card_index].card_id = 0
     GD.game.spells[dlg.card_index].card_guid = ""
     p.mana = p.mana - mana
@@ -1974,21 +1994,18 @@ function spellCostHandler(player, button, id)
       if take == "spell" then index=i; break end --priortize remove spell take
     end
     table.remove(p.actions.take, index)
-    UI_setAttribute("outer_spell_cost_panel","visibility","Pink")
-    if #p.actions.take == 0 then
-      -- board.call("setUI",{id="next_player_pnl",field="active",value=true})
-      --TODO: set done button active
+    UI_setAttribute("spell_card_panel","visibility","Pink")
+    if #p.actions.take == 0 then  --TODO: move all this to updateHUD()?
       updateSpellButtons(false)
       updateAlterationButtons(false)
-      object_UI_setAttribute(g_lower, "recycle_spell_pnl", "active", false)
-      object_UI_setAttribute(p.player_board, "player_done_pnl", "active", true)
+      object_UI_setAttribute(g_lower, "recycle_spell_pnl", "active", false)   --TODO: move to updateHUD()
+      -- object_UI_setAttribute(p.player_board, "player_done_pnl", "active", true)  --TODO: handled in updateHUD()?
     else
       updateAlterationButtons(true)
       updateSpellButtons(true)
     end
     GD.game.spell_cost = {}
     updateHUD()
-
   elseif action == "mana" then
     local type = Split(id,"_")[2]
     if type == "cost" then
@@ -1999,7 +2016,6 @@ function spellCostHandler(player, button, id)
       dlg.available_mana = dlg.available_mana - 1
       updateSlots()
     elseif type == "assigned" then
-      -- log("------ decrement mana")
       if dlg.assigned_mana == 0 then return end --no more mana assigned
       dlg.assigned_mana = dlg.assigned_mana - 1
       dlg.available_mana = dlg.available_mana + 1
