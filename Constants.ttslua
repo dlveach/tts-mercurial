@@ -146,12 +146,12 @@ C.arcanas = {
     guid = "937407",
     name = "Lizard",
     requirement = {
-      elements = {"fire","lightning","Earth"},
+      elements = {"Fire","Lightning","Earth"},
     },
     base_vp = 2,
     bonus = {
       vp = 1,
-      spell_type = "fire",
+      spell_type = "Fire",
       count = 2
     },
     desc = {
@@ -168,7 +168,7 @@ C.arcanas = {
     base_vp = 2,
     bonus = {
       vp = 1,
-      spell_type = "water",
+      spell_type = "Water",
       count = 2
     },
     desc = {

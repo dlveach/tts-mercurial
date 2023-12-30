@@ -2,7 +2,6 @@
 
 Work items for converstion of beta to production version:
 
-  --BUG: arcana selection/placement not working right, test with restore.
   --BUG: something wrong with image asset "Spell-4".  Will not load.
   --BUG: mystcaller doesn't get myst ruin on start
         --TODO: lots to do around myst ruin, design a UI for it showing both actions,
@@ -22,14 +21,7 @@ Work items for converstion of beta to production version:
           UI_setAttribute wrapper.
 
   --TODO: IN WORK: automate spell cast
-        - calcuate winnings and display "Take" buttons on Heroics/Arcanas/Prestige
-        - dialog for Myst if equilibrium attained.
-        - assign prestige
-        - take heroic
-        - take arcana
-
-  --TODO: final scoring
-    - BUG: fix arcana scoring to final rules
+        - Just need to add in myst rune
 
   - TODO: start options in UI start game panel
   - TODO: TEST: save/load/rewind
@@ -1102,10 +1094,68 @@ function updateSpellPower(pcol)
   if env.test.debug then log(s) end
 end
 
---TODO: implement
+--[[ Recalculate player score values from current data. ]]
 function updateScore(pcol)
   if env.test.trace then log("Global: updateScore()") end
-  log("------- TODO: implement updateScore()")
+  local pdata = GD.game.players[pcol]
+  pdata.score.heroics = 0
+  pdata.score.prestige = pdata.prestige
+  pdata.score.arcanas = 0
+  pdata.score.sigils = 0
+  pdata.score.total = pdata.prestige
+  --heroics
+  for _,h in ipairs(pdata.heroics) do
+    pdata.score.heroics = pdata.score.heroics + h.vp
+  end
+  pdata.score.total = pdata.score.total + pdata.score.heroics
+  --sigils
+  for s,n in pairs(pdata.sigils) do
+    if n > 2 then pdata.score.sigils = pdata.score.sigils + n
+    elseif n == 2 then pdata.score.sigils = pdata.score.sigils + 1
+    end
+  end
+  pdata.score.total = pdata.score.total + pdata.score.sigils
+  --arcanas
+  for _,a in ipairs(pdata.arcanas) do
+    pdata.score.arcanas = pdata.score.arcanas + a.base_vp
+    log("spell_type: "..tostring(a.bonus.spell_type))
+    if a.bonus.spell_type == "Fire" or a.bonus.spell_type == "Water" then
+      log("checking '"..a.bonus.spell_type.."' spell count bonus")
+      log(a)
+      local c = 0
+      for _,s in ipairs(pdata.cast_spells) do
+        log(spells[s.id].dice)
+        if contains(spells[s.id].dice, a.bonus.spell_type) then c = c + 1 end
+      end
+      log("contains "..tostring(c).." "..a.bonus.spell_type.." spells")
+      local bonus = math.floor(c/a.bonus.count)
+      log("arcana bonus: "..tostring(bonus))
+      pdata.score.arcanas = pdata.score.arcanas + bonus
+    elseif a.bonus.spell_type == "any" then
+      pdata.score.arcanas = pdata.score.arcanas + math.floor(#pdata.cast_spells/a.bonus.count)
+    elseif a.bonus.spell_type == "slot_count" then
+      local c = 0
+      for _,s in ipairs(pdata.cast_spells) do
+        if s.slots >= a.bonus.slot_count then c = c + 1 end
+      end
+      pdata.score.arcanas = pdata.score.arcanas + math.floor(c/a.bonus.count)
+    elseif a.bonus.spell_type == "aether_mod" then
+      local c = 0
+      for _,s in ipairs(pdata.cast_spells) do
+        if s.aether_mod then c = c + 1 end
+      end
+      pdata.score.arcanas = pdata.score.arcanas + math.floor(c/a.bonus.count)
+    elseif a.bonus.spell_type == "not_aether" then
+      local c = 0
+      for _,s in ipairs(pdata.cast_spells) do
+        if not(s.aether_mod) then c = c + 1 end
+      end
+      pdata.score.arcanas = pdata.score.arcanas + math.floor(c/a.bonus.count)
+    else
+      assert(false,"Global:updateScore(): invalid arcana bonus spell_type")
+    end
+  end
+  pdata.score.total = pdata.score.total + pdata.score.arcanas
 end
 
 --[[ Handle objects dropped in game.  Only certain object tags supported.  --]]
@@ -2210,7 +2260,7 @@ end
 
 --////////// Spell Cast stuffs ////////////
 
---[[ Handler for the Cast spell button. ] ]]
+--[[ Handler for the Cast spell button. ] ]]  --TODO: myst rune
 function castSpellBtn(player, button, id)
   if env.test.trace then log("Global: castSpellBtn() "..player.color..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
@@ -2254,6 +2304,9 @@ function updateCast(restore, ruin, pcol)
     object_UI_setAttribute(g_upper, "heroics_cancel_pnl","active",false)
   else
     object_UI_setAttribute(g_upper, "heroics_cancel_pnl","active",true)
+    if GD.env.verbose then
+      broadcastToColor("Choose a Heroic to claim.", pcol)
+    end
   end
 end
 
@@ -2265,36 +2318,36 @@ function checkArcanas(pcol)
   if env.test.trace then log("Global:checkArcanas() "..tostring(pcol)) end
   local pdata = GD.game.players[pcol]
   local result = {}
-  for i,arcana in ipairs(C.arcanas) do
+  for i,arcana in ipairs(GD.game.arcanas) do
+    local satisfied = true
     if arcana.requirement.elements ~= nil then
-      local satisfied = true
       for _,e in ipairs(arcana.requirement.elements) do
         local not_found = true
         for _,c in ipairs(pdata.active_spell_cards) do
           local spell = spells[c.card_id]
-          if contains(spell.dice, e) then
-            not_found = false
-            break
-          end
+          if contains(spell.dice, e) then not_found = false; break end
         end
-        if not_found then
-          satisfied = false
-          break
-        end
+        if not_found then satisfied = false; break end
       end
-      if satisfied then table.insert(result,{index=i,arcana=arcana}) end
     elseif arcana.requirement.cards ~= nil then
+      satisfied = #pdata.active_spell_cards >= 4
     elseif arcana.requirement.spell_power ~= nil then
+      satisfied = pdata.spell_power.net_restore >= arcana.requirement.spell_power.restore or
+        pdata.spell_power.net_ruin >= arcana.requirement.spell_power.ruin
     elseif arcana.requirement.aether_mod ~= nil then
+      local n = 0
+      for _,s in ipairs(pdata.active_spell_cards) do
+        if spells[s.card_id].aether_mod then n = n + 1 end
+      end
+      satisfied = n >= 3 and hasAether(pcol)
     elseif arcana.requirement.myst ~= nil then
+      satisfied = pdata.spell_power.myst >= 12
     end
+    if satisfied then table.insert(result,{index=i,arcana=arcana}) end
   end
-  log(result)
-  if #result > 0 then
-    return result
-  else
-    return nil
-  end
+  if env.test.debug then log(result) end
+  if #result > 0 then return result
+  else return nil end
 end
 
 --[[ Handler for the take Heroic button. ]]
@@ -2325,13 +2378,18 @@ function takeHeroicBtn(player, button, id)
     if pdata.mana > 10 then pdata.mana = 10 end
     pdata.acuity = pdata.acuity + 1
     if pdata.acuity > 10 then pdata.acuity = 10 end
+    for _,sigil in ipairs(data.sigils) do
+      pdata.sigils[sigil] = pdata.sigils[sigil] + 1
+    end
     if pdata.arcanas_won ~= nil then
       for _,e in ipairs(pdata.arcanas_won) do
         object_UI_setAttribute(g_upper, "arcana_"..tostring(e.index).."_pnl","active",true)
       end
+      if GD.env.verbose then
+        broadcastToColor("Choose an Arcana to claim.", player.color)
+      end
     else
       castCleanup(player.color)
-      updateScore()
       updateHUD()
     end
   end
@@ -2404,11 +2462,9 @@ function castConsolationHandler(player, button, id)
   UI_setAttribute("cast_cons_pnl","visibility","Pink")
 end
 
---[[ Display the myst spell power selection dialog to a player. ]]
+--[[ Display the myst spell power selection dialog to a player. ]] --TODO: implement
 function showMystDialog(pcol)
-
   log("TODO: showMystDialog() ")
-
 end
 
 function castMystHandler(player, button, id)
@@ -2442,6 +2498,7 @@ function castMystHandler(player, button, id)
   updateCast(restore, ruin, player.color)
 end
 
+--[[ Handler for the take Arcana buttons. ]]
 function takeArcanaBtn(player, button, id)
   if env.test.trace then log("Global:takeArcanaBtn() "..tostring(player.color)..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
@@ -2453,12 +2510,10 @@ function takeArcanaBtn(player, button, id)
   assert(board, "Global:takeArcanaBtn() could not locate player board")
   board.call("placeArcana",{guid=arcana.guid})
   castCleanup(player.color)
-  updateScore()
   updateHUD()
-  for i=1,6 do
-    object_UI_setAttribute(g_upper, "heroics_"..tostring(i).."_pnl","active",false)
+  for i=1,3 do
+    object_UI_setAttribute(g_upper, "arcana_"..tostring(i).."_pnl","active",false)
   end
-  object_UI_setAttribute(g_upper, "heroics_cancel_pnl","active",false)
 end
 
 --[[ Perform post spell cast cleanup for a player. ]]
@@ -2476,6 +2531,7 @@ function castCleanup(pcol)
   pdata.mana = pdata.mana + pdata.spent_mana
   --reset player data structure
   pdata.spent_mana = 0
+  pdata.casting = false
   pdata.active_spell_cards = {}
   pdata.actions.take = {}
   pdata.actions.play = 0
@@ -2562,12 +2618,8 @@ function updateHUD(player_color)
   local function updatePlayerHUD(i, pcol)
     if env.test.debug then log("updatePlayerHUD() i: "..tostring(i).." "..tostring(pcol)) end
     local pdata = GD.game.players[pcol]
-
-    -- local score = board.call("getCurrentScore")
     updateScore(pcol)
-    local score = -1
-
-    -- calculate potential spell cast for display
+    local score = GD.game.players[pcol].score.total
     updateSpellPower(pcol)
     local spell = {power=0,type="None"}
     if pdata.spell_power.net_restore > pdata.spell_power.net_ruin then
@@ -2586,7 +2638,6 @@ function updateHUD(player_color)
         type = "Myst",
       }
     end
-
     local heroics = #pdata.heroics
     UI_setAttribute("hud_row_"..tostring(i).."_spell", "text", tostring(spell.power))
     if spell.type ~= "None" then
