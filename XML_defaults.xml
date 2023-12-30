@@ -15,7 +15,7 @@
     spacing="16"
     padding="30"
     image="Sprites/Layout/Viewport"
-    color="rgb(0.4,0.1,0)" />
+    color="#301616" />
 
   <Button hoverClass="hover"
     pressClass="press"

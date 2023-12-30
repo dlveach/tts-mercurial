@@ -5,46 +5,60 @@
   <Include src="XML_defaults.xml"/>
 
 <Defaults>
+  <Panel class="draggable"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false" />
+  <Panel class="viewport"
+    image="Sprites/Layout/Viewport"/>
+  <Panel class="dark"
+    color="rgb(0.7,0.3,0)" />
+
   <TableLayout
     autoCalculateHeight="true"
     useGlobalCellPadding="false" />
-  <TableLayout class="dark_viewport"
-    image="Sprites/Layout/Viewport"
+  <TableLayout class="viewport"
+    image="Sprites/Layout/Viewport"/>
+  <TableLayout class="dark"
     color="#301616" />
+
   <Row
     dontUseTableRowBackground="true" />
   <Row class="title_row"
     image="Sprites/Layout/Title"
     color="rgb(0.7,0.3,0)" />
+
   <!-- Cell dontUseTableCellBackground false during dev to show lines -->
   <Cell
     dontUseTableCellBackground="true"
     color="rgba(0,0,0,0)"
     padding="0 0 0 0" />
+
   <Image
     preserveAspect="true" />
-  <Image class="die_image_active" active = "true" />
-  <Image class="die_image_inactive" active = "false" />
+  <Image class="image_active" active = "true" />
+  <Image class="image_inactive" active = "false" />
+
   <!-- HUD specifics -->
   <Text class="hud_header"
     color="rgb(0.8,0.8,0)"
     fontSize="14"/>
   <Image class="hud_image" active="false"
     image="Myst" />
+
   <!-- Alteration dialog specifics -->
   <Text class="alt_action_btn_txt"
     color="rgb(0.8,0.8,0)"
     fontSize="20"/>
+
   <!-- Score dialog stuffs -->
   <Row class="score_data_row"
       preferredHeight="50" />
 </Defaults>
 
   <!-- Start Panel -->
-  <Panel id="startPanel" active="false"
+  <Panel id="start_pnl" active="false"
+    class="draggable dark viewport"
     height="160" width="300"
-    allowDragging="true"
-    returnToOriginalPositionWhenReleased="false"
     showAnimation="Grow" hideAnimation="Shrink">
     <VerticalLayout>
       <Panel class="title">
@@ -59,43 +73,42 @@
   </Panel>
 
   <!-- Select Class Board Panel -->
-  <Panel id="selectClassBoardPanel" active="false"
-    allowDragging="true"
-    returnToOriginalPositionWhenReleased="false"
+  <Panel id="select_class_pnl" active="false"
+    class="draggable dark viewport"
     offsetXY="0 300"
     height="180" width="600"
     showAnimation="Grow" hideAnimation="Shrink">
-    <TableLayout class="base_table">
-      <Row preferredHeight="60"  class="base_table_row" color="rgba(0,0,0,0)">
+    <TableLayout class="dark viewport">
+      <Row preferredHeight="60" >
         <Cell columnSpan="4">
           <Panel class="title">
             <Text class="title"> Select and place class board in following order:</Text>
           </Panel>
         </Cell>
       </Row>
-      <Row preferredHeight="80" class="base_table_row">
+      <Row preferredHeight="80">
         <Cell padding="20 10 20 0">
-          <Panel id="selectClass_1_panel" color="Blue" image="Sprites/Layout/Viewport">
+          <Panel id="selectClass_1_panel" color="Blue" class="viewport">
             <Text id="selectClass_1_text" class="title" color="White" text="Blue"/>
           </Panel>
         </Cell>
         <Cell padding="10 10 20 0">
-          <Panel id="selectClass_2_panel" color="Red" image="Sprites/Layout/Viewport">
+          <Panel id="selectClass_2_panel" color="Red" class="viewport">
             <Text id="selectClass_2_text" class="title" color="White" text="Red"/>
           </Panel>
         </Cell>
         <Cell padding="10 10 20 0">
-          <Panel id="selectClass_3_panel" color="Yellow" image="Sprites/Layout/Viewport">
+          <Panel id="selectClass_3_panel" color="Yellow" class="viewport">
             <Text id="selectClass_3_text" class="title" color="White" text="Yellow"/>
           </Panel>
         </Cell>
         <Cell padding="10 20 20 0">
-          <Panel id="selectClass_4_panel" color="Green" image="Sprites/Layout/Viewport">
+          <Panel id="selectClass_4_panel" color="Green" class="viewport">
             <Text id="selectClass_4_text" class="title" color="White" text="Green"/>
           </Panel>
         </Cell>
       </Row>
-      <Row preferredHeight="40"  class="base_table_row">
+      <Row preferredHeight="40">
         <Cell><Text id="selectClassLocation_1_text" class="title" text="1"/></Cell>
         <Cell><Text id="selectClassLocation_2_text" class="title" text="2"/></Cell>
         <Cell><Text id="selectClassLocation_3_text" class="title" text="3"/></Cell>
@@ -105,15 +118,12 @@
   </Panel>
 
   <!-- HUD panel -->
-  <Panel id="hud_panel" active="false"
-    allowDragging="true"
-    returnToOriginalPositionWhenReleased="false"
+  <Panel id="hud_pnl" active="false"
+    class="draggable dark viewport"
     offsetXY="-550 350"
-    color="rgb(0.7,0.3,0)"
-    image="Sprites/Layout/Viewport"
     height="360" width="420">
     <Panel id="inner_hud_panel" height="340" width="400">
-      <TableLayout id="hud_table" class="dark_viewport"
+      <TableLayout id="hud_table" class="dark viewport"
         columnWidths="0 60 40 90 90">
         <Row class="title_row" preferredHeight="30">
           <Cell><Text class="hud_header" text="Player"/></Cell>
@@ -164,13 +174,13 @@
         <Row id="Red_hud_dice_row" preferredHeight="60"  visibility="Red">
           <Cell columnSpan="5">
             <HorizontalLayout padding="10">
-              <Image id="Red_hud_die_1_image" class="die_image_inactive" />
-              <Image id="Red_hud_die_2_image" class="die_image_inactive" />
-              <Image id="Red_hud_die_3_image" class="die_image_inactive" />
-              <Image id="Red_hud_die_4_image" class="die_image_inactive" />
-              <Image id="Red_hud_die_5_image" class="die_image_inactive" />
-              <Image id="Red_hud_die_6_image" class="die_image_inactive" />
-              <Image id="Red_hud_die_7_image" class="die_image_inactive" />
+              <Image id="Red_hud_die_1_image" class="image_inactive" />
+              <Image id="Red_hud_die_2_image" class="image_inactive" />
+              <Image id="Red_hud_die_3_image" class="image_inactive" />
+              <Image id="Red_hud_die_4_image" class="image_inactive" />
+              <Image id="Red_hud_die_5_image" class="image_inactive" />
+              <Image id="Red_hud_die_6_image" class="image_inactive" />
+              <Image id="Red_hud_die_7_image" class="image_inactive" />
             </HorizontalLayout>
           </Cell>
         </Row>
@@ -241,13 +251,13 @@
         <Row id="Blue_hud_dice_row" preferredHeight="60" visibility="Blue">
           <Cell columnSpan="5">
             <HorizontalLayout padding="10">
-              <Image id="Blue_hud_die_1_image" class="die_image_inactive" />
-              <Image id="Blue_hud_die_2_image" class="die_image_inactive" />
-              <Image id="Blue_hud_die_3_image" class="die_image_inactive" />
-              <Image id="Blue_hud_die_4_image" class="die_image_inactive" />
-              <Image id="Blue_hud_die_5_image" class="die_image_inactive" />
-              <Image id="Blue_hud_die_6_image" class="die_image_inactive" />
-              <Image id="Blue_hud_die_7_image" class="die_image_inactive" />
+              <Image id="Blue_hud_die_1_image" class="image_inactive" />
+              <Image id="Blue_hud_die_2_image" class="image_inactive" />
+              <Image id="Blue_hud_die_3_image" class="image_inactive" />
+              <Image id="Blue_hud_die_4_image" class="image_inactive" />
+              <Image id="Blue_hud_die_5_image" class="image_inactive" />
+              <Image id="Blue_hud_die_6_image" class="image_inactive" />
+              <Image id="Blue_hud_die_7_image" class="image_inactive" />
             </HorizontalLayout>
           </Cell>
         </Row>
@@ -318,13 +328,13 @@
         <Row id="Green_hud_dice_row" preferredHeight="60" visibility="Green">
           <Cell columnSpan="5">
             <HorizontalLayout padding="10">
-              <Image id="Green_hud_die_1_image" class="die_image_inactive" />
-              <Image id="Green_hud_die_2_image" class="die_image_inactive" />
-              <Image id="Green_hud_die_3_image" class="die_image_inactive" />
-              <Image id="Green_hud_die_4_image" class="die_image_inactive" />
-              <Image id="Green_hud_die_5_image" class="die_image_inactive" />
-              <Image id="Green_hud_die_6_image" class="die_image_inactive" />
-              <Image id="Green_hud_die_7_image" class="die_image_inactive" />
+              <Image id="Green_hud_die_1_image" class="image_inactive" />
+              <Image id="Green_hud_die_2_image" class="image_inactive" />
+              <Image id="Green_hud_die_3_image" class="image_inactive" />
+              <Image id="Green_hud_die_4_image" class="image_inactive" />
+              <Image id="Green_hud_die_5_image" class="image_inactive" />
+              <Image id="Green_hud_die_6_image" class="image_inactive" />
+              <Image id="Green_hud_die_7_image" class="image_inactive" />
             </HorizontalLayout>
           </Cell>
         </Row>
@@ -395,13 +405,13 @@
         <Row id="Yellow_hud_dice_row" preferredHeight="60"  visibility="Yellow">
           <Cell columnSpan="5">
             <HorizontalLayout padding="10">
-              <Image id="Yellow_hud_die_1_image" class="die_image_inactive" />
-              <Image id="Yellow_hud_die_2_image" class="die_image_inactive" />
-              <Image id="Yellow_hud_die_3_image" class="die_image_inactive" />
-              <Image id="Yellow_hud_die_4_image" class="die_image_inactive" />
-              <Image id="Yellow_hud_die_5_image" class="die_image_inactive" />
-              <Image id="Yellow_hud_die_6_image" class="die_image_inactive" />
-              <Image id="Yellow_hud_die_7_image" class="die_image_inactive" />
+              <Image id="Yellow_hud_die_1_image" class="image_inactive" />
+              <Image id="Yellow_hud_die_2_image" class="image_inactive" />
+              <Image id="Yellow_hud_die_3_image" class="image_inactive" />
+              <Image id="Yellow_hud_die_4_image" class="image_inactive" />
+              <Image id="Yellow_hud_die_5_image" class="image_inactive" />
+              <Image id="Yellow_hud_die_6_image" class="image_inactive" />
+              <Image id="Yellow_hud_die_7_image" class="image_inactive" />
             </HorizontalLayout>
           </Cell>
         </Row>
@@ -474,22 +484,19 @@
   </Panel>
 
   <!-- Pay Spell cost panel -->
-  <Panel id="spell_card_panel" active="false"
-    allowDragging="true"
-    returnToOriginalPositionWhenReleased="false"
+  <Panel id="spell_card_pnl" active="false"
+    class="draggable dark viewport"
     offsetXY="0 250"
-    color="rgb(0.7,0.3,0)"
-    image="Sprites/Layout/Viewport"
     height="350" width="1120">
     <Panel id="inner_spell_cost_pnl"
       height="330" width="1100">
-      <TableLayout class="dark_viewport" columnWidths="200 900">
+      <TableLayout class="dark viewport" columnWidths="200 900">
         <Row preferredHeight="330">
           <Cell padding="5 5 5 5">
             <Image id="spell_cost_card_img" preserveAspect="true" image="" />
           </Cell>
           <Cell>
-            <TableLayout class="dark_viewport">
+            <TableLayout class="dark viewport">
               <Row preferredHeight="30" class="title_row">
                 <Cell>
                   <Text fontSize="20" class="hud_header" text="Available resources to pay for spell:"/>
@@ -500,25 +507,25 @@
                   <TableLayout columnWidths="40 40 30 50 40 30 40 70 20 70 20 70 20 70 20 70 20 70 20 70">
                     <Row>
                       <Cell/>
-                      <Cell><Image id="spell_cost_mana_img" image="Mana" class="die_image_active" onClick="spellCostHandler"/></Cell>
+                      <Cell><Image id="spell_cost_mana_img" image="Mana" class="image_active" onClick="spellCostHandler"/></Cell>
                       <Cell><Text id="spell_cost_mana_txt" color="White" fontSize="24" text="10"/></Cell>
                       <Cell/>
-                      <Cell><Image id="spell_cost_acuity_img" image="Acuity" class="die_image_active" onClick="spellCostHandler"/></Cell>
+                      <Cell><Image id="spell_cost_acuity_img" image="Acuity" class="image_active" onClick="spellCostHandler"/></Cell>
                       <Cell><Text id="spell_cost_acuity_txt" color="White" fontSize="24" text="10"/></Cell>
                       <Cell/>
-                      <Cell><Image id="spell_cost_die_1_img" image="Earth" class="die_image_active" onClick="spellCostHandler"/></Cell>
+                      <Cell><Image id="spell_cost_die_1_img" image="Earth" class="image_active" onClick="spellCostHandler"/></Cell>
                       <Cell/>
-                      <Cell><Image id="spell_cost_die_2_img" image="Water" class="die_image_active" onClick="spellCostHandler"/></Cell>
+                      <Cell><Image id="spell_cost_die_2_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
                       <Cell/>
-                      <Cell><Image id="spell_cost_die_3_img" image="Water" class="die_image_active" onClick="spellCostHandler"/></Cell>
+                      <Cell><Image id="spell_cost_die_3_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
                       <Cell/>
-                      <Cell><Image id="spell_cost_die_4_img" image="Fire" class="die_image_active" onClick="spellCostHandler"/></Cell>
+                      <Cell><Image id="spell_cost_die_4_img" image="Fire" class="image_active" onClick="spellCostHandler"/></Cell>
                       <Cell/>
-                      <Cell><Image id="spell_cost_die_5_img" image="Water" class="die_image_active" onClick="spellCostHandler"/></Cell>
+                      <Cell><Image id="spell_cost_die_5_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
                       <Cell/>
-                      <Cell><Image id="spell_cost_die_6_img" image="Lightning" class="die_image_active" onClick="spellCostHandler"/></Cell>
+                      <Cell><Image id="spell_cost_die_6_img" image="Lightning" class="image_active" onClick="spellCostHandler"/></Cell>
                       <Cell/>
-                      <Cell><Image id="spell_cost_die_7_img" image="Lightning" class="die_image_active" onClick="spellCostHandler"/></Cell>
+                      <Cell><Image id="spell_cost_die_7_img" image="Lightning" class="image_active" onClick="spellCostHandler"/></Cell>
                     </Row>
                   </TableLayout>
                 </Cell>
@@ -533,21 +540,21 @@
                   <TableLayout columnWidths="110 40 30 50 40 30 40 70 20 70 20 70 20 70 20 70 20 70 0">
                     <Row>
                       <Cell/>
-                      <Cell><Image id="spell_assigned_mana_img" image="Mana" class="die_image_active" onClick="spellCostHandler"/></Cell>
+                      <Cell><Image id="spell_assigned_mana_img" image="Mana" class="image_active" onClick="spellCostHandler"/></Cell>
                       <Cell><Text id="spell_assigned_mana_txt" color="White" fontSize="24" text="0"/></Cell>
                       <Cell/>
-                      <Cell><Image id="spell_assigned_acuity_img" image="Acuity" class="die_image_active" onClick="spellCostHandler"/></Cell>
+                      <Cell><Image id="spell_assigned_acuity_img" image="Acuity" class="image_active" onClick="spellCostHandler"/></Cell>
                       <Cell><Text id="spell_assigned_acuity_txt" color="White" fontSize="24" text="0"/></Cell>
                       <Cell/>
                       <Cell><Image id="spell_assigned_die_1_img" image="Earth" preserveAspect="true" onClick="spellCostHandler"/></Cell>
                       <Cell/>
-                      <Cell><Image id="spell_assigned_die_2_img" image="Water" class="die_image_active" onClick="spellCostHandler"/></Cell>
+                      <Cell><Image id="spell_assigned_die_2_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
                       <Cell/>
-                      <Cell><Image id="spell_assigned_die_3_img" image="Water" class="die_image_active" onClick="spellCostHandler"/></Cell>
+                      <Cell><Image id="spell_assigned_die_3_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
                       <Cell/>
-                      <Cell><Image id="spell_assigned_die_4_img" image="Fire" class="die_image_active" onClick="spellCostHandler"/></Cell>
+                      <Cell><Image id="spell_assigned_die_4_img" image="Fire" class="image_active" onClick="spellCostHandler"/></Cell>
                       <Cell/>
-                      <Cell><Image id="spell_assigned_die_5_img" image="Water" class="die_image_active" onClick="spellCostHandler"/></Cell>
+                      <Cell><Image id="spell_assigned_die_5_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
                       <Cell/>
                     </Row>
                   </TableLayout>
@@ -607,12 +614,9 @@
   </Panel>
 
   <!-- Alteration card panel -->
-  <Panel id="alteration_card_panel" active="false"
-    allowDragging="true"
-    returnToOriginalPositionWhenReleased="false"
+  <Panel id="alteration_card_pnl" active="false"
+    class="draggable dark viewport"
     offsetXY="0 50"
-    color="rgb(0.7,0.3,0)"
-    image="Sprites/Layout/Viewport"
     height="350" width="1120"
     padding="10 10 10 10">
     <TableLayout class="base_table" color="#301616" columnWidths="200 900">
@@ -707,19 +711,19 @@
                       <Text class="hud_header" fontSize="24" text="Available Dice:"/>
                     </Cell>
                     <Cell/>
-                    <Cell><Image id="convert_from_die_1_img" image="Earth" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell><Image id="convert_from_die_1_img" image="Earth" class="image_active" onClick="alterationDlgHandler"/></Cell>
                     <Cell/>
-                    <Cell><Image id="convert_from_die_2_img" image="Water" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell><Image id="convert_from_die_2_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
                     <Cell/>
-                    <Cell><Image id="convert_from_die_3_img" image="Water" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell><Image id="convert_from_die_3_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
                     <Cell/>
-                    <Cell><Image id="convert_from_die_4_img" image="Fire" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell><Image id="convert_from_die_4_img" image="Fire" class="image_active" onClick="alterationDlgHandler"/></Cell>
                     <Cell/>
-                    <Cell><Image id="convert_from_die_5_img" image="Water" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell><Image id="convert_from_die_5_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
                     <Cell/>
-                    <Cell><Image id="convert_from_die_6_img" image="Lightning" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell><Image id="convert_from_die_6_img" image="Lightning" class="image_active" onClick="alterationDlgHandler"/></Cell>
                     <Cell/>
-                    <Cell><Image id="convert_from_die_7_img" image="Lightning" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell><Image id="convert_from_die_7_img" image="Lightning" class="image_active" onClick="alterationDlgHandler"/></Cell>
                     <Cell/>
                   </Row>
                   <Row>
@@ -733,19 +737,19 @@
                       </VerticalLayout>
                     </Cell>
                     <Cell/>
-                    <Cell><Image id="convert_to_die_1_img" image="Earth" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell><Image id="convert_to_die_1_img" image="Earth" class="image_active" onClick="alterationDlgHandler"/></Cell>
                     <Cell/>
-                    <Cell><Image id="convert_to_die_2_img" image="Water" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell><Image id="convert_to_die_2_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
                     <Cell/>
-                    <Cell><Image id="convert_to_die_3_img" image="Water" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell><Image id="convert_to_die_3_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
                     <Cell/>
-                    <Cell><Image id="convert_to_die_4_img" image="Fire" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell><Image id="convert_to_die_4_img" image="Fire" class="image_active" onClick="alterationDlgHandler"/></Cell>
                     <Cell/>
-                    <Cell><Image id="convert_to_die_5_img" image="Water" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell><Image id="convert_to_die_5_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
                     <Cell/>
-                    <Cell><Image id="convert_to_die_6_img" image="Lightning" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell><Image id="convert_to_die_6_img" image="Lightning" class="image_active" onClick="alterationDlgHandler"/></Cell>
                     <Cell/>
-                    <Cell><Image id="convert_to_die_7_img" image="Lightning" class="die_image_active" onClick="alterationDlgHandler"/></Cell>
+                    <Cell><Image id="convert_to_die_7_img" image="Lightning" class="image_active" onClick="alterationDlgHandler"/></Cell>
                     <Cell/>
                   </Row>
                 </TableLayout>
@@ -772,13 +776,113 @@
     </TableLayout>
   </Panel>
 
-  <!-- Heroics panel
-  <Panel id="outer_heroic_panel" active="false"
-    allowDragging="true"
-    returnToOriginalPositionWhenReleased="false"
+
+  <!-- Cast Consolation panel -->
+  <Panel id="cast_cons_pnl" active="false"
+    class="draggable dark viewport"
+    offsetXY="0 150"
+    padding = "10"
+    height="220" width="420">
+    <TableLayout class="dark viewport">
+      <Row preferredHeight="50">
+        <Cell>
+          <TableLayout columnWidths="210 40 150">
+            <Row>
+              <Cell>
+                <Text class="hud_header" fontSize="18" alignment="MiddleRight" text="Spell power: "/>
+              </Cell>
+              <Cell>
+                <Text id="cast_cons_spell_power_txt" fontSize="20" color="white" text="00"/>
+              </Cell>
+              <Cell padding="5 0 12 12">
+                <Image id="cast_cons_spell_type_img" rectAlignment="MiddleLeft" image="Restore" />
+              </Cell>
+            </Row>
+          </TableLayout>
+        </Cell>
+      </Row>
+      <Row preferredHeight="40">
+        <Cell padding="0 0 10 0">
+          <TableLayout columnWidths="190 40 170">
+            <Row>
+              <Cell>
+                <Text class="hud_header" alignment="MiddleRight" fontSize="16" text="Will generate "/>
+              </Cell>
+              <Cell>
+                <Text id="cast_cons_prestige_txt" fontSize="20" color="white" text="0"/>
+              </Cell>
+              <Cell>
+                <Text class="hud_header" alignment="MiddleLeft" fontSize="16" text=" Prestige"/>
+              </Cell>
+            </Row>
+          </TableLayout>
+        </Cell>
+      </Row>
+      <Row preferredHeight="40">
+        <Cell padding="0 0 0 10">
+          <Text class="hud_header" fontSize="16" text="with no Heroics.  Continue anyway?"/>
+        </Cell>
+      </Row>
+      <Row preferredHeight="70">
+        <Cell padding="40 40 10 10">
+          <HorizontalLayout spacing="40">
+            <Button id="cast_cons_cancel" onClick="castConsolationHandler" text="Cancel"/>
+            <Button id="cast_cons_continue" onClick="castConsolationHandler" text="Continue"/>
+          </HorizontalLayout>
+        </Cell>
+      </Row>
+    </TableLayout>
+  </Panel>
+
+  <!-- Cast Consolation panel -->
+  <Panel id="cast_myst_pnl" active="false"
+    class="draggable dark viewport"
+    offsetXY="0 150"
+    padding = "10"
+    height="360" width="420">
+    <TableLayout class="dark viewport">
+      <Row preferredHeight="50">
+        <Cell>
+          <TableLayout columnWidths="210 40 150">
+            <Row>
+              <Cell>
+                <Text class="hud_header" fontSize="18" alignment="MiddleRight" text="Equilibrium! "/>
+              </Cell>
+              <Cell>
+                <Text id="cast_cons_spell_power_txt" fontSize="20" color="white" text="00"/>
+              </Cell>
+              <Cell padding="5 0 12 12">
+                <Image id="cast_cons_spell_type_img" rectAlignment="MiddleLeft" image="Myst" />
+              </Cell>
+            </Row>
+          </TableLayout>
+        </Cell>
+      </Row>
+      <Row preferredHeight="180">
+        <Cell padding="0 0 0 0">
+          <Image image="Myst_Convert"/>
+        </Cell>
+      </Row>
+      <Row preferredHeight="40">
+        <Cell padding="0 0 20 0">
+          <Text class="hud_header" fontSize="16" text="Select Myst conversion:"/>
+        </Cell>
+      </Row>
+      <Row preferredHeight="70">
+        <Cell padding="40 40 10 10">
+          <HorizontalLayout spacing="40">
+            <Button id="cast_myst_restore" onClick="castMystHandler" text="Restore"/>
+            <Button id="cast_myst_ruin" onClick="castMystHandler" text="Ruin"/>
+          </HorizontalLayout>
+        </Cell>
+      </Row>
+    </TableLayout>
+  </Panel>
+
+  <!-- Heroics panel -->
+  <Panel id="heroic_pnl" active="false"
+    class="draggable dark viewport"
     offsetXY="0 350"
-    color="rgb(0.7,0.3,0)"
-    image="Sprites/Layout/Viewport"
     height="350" width="920">
     <Panel id="inner_heroic_panel" height="330" width="900">
       <TableLayout class="heroics_table">
@@ -842,137 +946,137 @@
       </TableLayout>
     </Panel>
   </Panel>
--->
 
 <!-- Final Scoring table -->
-<Panel id="score_panel" active="false" width="900" height="360"
-      showAnimation="Grow" hideAnimation="Shrink">
-    <TableLayout class="score_table">
-        <Row id="table_1_title_row" class="title_row">
-            <Cell class="header_cell" columnSpan="7">
-                <Text id="table_1_title_text" class="table_title_text" text="Final Scoring" />
-            </Cell>
-        </Row>
-        <Row id="score_table_header" preferredHeight="50">
-            <Cell class="header_cell">
-                <Text id="score_table_header_text_1" class="table_header_text" text="Player" />
-            </Cell>
-            <Cell class="header_cell">
-                <Text id="score_table_header_text_2" class="table_header_text" text="Class" />
-            </Cell>
-            <Cell class="header_cell">
-                <Text id="score_table_header_text_3" class="table_header_text" text="Heroics" />
-            </Cell>
-            <Cell class="header_cell">
-                <Text id="score_table_header_text_4" class="table_header_text" text="Sigils" />
-            </Cell>
-            <Cell class="header_cell">
-                <Text id="score_table_header_text_5" class="table_header_text" text="Prestige" />
-            </Cell>
-            <Cell class="header_cell">
-                <Text id="score_table_header_text_6" class="table_header_text" text="Arcanas" />
-            </Cell>
-            <Cell class="header_cell">
-                <Text id="score_table_header_text_7" class="table_header_text" text="Total" />
-            </Cell>
-        </Row>
-        <Row id="score_table_row_1" active="true" class="score_data_row">
-            <Cell class="table_cell">
-                <Text id="score_table_row_1_text_1" class="table_data_text" text="color"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_1_text_2" class="table_data_text" text="class"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_1_text_3" class="table_data_text" text="0"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_1_text_4" class="table_data_text" text="0"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_1_text_5" class="table_data_text" text="0"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_1_text_6" class="table_data_text" text="0"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_1_text_7" class="table_data_text" text="0"/>
-            </Cell>
-        </Row>
+<Panel id="score_panel" active="false"
+  width="900" height="360"
+  showAnimation="Grow" hideAnimation="Shrink">
+  <TableLayout class="score_table">
+    <Row id="table_1_title_row" class="title_row">
+      <Cell class="header_cell" columnSpan="7">
+        <Text id="table_1_title_text" class="table_title_text" text="Final Scoring" />
+      </Cell>
+    </Row>
+    <Row id="score_table_header" preferredHeight="50">
+      <Cell class="header_cell">
+        <Text id="score_table_header_text_1" class="table_header_text" text="Player" />
+      </Cell>
+      <Cell class="header_cell">
+        <Text id="score_table_header_text_2" class="table_header_text" text="Class" />
+      </Cell>
+      <Cell class="header_cell">
+        <Text id="score_table_header_text_3" class="table_header_text" text="Heroics" />
+      </Cell>
+      <Cell class="header_cell">
+        <Text id="score_table_header_text_4" class="table_header_text" text="Sigils" />
+      </Cell>
+      <Cell class="header_cell">
+        <Text id="score_table_header_text_5" class="table_header_text" text="Prestige" />
+      </Cell>
+      <Cell class="header_cell">
+        <Text id="score_table_header_text_6" class="table_header_text" text="Arcanas" />
+      </Cell>
+      <Cell class="header_cell">
+        <Text id="score_table_header_text_7" class="table_header_text" text="Total" />
+      </Cell>
+    </Row>
+    <Row id="score_table_row_1" active="true" class="score_data_row">
+      <Cell class="table_cell">
+        <Text id="score_table_row_1_text_1" class="table_data_text" text="color"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_1_text_2" class="table_data_text" text="class"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_1_text_3" class="table_data_text" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_1_text_4" class="table_data_text" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_1_text_5" class="table_data_text" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_1_text_6" class="table_data_text" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_1_text_7" class="table_data_text" text="0"/>
+      </Cell>
+    </Row>
 
-        <Row id="score_table_row_2" active="true" class="score_data_row">
-            <Cell class="table_cell">
-                <Text id="score_table_row_2_text_1" class="table_data_text" text="color"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_2_text_2" class="table_data_text" text="class"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_2_text_3" class="table_data_text" text="0"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_2_text_4" class="table_data_text" text="0"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_2_text_5" class="table_data_text" text="0"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_2_text_6" class="table_data_text" text="0"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_2_text_7" class="table_data_text" text="0"/>
-            </Cell>
-        </Row>
+    <Row id="score_table_row_2" active="true" class="score_data_row">
+      <Cell class="table_cell">
+        <Text id="score_table_row_2_text_1" class="table_data_text" text="color"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_2_text_2" class="table_data_text" text="class"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_2_text_3" class="table_data_text" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_2_text_4" class="table_data_text" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_2_text_5" class="table_data_text" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_2_text_6" class="table_data_text" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_2_text_7" class="table_data_text" text="0"/>
+      </Cell>
+    </Row>
 
-        <Row id="score_table_row_3" active="true" class="score_data_row">
-            <Cell class="table_cell">
-                <Text id="score_table_row_3_text_1" class="table_data_text" text="color"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_3_text_2" class="table_data_text" text="class"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_3_text_3" class="table_data_text" text="0"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_3_text_4" class="table_data_text" text="0"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_3_text_5" class="table_data_text" text="0"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_3_text_6" class="table_data_text" text="0"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_3_text_7" class="table_data_text" text="0"/>
-            </Cell>
-        </Row>
+    <Row id="score_table_row_3" active="true" class="score_data_row">
+      <Cell class="table_cell">
+        <Text id="score_table_row_3_text_1" class="table_data_text" text="color"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_3_text_2" class="table_data_text" text="class"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_3_text_3" class="table_data_text" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_3_text_4" class="table_data_text" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_3_text_5" class="table_data_text" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_3_text_6" class="table_data_text" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_3_text_7" class="table_data_text" text="0"/>
+      </Cell>
+    </Row>
 
-        <Row id="score_table_row_4" active="true" class="score_data_row">
-            <Cell class="table_cell">
-                <Text id="score_table_row_4_text_1" class="table_data_text" text="color"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_4_text_2" class="table_data_text" text="class"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_4_text_3" class="table_data_text" text="0"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_4_text_4" class="table_data_text" text="0"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_4_text_5" class="table_data_text" text="0"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_4_text_6" class="table_data_text" text="0"/>
-            </Cell>
-            <Cell class="table_cell">
-                <Text id="score_table_row_4_text_7" class="table_data_text" text="0"/>
-            </Cell>
-        </Row>
+    <Row id="score_table_row_4" active="true" class="score_data_row">
+      <Cell class="table_cell">
+        <Text id="score_table_row_4_text_1" class="table_data_text" text="color"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_4_text_2" class="table_data_text" text="class"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_4_text_3" class="table_data_text" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_4_text_4" class="table_data_text" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_4_text_5" class="table_data_text" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_4_text_6" class="table_data_text" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_4_text_7" class="table_data_text" text="0"/>
+      </Cell>
+    </Row>
 
-    </TableLayout>
+  </TableLayout>
 </Panel>
 
 </XmlLayout>

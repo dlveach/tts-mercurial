@@ -12,7 +12,7 @@
     scale="0.5 0.5" />
   <Panel class="inner"
     padding="10 5 0 0" />
-  <Button class="take_button"
+  <Button class="take_heroic"
     fontSize="20"
     onClick="Global/takeHeroicBtn"
     text="Take" />
@@ -23,42 +23,49 @@
     scale="0.5 0.5" />
   <Panel class="arcana_inner"
     padding="40 40 0 0" />
-  <Button class="arcana_take"
+  <Button class="take_arcana"
     fontSize="20"
     onClick="Global/takeArcanaBtn"
     text="Take" />
 </Defaults>
 
-<Panel id="heroics_pnl" class="main" position="30 130 -6" >
+<Panel id="heroics_pnl" class="main"
+  height="40" width="855"
+  position="-1 130 -6" >
   <HorizontalLayout>
     <Panel>
       <Panel id="heroics_1_pnl" class="inner">
-        <Button id="heroics_1_btn" class="take_button" />
+        <Button id="heroics_1_btn" class="take_heroic" />
       </Panel>
     </Panel>
     <Panel>
       <Panel id="heroics_2_pnl" class="inner">
-        <Button id="heroics_2_btn" class="take_button" />
+        <Button id="heroics_2_btn" class="take_heroic" />
       </Panel>
     </Panel>
     <Panel>
       <Panel id="heroics_3_pnl" class="inner">
-        <Button id="heroics_3_btn" class="take_button" />
+        <Button id="heroics_3_btn" class="take_heroic" />
       </Panel>
     </Panel>
     <Panel>
       <Panel id="heroics_4_pnl" class="inner">
-        <Button id="heroics_4_btn" class="take_button" />
+        <Button id="heroics_4_btn" class="take_heroic" />
       </Panel>
     </Panel>
     <Panel>
       <Panel id="heroics_5_pnl" class="inner">
-        <Button id="heroics_5_btn" class="take_button" />
+        <Button id="heroics_5_btn" class="take_heroic" />
       </Panel>
     </Panel>
     <Panel>
       <Panel id="heroics_6_pnl" class="inner">
-        <Button id="heroics_6_btn" class="take_button" />
+        <Button id="heroics_6_btn" class="take_heroic" />
+      </Panel>
+    </Panel>
+    <Panel>
+      <Panel id="heroics_cancel_pnl" class="inner">
+        <Button id="take_heroic_cancel" class="take_heroic" text="Cancel" />
       </Panel>
     </Panel>
   </HorizontalLayout>
@@ -68,17 +75,17 @@
   <HorizontalLayout spacing="30">
     <Panel>
       <Panel id="arcana_1_pnl" class="arcana_inner">
-        <Button id="arcana_1_btn" class="arcana_take" />
+        <Button id="arcana_1_btn" class="take_arcana" />
       </Panel>
     </Panel>
     <Panel>
       <Panel id="arcana_2_pnl" class="arcana_inner">
-        <Button id="arcana_2_btn" class="arcana_take" />
+        <Button id="arcana_2_btn" class="take_arcana" />
       </Panel>
     </Panel>
     <Panel>
       <Panel id="arcana_3_pnl" class="arcana_inner">
-        <Button id="arcana_3_btn" class="arcana_take" />
+        <Button id="arcana_3_btn" class="take_arcana" />
       </Panel>
     </Panel>
   </HorizontalLayout>

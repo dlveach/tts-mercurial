@@ -134,11 +134,18 @@ C.default_cast_params = {
   debug        = false,
 }
 --[[ arcana data for scoring --]]
-C.arcanas = {}
-C.arcanas["8f529c"] = {
-  face_up = {
+-- C.arcanas = {}
+C.arcana_pos = {
+  {-8.23, 1.5, 8.75},
+  {-3.12, 1.5, 8.75},
+  {1.99, 1.5, 8.75},
+}
+--TODO: move this to cards.ttslua?
+C.arcanas = {
+  {
+    guid = "937407",
     name = "Lizard",
-    requirement = { --future
+    requirement = {
       elements = {"fire","lightning","Earth"},
     },
     base_vp = 2,
@@ -146,11 +153,16 @@ C.arcanas["8f529c"] = {
       vp = 1,
       spell_type = "fire",
       count = 2
-    }
+    },
+    desc = {
+      requirement="Spell combination has Fire, Lightning, and Earth Spells.",
+      reward="2VP + 1Vp for every 2 Fire Spells cast.",
+    },
   },
-  face_down = {
+  {
+    guid = "9654ee",
     name = "Dragon",
-    requirement = { --future
+    requirement = {
       elements = {"Water","Lightning","Earth"},
     },
     base_vp = 2,
@@ -158,13 +170,16 @@ C.arcanas["8f529c"] = {
       vp = 1,
       spell_type = "water",
       count = 2
-    }
-  }
-}
-C.arcanas["5f944b"] = {
-  face_up = {
+    },
+    desc = {
+      requirement="Spell combination has Water, Lightning, and Earth Spells.",
+      reward="2VP + 1Vp for every 2 Water Spells cast.",
+    },
+  },
+  {
+    guid = "7d8147",
     name = "Cat",
-    requirement = { --future
+    requirement = {
       cards = 4,
     },
     base_vp = 2,
@@ -172,11 +187,16 @@ C.arcanas["5f944b"] = {
       vp = 1,
       spell_type = "any",
       count = 4
-    }
+    },
+    desc = {
+      requirement="Spell combination has 4 or more Spells.",
+      reward="2VP + 1VP for every 4 Spells cast.",
+    },
   },
-  face_down = {
+  {
+    guid="83a1e9",
     name = "Stallion",
-    requirement = { --future
+    requirement = {
       spell_power = {ruin = 27, restore = 38}
     },
     base_vp = 2,
@@ -185,13 +205,16 @@ C.arcanas["5f944b"] = {
       spell_type = "slot_count",
       slot_count = 4,
       count = 3
-    }
-  }
-}
-C.arcanas["a94aad"] = {
-  face_up = {
+    },
+    desc = {
+      requirement="Spell combination either inflicts at least 27 Ruin or grants at least 38 Restore.",
+      reward="2VP + 2VP for every 3 Spells that have 4 or more dice slots.",
+    },
+  },
+  {
+    guid = "57f2e6",
     name = "Phoenix",
-    requirement = { --future
+    requirement = {
       aether_mod = 3,
       aether = 1,
     },
@@ -200,11 +223,16 @@ C.arcanas["a94aad"] = {
       vp = 1,
       spell_type = "aether_mod",
       count = 2
-    }
+    },
+    desc = {
+      requirement="Spell combination has at least 3 Spells that are improved by Aether and you have the Aether element.",
+      reward="2VP + 1VP for every 2 Spells cast that can be improved by Aether.",
+    },
   },
-  face_down = {
+  {
+    guid = "966773",
     name = "Owl",
-    requirement = { --future
+    requirement = {
       myst = 12,
     },
     base_vp = 2,
@@ -212,9 +240,14 @@ C.arcanas["a94aad"] = {
       vp = 1,
       spell_type = "not_aether",
       count = 3
-    }
+    },
+    desc = {
+      requirement="Spell combination achieves Equilibrium and results in at least 12 Myst.",
+      reward="2VP + 1VP for every 3 Spells that are NOT improved by Aether.",
+    },
   }
 }
+
 C.pos = {}
 C.rot = {}
 C.pos.spells = {}

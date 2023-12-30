@@ -1,4 +1,4 @@
---[[ Card definitions ]]
+--[[ Card definitions TODO: use g_ notation on globals ]]
 
 spells = {
   {
