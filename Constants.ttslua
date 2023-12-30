@@ -134,7 +134,6 @@ C.default_cast_params = {
   debug        = false,
 }
 --[[ arcana data for scoring --]]
--- C.arcanas = {}
 C.arcana_pos = {
   {-8.23, 1.5, 8.75},
   {-3.12, 1.5, 8.75},
@@ -271,7 +270,6 @@ C.pos.heroics[3] = {-2.98, 1.07, 3.25}
 C.pos.heroics[4] = {0.15, 1.07, 3.25}
 C.pos.heroics[5] = {3.27, 1.07, 3.25}
 C.pos.heroics[6] = {6.40, 1.07, 3.25}
-C.pos.myst_rune = {2.51, 1.06, 12.54}
-C.rot.myst_rune = {0.00, 180.00, 0.00}
+C.pos.myst_rune = {7.25, 1.06, 15.02} --{2.51, 1.06, 12.54}
 C.die_elements = {"Fire", "Earth", "Aether", "Void", "Lightning", "Water"}
 C.die_flip = {6,5,4,3,2,1}

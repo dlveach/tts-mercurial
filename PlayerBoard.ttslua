@@ -291,6 +291,21 @@ function placeArcana(params)
   arcana.setPosition(pos)
 end
 
+--[[ Place the specified myst rune relative to this board. ]]
+function placeMystRune(params)
+  assert(params, board_name..":placeMystRune(): missing params")
+  if env.test.trace then log(board_name..":placeArcana() "..tostring(params.guid)) end
+  if env.test.debug then
+    log(params)
+    log(myst_rune_world_location)
+  end
+  local rune = getObjectFromGUID(params.guid)
+  assert(rune, board_name..":placeMystRune():failed to locate obj for guid "..tostring(params.guid))
+  rune.setLock(false)
+  rune.setPosition(myst_rune_world_location)
+  Wait.frames(function() rune.setLock(true) end, 1)
+end
+
 --[[ Called from Global to get used alterations deck/card if any.
     Returns object (card or deck).  Returns nil if nothing there.
 --]]

@@ -834,7 +834,7 @@
     </TableLayout>
   </Panel>
 
-  <!-- Cast Consolation panel -->
+  <!-- Cast Myst Selection panel -->
   <Panel id="cast_myst_pnl" active="false"
     class="draggable dark viewport"
     offsetXY="0 150"
@@ -873,6 +873,34 @@
           <HorizontalLayout spacing="40">
             <Button id="cast_myst_restore" onClick="castMystHandler" text="Restore"/>
             <Button id="cast_myst_ruin" onClick="castMystHandler" text="Ruin"/>
+          </HorizontalLayout>
+        </Cell>
+      </Row>
+    </TableLayout>
+  </Panel>
+
+  <!-- Cast Myst Rune choice panel -->
+  <Panel id="cast_mystrune_pnl" active="false"
+    class="draggable dark viewport"
+    offsetXY="0 150"
+    padding = "10"
+    height="300" width="420">
+    <TableLayout class="dark viewport">
+      <Row preferredHeight="50">
+        <Cell>
+          <Text class="hud_header" fontSize="18" text="Do you wish to use your Myst Rune?"/>
+        </Cell>
+      </Row>
+      <Row preferredHeight="150">
+        <Cell padding="0 0 0 0">
+          <Image id="cast_mystrune_img" image="MystRune_Restore"/>
+        </Cell>
+      </Row>
+      <Row preferredHeight="70">
+        <Cell padding="40 40 15 5">
+          <HorizontalLayout spacing="40">
+            <Button id="cast_mystrune_no" onClick="castMystruneHandler" text="No"/>
+            <Button id="cast_mystrune_yes" onClick="castMystruneHandler" text="Yes"/>
           </HorizontalLayout>
         </Cell>
       </Row>

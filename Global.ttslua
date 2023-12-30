@@ -3,10 +3,8 @@
 Work items for converstion of beta to production version:
 
   --BUG: something wrong with image asset "Spell-4".  Will not load.
-  --BUG: mystcaller doesn't get myst ruin on start
-        --TODO: lots to do around myst ruin, design a UI for it showing both actions,
-        --TODO: have buttons to activate conversion power, hopefully reuse alteration dialog!
-        --TODO: take into account when designing spell cast
+
+  --TODO: have button to activate conversion power, hopefully reuse alteration dialog!
 
   --TODO: move updateSpellButtons() and updateAlterationButtons() into updateHUD()
           NOTE: would have to only run those for the active player.
@@ -20,8 +18,6 @@ Work items for converstion of beta to production version:
           data as state.  Maybe even get rid of UI state in GD all together and end need for
           UI_setAttribute wrapper.
 
-  --TODO: IN WORK: automate spell cast
-        - Just need to add in myst rune
 
   - TODO: start options in UI start game panel
   - TODO: TEST: save/load/rewind
@@ -140,11 +136,13 @@ function onLoad(saved_data)
     UI_setAttribute("alteration_card_pnl","visibility","Pink")
     UI_setAttribute("cast_cons_pnl","visibility","Pink")
     UI_setAttribute("cast_myst_pnl","visibility","Pink")
+    UI_setAttribute("cast_mystrune_pnl","visibility","Pink")
     Wait.frames(function()
       UI_setAttribute("spell_card_pnl","active",true)
       UI_setAttribute("alteration_card_pnl","active",true)
       UI_setAttribute("cast_cons_pnl","active",true)
       UI_setAttribute("cast_myst_pnl","active",true)
+      UI_setAttribute("cast_mystrune_pnl","active",true)
     end, 10)
     UI_setAttribute("start_pnl", "active",true)
   end
@@ -379,7 +377,7 @@ function setPlayerClass(params)
         restore = 0,
         ruin = 0,
       },
-      myst_ruin = 0,
+      mystrune = {restore=0,ruin=0},
       card_map = {
         base_spells = {{guid="",id=""},{guid="",id=""},{guid="",id=""},{guid="",id=""},{guid="",id=""},},
         link_spells = {{},{},{},{},{},},
@@ -549,21 +547,27 @@ function finalSetup()
 
   -- Place the random selected myst rune (if Mystcaller not taken)
   if (math.random(1, 10) > 5) then
-    GD.game.myst_rune = C.guids.myst_rune_1
+    GD.game.mystrune = C.guids.myst_rune_1
+    GD.game.mystrune_type = "Restore"
     getObjectFromGUID(C.guids.myst_rune_2).destruct()
   else
-    GD.game.myst_rune = C.guids.myst_rune_2
+    GD.game.mystrune = C.guids.myst_rune_2
+    GD.game.mystrune_type = "Ruin"
     getObjectFromGUID(C.guids.myst_rune_1).destruct()
   end
   local mystcaller = false
   for _,p in pairs(GD.game.players) do
-    if p.class == "Mystcaller" then mystcaller = true end
+    if p.class == "Mystcaller" then
+      p.mystrune = GD.game.mystrune
+      local board = getObjectFromGUID(p.player_board)
+      board.call("placeMystRune", {guid=GD.game.mystrune})
+      mystcaller = true
+    end
   end
   if not(mystcaller) then
-    local myst_rune = getObjectFromGUID(GD.game.myst_rune)
-    myst_rune.setPositionSmooth(C.pos.myst_rune)
-    myst_rune.setRotation(C.rot.myst_rune)
-    myst_rune.setLock(false)
+    local myst_rune = getObjectFromGUID(GD.game.mystrune)
+    myst_rune.setPosition(C.pos.myst_rune)
+    Wait.frames(function() myst_rune.setLock(true) end, 1)
   end
 
   -- Random select 3 arcanas
@@ -1082,6 +1086,9 @@ function updateSpellPower(pcol)
   --Acuity
   s.gross_restore = s.gross_restore + s.acuity.restore
   s.gross_ruin = s.gross_ruin + s.acuity.ruin
+  --Mystrune
+  s.gross_restore = s.gross_restore + s.mystrune.restore
+  s.gross_ruin = s.gross_ruin + s.mystrune.ruin
   --totals
   s.net_restore = 0
   s.net_ruin = 0
@@ -1583,6 +1590,12 @@ function alterationDlgHandler(player, button, id)
             end
           end
           satisfied = satisfied and count >= r.amount
+        elseif r.type == "Owned" then
+          local found = false
+          for _,d in ipairs(pdata.dice) do
+            if contains(r.value, C.die_elements[d.value]) then found = true; break end
+          end
+          satisfied = satisfied and found
         elseif r.type == "Acuity" then
           satisfied = satisfied and pdata.acuity >= r.amount
         elseif r.type == "Spell" then
@@ -2260,25 +2273,25 @@ end
 
 --////////// Spell Cast stuffs ////////////
 
---[[ Handler for the Cast spell button. ] ]]  --TODO: myst rune
+--[[ Handler for the Cast spell button. ] ]]  --TODO: myst rune dialog
 function castSpellBtn(player, button, id)
   if env.test.trace then log("Global: castSpellBtn() "..player.color..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local pdata = GD.game.players[player.color]
-
-  log("TODO: check here for mystrune mod ???  Another dialog???")
-
   --disable all action buttons for player
   pdata.casting = true
   updateSpellButtons(false)
   updateAlterationButtons(false)
   updateHUD()
   --show appropriate dialog
-  local restore = pdata.spell_power.net_restore
-  local ruin = pdata.spell_power.net_ruin
-  if pdata.spell_power.myst > 0 then
-    UI_setAttribute("cast_myst_pnl","visibility",player.color)
+  if pdata.mystrune ~= nil then
+    UI_setAttribute("cast_mystrune_img","image","MystRune_"..GD.game.mystrune_type)
+    UI_setAttribute("cast_mystrune_pnl","visibility",player.color)
+  elseif pdata.spell_power.myst > 0 then
+    showMystDialog(player.color)
   else
+    local restore = pdata.spell_power.net_restore
+    local ruin = pdata.spell_power.net_ruin
     updateCast(restore, ruin, player.color)
   end
 end
@@ -2359,6 +2372,15 @@ function takeHeroicBtn(player, button, id)
     --reset player state to cancel cast
     pdata.casting = nil
     pdata.arcanas_won = nil
+    if pdata.spell_power.mystrune.restore > 0 or pdata.spell_power.mystrune.ruin > 0 then
+      --return and reset the mystrune HACK: is there a better way around this?
+      local board = getObjectFromGUID(pdata.player_board)
+      assert(board, "Global:takeHeroicBtn() could not locate player board")
+      board.call("placeMystRune", {guid=GD.game.mystrune})
+      pdata.spell_power.mystrune.restore = 0
+      pdata.spell_power.mystrune.ruin = 0
+      pdata.mystrune = GD.game.mystrune
+    end
     updateHUD()
     updateSpellButtons(true)
     updateAlterationButtons(true)
@@ -2464,9 +2486,13 @@ end
 
 --[[ Display the myst spell power selection dialog to a player. ]] --TODO: implement
 function showMystDialog(pcol)
-  log("TODO: showMystDialog() ")
+  if env.test.trace then log("Global:showMystDialog() "..tostring(pcol)) end
+  local pdata = GD.game.players[pcol]
+  UI_setAttribute("cast_cons_spell_power_txt","text",tostring(pdata.spell_power.myst))
+  UI_setAttribute("cast_myst_pnl","visibility",pcol)
 end
 
+--[[ Handler for the Myst select spell type dialog.]]
 function castMystHandler(player, button, id)
   if env.test.trace then log("Global:castMystHandler() "..tostring(player.color)..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
@@ -2495,6 +2521,33 @@ function castMystHandler(player, button, id)
     if type == "restore" then restore = 34
     else ruin = 24 end
   end
+  updateCast(restore, ruin, player.color)
+end
+
+--[[ Handler for the Myst Rune choice dialog.]]
+function castMystruneHandler(player, button, id)
+  if env.test.trace then log("Global:castMystruneHandler() "..tostring(player.color)..", "..tostring(id)) end
+  if player.color ~= GD.game.player_order[GD.game.current_player] then return end
+  local pdata = GD.game.players[player.color]
+  local restore = pdata.spell_power.net_restore
+  local ruin = pdata.spell_power.net_ruin
+  local action = Split(id,"_")[3]
+  if action == "no" then
+    --TODO: anything?
+  elseif action == "yes" then
+    if GD.game.mystrune_type == "Restore" then
+      restore = restore + 3
+      pdata.spell_power.mystrune = {restore=3,ruin=0}
+    else
+      ruin = ruin + 2
+      pdata.spell_power.mystrune = {restore=0,ruin=2}
+    end
+    returnMystRune(player.color)
+  else
+    assert(false, "Global:castMystruneHandler() unknown action id")
+  end
+  UI_setAttribute("cast_mystrune_pnl","visibility","Pink")
+  updateHUD()
   updateCast(restore, ruin, player.color)
 end
 
@@ -2529,6 +2582,18 @@ function castCleanup(pcol)
   returnUsedAlterations(pcol)
   --return player's spent mana
   pdata.mana = pdata.mana + pdata.spent_mana
+  --if myst, give the mystrune, clear other players mystrune
+  if pdata.spell_power.myst > 0 then
+    for c,p in pairs(GD.game.players) do
+      if c == pcol then
+        p.mystrune = GD.game.mystrune
+        local board = getObjectFromGUID(p.player_board)
+        board.call("placeMystRune", {guid=GD.game.mystrune})
+      else
+        p.mystrune = nil
+      end
+    end
+  end
   --reset player data structure
   pdata.spent_mana = 0
   pdata.casting = false
@@ -2544,7 +2609,7 @@ function castCleanup(pcol)
       restore = 0,
       ruin = 0,
     },
-    myst_ruin = 0,
+    mystrune = {restore=0,ruin=0},
     card_map = {
       base_spells = {{guid="",id=""},{guid="",id=""},{guid="",id=""},{guid="",id=""},{guid="",id=""},},
       link_spells = {{},{},{},{},{},},
@@ -2563,7 +2628,7 @@ function castCleanup(pcol)
   --reroll player's dice and set un-allocated
   for _,d in ipairs(pdata.dice) do
     local val = math.random(1,6)
-    d.val = val
+    d.value = val
     d.element = C.die_elements[val]
     d.allocated = false
   end
@@ -2572,11 +2637,19 @@ end
 
 --////////// Support Functions ////////////
 
+function returnMystRune(pcol)
+  if env.test.trace then log("Global:returnMystRune() "..tostring(pcol)) end
+  local o = getObjectFromGUID(GD.game.mystrune)
+  assert(o, "")
+  o.setPosition(C.pos.myst_rune)
+  GD.game.players[pcol].mystrune = nil
+end
+
 --[[ Called from playerBoard.  Used in the edit acuity spell dialog.
     See Related: updateAcuitySpell()
 --]]
 function getAcuitySpell(pcol)
-  if env.test.trace then log("Global: getAcuitySpell() "..tostring(pcol)) end
+  if env.test.trace then log("Global:getAcuitySpell() "..tostring(pcol)) end
   local pdata = GD.game.players[pcol]
   local acuity_spell = {
     acuity = pdata.acuity,
@@ -2673,6 +2746,10 @@ function updateHUD(player_color)
     class_board.call("updateUI",pdata)
     local player_board = getObjectFromGUID(pdata.player_board)
     player_board.call("updateUI",pdata)
+    --handle case of myst rune owned by player
+    if pdata.mystrune ~= nil then
+      log("TODO: updateHUD() enable myst rune button")
+    end
   end
   if player_color ~= nil then
     updatePlayerHUD(indexOf(GD.game.player_order, player_color), player_color)
