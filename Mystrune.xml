@@ -1,0 +1,19 @@
+<XmlLayout xmlns="http://www.w3schools.com"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:noNamespaceSchemaLocation="../../../Configuration/XmlLayout.xsd">
+
+<Include src="XML_defaults.xml"/>
+
+<Panel id="ui_panel" active="false"
+  height="300" width="600"
+  position="-800 7 0"
+  rotation="0 0 180"
+  scale="0.5 0.5">
+  <Button
+    height="360" width="900"
+    onClick="activate"
+    text="Activate"
+    fontSize="150"/>
+</Panel>
+
+</XmlLayout>

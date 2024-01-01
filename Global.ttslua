@@ -2,29 +2,29 @@
 
 Work items for converstion of beta to production version:
 
+  --BUG: convert enchant spell does not convert dice spell power (probably also not acuity spell power)
+          coded this to only affect card spell power.  Confirm what's right with rules.
   --BUG: something wrong with image asset "Spell-4".  Will not load.
 
-  --TODO: have button to activate conversion power, hopefully reuse alteration dialog!
+  --TODO: OPTIMIZE add discarded alteration cards counter to player data.  Check on playerboard
+        ui update to avoid locating deck with physics everyt time.  Only do if count > 0.
+
+  --TODO: change arcanas into cards, move data into cards.ttslua
 
   --TODO: move updateSpellButtons() and updateAlterationButtons() into updateHUD()
           NOTE: would have to only run those for the active player.
           Effectively make updateHUD into updateUI (the entire UI)
-  --TODO: call UI updates on game restore.  Change UI_setAttribute back to UI.setAttribute
-          in UI update functions since persistent state no longer needed there.
-          NOTE: combine this with above.
-  --TODO: create active_player state in player data.  Use in UI update to show active panel on
-          playerboard.  See if this (along with above) gets rid of object_UI_setAttribute.
-  --TODO: overall, above things move most if not all UI update into game restore using player
-          data as state.  Maybe even get rid of UI state in GD all together and end need for
-          UI_setAttribute wrapper.
-
+  --TODO: Mostly done.  Call UI updates on game restore.
+  --TODO: Change UI_setAttribute back to UI.setAttribute in UI update functions,
+          persistent state no longer needed there.
 
   - TODO: start options in UI start game panel
-  - TODO: TEST: save/load/rewind
+
+  --TODO: eleminate redundancy in Spell card info and images.  Bunch of same.
 
 Future possible stuff for greater enhancement
 
-  --TODO: automate assinging resources to spell cards???  At least for fixed dice slots.
+  --TODO: automate assigning resources to spell cards???  At least for fixed dice slots.
 
 ****************************************************************************** ]]
 
@@ -137,12 +137,14 @@ function onLoad(saved_data)
     UI_setAttribute("cast_cons_pnl","visibility","Pink")
     UI_setAttribute("cast_myst_pnl","visibility","Pink")
     UI_setAttribute("cast_mystrune_pnl","visibility","Pink")
+    UI_setAttribute("activate_mystrune_pnl","visibility","Pink")
     Wait.frames(function()
       UI_setAttribute("spell_card_pnl","active",true)
       UI_setAttribute("alteration_card_pnl","active",true)
       UI_setAttribute("cast_cons_pnl","active",true)
       UI_setAttribute("cast_myst_pnl","active",true)
       UI_setAttribute("cast_mystrune_pnl","active",true)
+      UI_setAttribute("activate_mystrune_pnl","active",true)
     end, 10)
     UI_setAttribute("start_pnl", "active",true)
   end
@@ -215,6 +217,11 @@ function restoreGameState()
   if GD.game.started then
     updateHUD()
     local pcol = GD.game.player_order[GD.game.current_player]
+    --handle mystrune token
+    if GD.game.players[pcol].mystrune ~= nil then
+      local o = getObjectFromGUID(GD.game.players[pcol].mystrune)
+      o.call("assign",pcol)
+    end
     updateSpellButtons(true)  --TODO: move into update HUD?
     updateAlterationButtons(true)   --TODO: move into update HUD?
   end
@@ -359,7 +366,6 @@ function setPlayerClass(params)
     end
     player.mana = setup.start_mana
     player.spent_mana = 0
-    -- player.mana_assigned = 0
     player.acuity = setup.start_acuity
     player.sigils = { red = 0, blue = 0, green = 0, yellow = 0 }
     player.sigils[setup.board_sigil] = 1
@@ -393,6 +399,7 @@ function setPlayerClass(params)
       net_ruin = 0,
       myst = 0,
     }
+    --player score data structure
     player.score = {
       heroics = 0,
       arcanas = 0,
@@ -400,6 +407,10 @@ function setPlayerClass(params)
       prestige = 0,
       total = 0,
     }
+    --action dialog handler stuffs
+    player.alteration_action = nil
+    player.casting = false
+    player.mystrune_action = nil
     --setup position color bar
     local color_bar = getObjectFromGUID(player.color_bar)
     assert(color_bar,"Global:setPlayerClass(): unable to get color bar "..tostring(player.color_bar))
@@ -556,11 +567,13 @@ function finalSetup()
     getObjectFromGUID(C.guids.myst_rune_1).destruct()
   end
   local mystcaller = false
-  for _,p in pairs(GD.game.players) do
+  for pcol,p in pairs(GD.game.players) do
     if p.class == "Mystcaller" then
       p.mystrune = GD.game.mystrune
       local board = getObjectFromGUID(p.player_board)
       board.call("placeMystRune", {guid=GD.game.mystrune})
+      local o = getObjectFromGUID(p.mystrune)
+      o.call("assign",pcol)
       mystcaller = true
     end
   end
@@ -665,7 +678,10 @@ function takeUsedAlterationsBtn(player, button, id)
   local index = indexOf(pdata.actions.take, "any")
   if index > 0 then table.remove(pdata.actions.take, index)
   else log("WARN: takeUsedAlterationsBtn(): unable to decrement take actions") end
+  pdata.cast_allowed = false
   updateHUD()
+  updateAlterationButtons(true)
+  updateSpellButtons(true)
 end
 
 --[[ Return all used alteration cards to player's hand and set them unused. ]]
@@ -732,18 +748,19 @@ function startPlayerTurn(pcol)
   if env.test.trace then log("Global:startPlayerTurn() "..tostring(pcol)) end
   if env.test.debug then log(GD.game.players[pcol]) end
   if pcol ~= GD.game.player_order[GD.game.current_player] then return end
-  local player = GD.game.players[pcol]
-  player.actions.take = {"any"}
-  player.actions.play = 1
+  local pdata = GD.game.players[pcol]
+  pdata.actions.take = {"any"}
+  pdata.actions.play = 1
   object_UI_setAttribute(g_lower, "recycle_spell_pnl", "active", true)
   for i=1,6 do
     object_UI_setAttribute(g_lower, "alterations_button_"..tostring(i).."_pnl", "active", true)
   end
-  updateAlterationButtons(true)
-  updateSpellButtons(true)
-  player.active = true
+  pdata.active = true
+  pdata.cast_allowed = true
   if GD.env.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
   updateHUD()
+  updateAlterationButtons(true)
+  updateSpellButtons(true)
 end
 
 --[[ Set the next player in player_order.
@@ -753,8 +770,8 @@ function setNextPlayer()
   --disable previous player stuffs
   updateAlterationButtons(false)
   updateSpellButtons(false)
-  local player = GD.game.players[GD.game.player_order[GD.game.current_player]]
-  player.active = false
+  local pdata = GD.game.players[GD.game.player_order[GD.game.current_player]]
+  pdata.active = false
   --advance curent player
   if GD.game.current_player == #GD.game.player_order then
     GD.game.current_player = 1
@@ -1200,7 +1217,7 @@ function onObjectDrop(pcol, obj)
             if pcol == current and GD.game.players[pcol].actions.play > 0 then
               local index = tonumber(obj.getGMNotes())
               obj.setLock(true)
-              showAlterationDlg(obj.getGUID(), index, pcol)
+              showAlterationDlg(obj.getGUID(), index)
             else
               obj.deal(1,pcol)
               if pcol == current and GD.env.verbose then broadcastToColor("You have no more play actions.", pcol) end
@@ -1315,21 +1332,21 @@ function takeAlterationBtn(player, button, id)
   pdata.acuity = pdata.acuity + GD.game.alterations[index].acuity
   local index = indexOf(pdata.actions.take, "any")
   if index > 0 then table.remove(pdata.actions.take, index)
-  else
-    log("WARN: takeAlterationBtn(): unable to decrement take actions")
-  end
-  updateAlterationButtons(true)
+  else log("WARN: takeAlterationBtn(): unable to decrement take actions") end
+  pdata.cast_allowed = false
   updateHUD()
+  updateAlterationButtons(true)
   updateSpellButtons(true)
 end
 
 --[[ Show the initial Alteration card dialog when playier plays an alteration card. ]]
-function showAlterationDlg(guid, card_index, pcol)
-  if env.test.trace then log("Global: showAlterationDlg() "..tostring(guid)..", "..tostring(card_index)..", "..pcol) end
+function showAlterationDlg(guid, card_index)
+  if env.test.trace then log("Global: showAlterationDlg() "..tostring(guid)..", "..tostring(card_index)) end
   if env.test.debug then assert(card_index and card_index > 0 and card_index < 45,"ERROR: showAlterationDlg(): invalid card index") end
-  -- set up data structure for dialog
-  GD.game.alteration_action = {}
-  local alt = GD.game.alteration_action
+  local pcol = GD.game.player_order[GD.game.current_player]
+  local pdata = GD.game.players[pcol]
+  pdata.alteration_action = {}
+  local alt = pdata.alteration_action
   alt.player_color = pcol
   alt.card_id = card_index
   alt.card_guid = guid
@@ -1347,13 +1364,17 @@ function showAlterationDlg(guid, card_index, pcol)
   if env.test.debug then log(alt) end
   updateAlterationDlg()
   UI_setAttribute("alteration_card_pnl","visibility",pcol)
+  updateAlterationButtons(false)
+  updateSpellButtons(false)
+  updateHUD(pcol)
 end
 
 --[[ Update the alteration dialog with current data structure. ]]
 function updateAlterationDlg()
   if env.test.trace then log("Global: updateAlterationDlg()") end
-  local alt = GD.game.alteration_action
-  local pcol = alt.player_color
+  local pcol = GD.game.player_order[GD.game.current_player]
+  local pdata = GD.game.players[pcol]
+  local alt = pdata.alteration_action
   if alt.state == "select_action" then
     UI_setAttribute("alteration_card_img","image","Alt-"..tostring(alt.card_id))
     local card = alterations[alt.card_id]
@@ -1371,7 +1392,8 @@ function updateAlterationDlg()
       UI_setAttribute("alteration_primary_or_action_txt","text","undefined")
     end
     local secondary = card.secondary ~= nil
-    if secondary and card.secondary.aetherflow then secondary = secondary and GD.game.players[pcol].aetherflow ~= nil end
+    -- if secondary and card.secondary.aetherflow then secondary = secondary and GD.game.players[pcol].aetherflow ~= nil end
+    if secondary and card.secondary.aetherflow then secondary = secondary and pdata.aetherflow ~= nil end
     if secondary then
       UI_setAttribute("alteration_secondary_action_txt","text","SECONDARY: "..card.secondary.desc)
     end
@@ -1383,7 +1405,6 @@ function updateAlterationDlg()
     UI_setAttribute("alteration_done_pnl","active",false)
     UI_setAttribute("alteration_next_pnl","active",false)
     UI_setAttribute("alteration_cancel_pnl","active",true)
-
   elseif alt.state == "pay_acuity" then
     UI_setAttribute("alteration_available_acuity_txt","text",tostring(alt.acuity_available))
     UI_setAttribute("alteration_paid_acuity_txt","text",tostring(alt.acuity_paid))
@@ -1392,7 +1413,6 @@ function updateAlterationDlg()
     UI_setAttribute("alteration_select_action_tbl","active",false)
     UI_setAttribute("alteration_done_pnl","active",false)
     UI_setAttribute("alteration_cancel_pnl","active",true)
-
   elseif alt.state == "convert" then
     UI_setAttribute("convert_to_dice_title_txt","text","Converted Dice:")
     UI_setAttribute("alteration_select_action_tbl","active",false)
@@ -1416,7 +1436,6 @@ function updateAlterationDlg()
     UI_setAttribute("alteration_done_pnl","active", #alt.to_dice > 0 )
     UI_setAttribute("alteration_cancel_pnl","active",true)
     UI_setAttribute("alteration_next_pnl","active",false)
-
   elseif alt.state == "reroll" or alt.state == "flip" then
     if alt.state == "reroll" then
       UI_setAttribute("convert_to_dice_title_txt","text","Dice to Re-Roll:")
@@ -1443,7 +1462,6 @@ function updateAlterationDlg()
     UI_setAttribute("alteration_done_pnl","active", #alt.to_dice > 0 )
     UI_setAttribute("alteration_cancel_pnl","active",true)
     UI_setAttribute("alteration_next_pnl","active",false)
-
   else
     log("ERROR: updateAlterationDlg() unknown alteration dialog state")
   end
@@ -1457,8 +1475,9 @@ function alterationDlgHandler(player, button, id)
   if env.test.trace then log("Global: alterationDlgHandler() "..player.color..", "..tostring(id)..", "..tostring(button)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local action = Split(id,"_")[2]
-  local alt = GD.game.alteration_action
+  -- local alt = GD.game.alteration_action
   local pdata = GD.game.players[player.color]
+  local alt = pdata.alteration_action
   local card = alterations[alt.card_id]
   assert(card, "ERROR: alterationsDlgHandler() cannot locate card data for id "..tostring(alt.card_id))
   local close_dialog = true
@@ -1688,8 +1707,11 @@ function alterationDlgHandler(player, button, id)
     assert(c, "ERROR: alterationDlgHandler(): unable to locate card object "..tostring(card.guid))
     c.setLock(false)
     c.deal(1,player.color)
-    GD.game.alteration_action = {}
+    pdata.alteration_action = nil
     UI_setAttribute("alteration_card_pnl","visibility","Pink")
+    updateHUD(player.color)
+    updateSpellButtons(true)
+    updateAlterationButtons(true)
     return
   elseif action == "from" then
     local index = tonumber(Split(id,"_")[4])
@@ -1746,6 +1768,7 @@ function alterationDlgHandler(player, button, id)
         end
       end
     end
+    pdata.cast_allowed = false
     pdata.actions.play = pdata.actions.play - 1
     local card = getObjectFromGUID(card.guid)
     assert(card, "alterationDlgHandler(): could not instantiate card object")
@@ -1759,10 +1782,10 @@ function alterationDlgHandler(player, button, id)
     local board = getObjectFromGUID(pdata.player_board)
     board.call("placeUsedAlterationCard",{guid=card.guid})
     UI_setAttribute("alteration_card_pnl","visibility","Pink")
+    pdata.alteration_action = nil
     updateHUD()
     updateAlterationButtons(true)
     updateSpellButtons(true)
-    GD.game.alteration_action = {}
   else
     updateAlterationDlg()
   end
@@ -1782,6 +1805,146 @@ function updateAlterationButtons(state)
     if GD.game.alterations[i].card_id == 0 then state = false end
     object_UI_setAttribute(g_lower, "alterations_button_"..tostring(i).."_pnl", "active", s)
   end
+end
+
+--////////// Mystrune dialog ////////////
+
+function mystruneActivate(params)
+  assert(params,"Global:mystruneActivate(): missing params")
+  if env.test.trace then log("Global: mystruneActivate() "..tostring(params.player_color)..", "..tostring(tostring(params.action))) end
+  if env.test.debug then log(params) end
+  local pcol = params.player_color
+  if pcol ~= GD.game.player_order[GD.game.current_player] then return end
+  local pdata = GD.game.players[pcol]
+  if pdata.mystrune == nil then return end  --doesn't own it
+  --setup dlg data and show dialog
+  local to = {}
+  local action = params.action
+  if action == "Fire_Lightning" then
+    to = {"Fire","Lightning",}
+  elseif action == "Water_Earth" then
+    to = {"Water","Earth",}
+  else
+    log("ERROR: mystruneActivate(): unknown action")
+    return
+  end
+  -- GD.game.mystrune_action = {
+  pdata.mystrune_action = {
+    player_color = pcol,
+    from_dice = {},
+    to = to,
+    to_dice = nil,
+  }
+  for i,d in ipairs(pdata.dice) do
+    if not(d.allocated) then
+      table.insert(pdata.mystrune_action.from_dice, {
+        p_index=i,
+        value=d.value,
+        element=d.element,
+        assigned=false,
+      })
+    end
+  end
+  for i=1,7 do
+    if i > #pdata.mystrune_action.from_dice then
+      UI.setClass("mystrune_from_die_"..tostring(i).."_img","image_inactive")
+    else
+      UI.setClass("mystrune_from_die_"..tostring(i).."_img","image_active")
+    end
+  end
+  updateMystruneActivateDlg()
+  UI_setAttribute("activate_mystrune_pnl","visibility",pcol)
+  updateHUD(pcol)
+  updateSpellButtons(false)
+  updateAlterationButtons(false)
+end
+
+--[[ Update the mystrune dialog from the dlg data structure. ]]
+function updateMystruneActivateDlg()
+  if env.test.trace then log("updateMystruneActivateDlg()") end
+  local pcol = GD.game.player_order[GD.game.current_player]
+  local pdata = GD.game.players[pcol]
+  local data = pdata.mystrune_action
+  for i,d in ipairs(data.from_dice) do
+    if d.assigned then
+      UI.setClass("mystrune_from_die_"..tostring(i).."_img","image_inactive")
+    else
+      UI_setAttribute("mystrune_from_die_"..tostring(i).."_img","image",d.element)
+      UI.setClass("mystrune_from_die_"..tostring(i).."_img","image_active")
+    end
+  end
+  if data.to_dice ~= nil then
+    UI_setAttribute("mystrune_to_die_img","image",data.to_dice.element)
+    UI.setClass("mystrune_to_die_img","image_active")
+  else
+    UI.setClass("mystrune_to_die_img","image_inactive")
+  end
+  UI_setAttribute("mystrune_done_pnl","active",data.to_dice ~= nil)
+end
+
+--[[ Handler for the mystrune activate dialog. ]]
+function mystruneActivateDlg(player, button, id)
+  if env.test.trace then log("Global:mystruneActivateDlg() "..player.color..", "..tostring(id)..", "..tostring(button)) end
+  if not(GD.game.started) then return end --TODO: remove after development
+  if player.color ~= GD.game.player_order[GD.game.current_player] then return end
+  local pdata = GD.game.players[player.color]
+  local data = pdata.mystrune_action
+  local action = Split(id,"_")[2]
+  if action == "cancel" then
+    pdata.mystrune_action = nil
+    UI_setAttribute("activate_mystrune_pnl","visibility","Pink")
+    updateHUD()
+    updateSpellButtons(true)
+    updateAlterationButtons(true)
+    return
+  elseif action == "done" then
+    if data.to_dice == nil then
+      log("WARN: Global:mystruneActivateDlg() to_dice is nil")  --DEBUG: shouldn't happen
+      return
+    end
+    -- local pdata = GD.game.players[player.color]
+    local index = data.to_dice.p_index
+    pdata.dice[index].value = data.to_dice.value
+    pdata.dice[index].element = data.to_dice.element
+    pdata.mystrune_action = nil
+    UI_setAttribute("activate_mystrune_pnl","visibility","Pink")
+    returnMystRune(player.color)
+    updateHUD()
+    updateSpellButtons(true)
+    updateAlterationButtons(true)
+    return
+  elseif action == "from" then
+    if data.to_dice ~= nil then return end
+    local index = tonumber(Split(id,"_")[4])
+    data.to_dice = {
+      index = index,
+      p_index = data.from_dice[index].p_index,
+      element = data.to[1],
+      value = indexOf(C.die_elements, data.to[1]),
+    }
+    data.from_dice[index].assigned = true
+  elseif action == "to" then
+    if data.to_dice == nil then
+      log("WARN: Global:mystruneActivateDlg() to_dice is nil")  --DEBUG: shouldn't happen
+      return
+    end
+    --only two elements in 'to', so just toggle
+    if button == "-1" then
+      if data.to_dice.element == data.to[1] then
+        data.to_dice.element = data.to[2]
+        data.to_dice.value = indexOf(C.die_elements, data.to[2])
+      else
+        data.to_dice.element = data.to[1]
+        data.to_dice.value = indexOf(C.die_elements, data.to[1])
+      end
+    else
+      data.from_dice[data.to_dice.index].assigned = false
+      data.to_dice = nil
+    end
+  else
+    assert(false, "Global:mystruneActivateDlg(): unexpected action id")
+  end
+  updateMystruneActivateDlg()
 end
 
 --////////// Take Spell dialog ////////////
@@ -1863,6 +2026,8 @@ function showPaySpellDlg(card_index, pcol)
     UI.setClass("spell_assigned_die_"..tostring(i).."_img","image_inactive")
   end
   updateSpellCostDlg()
+  local id = card.getGMNotes()
+  if id == "4" then id = "3" end --HACK: BUG: Spell-4 image won't load, Spell-3 is the same image
   local card_image = "Spell-"..card.getGMNotes()
   if env.test.debug then
     log("---- Clearing card image")
@@ -2021,6 +2186,7 @@ function spellCostHandler(player, button, id)
     Wait.frames(function()
       Wait.condition(function() card.setLock(true) end, function() return card.resting end)
     end,1)
+    updateHUD(player.color)
     updateSpellButtons(true)
     updateAlterationButtons(true)
   elseif action == "assign" then
@@ -2036,21 +2202,20 @@ function spellCostHandler(player, button, id)
     if mana > 0 then mana = mana - dlg.mana_discount end
     if acuity > 0 then acuity = acuity - dlg.acuity_discount end
     if env.test.debug then
-      log(dlg)
       log("Player payes "..tostring(mana).." Mana")
       log("Player payes "..tostring(acuity).." Acuity")
       for _,die in ipairs(dlg.assigned_dice) do
         log("Player pays die at index: "..tostring(die.index)..", "..die.element)
       end
     end
-    local p = GD.game.players[player.color]
-    local board = getObjectFromGUID(p.player_board)
+    local pdata = GD.game.players[player.color]
+    local board = getObjectFromGUID(pdata.player_board)
     assert(board, "Global:spellCostHandler(): assign: missing board")
     local card = getObjectFromGUID(GD.game.spells[dlg.card_index].card_guid)
     assert(card,"Global:spellCostHandler(): assign: missing spell card object")
     card.setLock(false)
     board.call("placeSpellCard", {guid=card.getGUID()})
-    table.insert(p.active_spell_cards,
+    table.insert(pdata.active_spell_cards,
     {
       card_id=GD.game.spells[dlg.card_index].card_id,
       guid=card.getGUID()
@@ -2059,10 +2224,37 @@ function spellCostHandler(player, button, id)
     local data = spells[tonumber(card.getGMNotes())]
     local params = {
       guid = card.getGUID(),
-      map = p.spell_power.card_map,
+      map = pdata.spell_power.card_map,
       card_data = data
     }
     if data.option then setSpellCardDecal(card, player.color) end
+    --player data adustments and UI updates
+    GD.game.spells[dlg.card_index].card_id = 0
+    GD.game.spells[dlg.card_index].card_guid = ""
+    pdata.mana = pdata.mana - mana
+    pdata.spent_mana = pdata.spent_mana + mana
+    pdata.acuity = pdata.acuity - acuity
+    for  _,die in ipairs(dlg.assigned_dice) do
+      pdata.dice[die.index].allocated = true
+    end
+    local index = #pdata.actions.take
+    for i,take in ipairs(pdata.actions.take) do
+      if take == "spell" then index=i; break end --priortize remove spell take
+    end
+    table.remove(pdata.actions.take, index)
+    pdata.cast_allowed = false
+    UI_setAttribute("spell_card_pnl","visibility","Pink")
+    if #pdata.actions.take == 0 then  --TODO: move all this to updateHUD()?
+      updateSpellButtons(false)
+      updateAlterationButtons(false)
+      object_UI_setAttribute(g_lower, "recycle_spell_pnl", "active", false)   --TODO: move to updateHUD()
+      -- object_UI_setAttribute(pdata.player_board, "player_done_pnl", "active", true)  --TODO: handled in updateHUD()?
+    else
+      updateAlterationButtons(true)
+      updateSpellButtons(true)
+    end
+    GD.game.spell_cost = {}
+    -- updateHUD()
     Wait.condition(function()
       --after card rests on class board, auto locate in 1st available spell position
       local map = board.call("locateSpell", params)
@@ -2071,32 +2263,6 @@ function spellCostHandler(player, button, id)
       updateSpellPower(player.color)
       updateHUD()
     end, function() return card.resting end)
-    --player data adustments and UI updates
-    GD.game.spells[dlg.card_index].card_id = 0
-    GD.game.spells[dlg.card_index].card_guid = ""
-    p.mana = p.mana - mana
-    p.spent_mana = p.spent_mana + mana
-    p.acuity = p.acuity - acuity
-    for  _,die in ipairs(dlg.assigned_dice) do
-      p.dice[die.index].allocated = true
-    end
-    local index = #p.actions.take
-    for i,take in ipairs(p.actions.take) do
-      if take == "spell" then index=i; break end --priortize remove spell take
-    end
-    table.remove(p.actions.take, index)
-    UI_setAttribute("spell_card_pnl","visibility","Pink")
-    if #p.actions.take == 0 then  --TODO: move all this to updateHUD()?
-      updateSpellButtons(false)
-      updateAlterationButtons(false)
-      object_UI_setAttribute(g_lower, "recycle_spell_pnl", "active", false)   --TODO: move to updateHUD()
-      -- object_UI_setAttribute(p.player_board, "player_done_pnl", "active", true)  --TODO: handled in updateHUD()?
-    else
-      updateAlterationButtons(true)
-      updateSpellButtons(true)
-    end
-    GD.game.spell_cost = {}
-    updateHUD()
   elseif action == "mana" then
     local type = Split(id,"_")[2]
     if type == "cost" then
@@ -2370,7 +2536,7 @@ function takeHeroicBtn(player, button, id)
   local pdata = GD.game.players[player.color]
   if id == "take_heroic_cancel" then
     --reset player state to cancel cast
-    pdata.casting = nil
+    pdata.casting = false
     pdata.arcanas_won = nil
     if pdata.spell_power.mystrune.restore > 0 or pdata.spell_power.mystrune.ruin > 0 then
       --return and reset the mystrune HACK: is there a better way around this?
@@ -2380,6 +2546,8 @@ function takeHeroicBtn(player, button, id)
       pdata.spell_power.mystrune.restore = 0
       pdata.spell_power.mystrune.ruin = 0
       pdata.mystrune = GD.game.mystrune
+      local o = getObjectFromGUID(pdata.mystrune)
+      o.call("assign",player.color)
     end
     updateHUD()
     updateSpellButtons(true)
@@ -2424,16 +2592,16 @@ end
 --[[ Display the cast consolation dialog to a player. ]]
 function showCastConsolationDialog(pcol)
   if env.test.trace then log("Global: showCastConsolationDialog() "..tostring(pcol)) end
-  local p = GD.game.players[pcol].spell_power
+  local pdata = GD.game.players[pcol].spell_power
   local power = 0
   local type = ""
   local prestige = 0
-  if p.net_restore > 0 then
-    power = p.net_restore
+  if pdata.net_restore > 0 then
+    power = pdata.net_restore
     type = "Restore"
     prestige = math.floor(power/4)
-  elseif p.net_ruin > 0 then
-    power = p.net_ruin
+  elseif pdata.net_ruin > 0 then
+    power = pdata.net_ruin
     type = "Ruin"
     prestige = math.floor(power/3)
   else
@@ -2458,9 +2626,9 @@ function castConsolationHandler(player, button, id)
   if id == "cast_cons_continue" then
     --handle cast for prestige points
     local prestige = 0
-    if p.spell_power.net_restore > 0 then
+    if pdata.spell_power.net_restore > 0 then
       prestige = math.floor(pdata.spell_power.net_restore/4)
-    elseif p.spell_power.net_ruin > 0 then
+    elseif pdata.spell_power.net_ruin > 0 then
       prestige = math.floor(pdata.spell_power.net_ruin/3)
     else
       log("WARN: Global: castConsolationHandler() no spell power.")
@@ -2473,7 +2641,7 @@ function castConsolationHandler(player, button, id)
     end
   elseif id == "cast_cons_cancel" then
     --reset player state to cancel cast
-    pdata.casting = nil
+    pdata.casting = false
     pdata.arcanas_won = nil
     updateHUD()
     updateSpellButtons(true)
@@ -2488,7 +2656,7 @@ end
 function showMystDialog(pcol)
   if env.test.trace then log("Global:showMystDialog() "..tostring(pcol)) end
   local pdata = GD.game.players[pcol]
-  UI_setAttribute("cast_cons_spell_power_txt","text",tostring(pdata.spell_power.myst))
+  UI_setAttribute("cast_myst_spell_power_txt","text",tostring(pdata.spell_power.myst))
   UI_setAttribute("cast_myst_pnl","visibility",pcol)
 end
 
@@ -2589,6 +2757,8 @@ function castCleanup(pcol)
         p.mystrune = GD.game.mystrune
         local board = getObjectFromGUID(p.player_board)
         board.call("placeMystRune", {guid=GD.game.mystrune})
+        local o = getObjectFromGUID(p.mystrune)
+        o.call("assign",pcol)
       else
         p.mystrune = nil
       end
@@ -2643,6 +2813,7 @@ function returnMystRune(pcol)
   assert(o, "")
   o.setPosition(C.pos.myst_rune)
   GD.game.players[pcol].mystrune = nil
+  o.call("assign","")
 end
 
 --[[ Called from playerBoard.  Used in the edit acuity spell dialog.
@@ -2676,12 +2847,15 @@ end
 --[[ Update HUD and board UIs with current data.
 Parameters:
   player_color: (opt) if supplied update only this players info
+TODO: move updateSpellButtons and updateAlterationButtons into this function.
+      Effectively making this into update all UI atomically.
 NOTE: this function triggers updates to the following things:
     player spell power recalculation
     player score recalculation
     player class board object UI update
     player board object UI update
-TODO: evaluate if there's any duplication going on with those updates.
+    mystrune token UI update (if owned)
+TODO: evaluate if there's any duplication or REALLY BAD: recursion going on with those updates.
 --]]
 function updateHUD(player_color)
   if env.test.trace then log("Global: updateHUD() "..tostring(player_color)) end
@@ -2725,12 +2899,9 @@ function updateHUD(player_color)
       local id = pcol.."_hud_die_"..tostring(i).."_image"
       UI.setAttribute(id,"image",C.die_elements[d.value])
       UI.setClass(id, "image_active")
-      if d.allocated then
-        -- UI.setClass(id, "image_inactive")
+      if d.allocated then   --TODO: use gray border same as in class board?
         UI.setAttribute(id, "color", "rgb(0.4,0.4,0.4)")
       else
-        -- UI.setAttribute(id,"image",C.die_elements[d.value])
-        -- UI.setClass(id, "image_active")
         UI.setAttribute(id, "color", "white")
       end
     end
@@ -2748,7 +2919,12 @@ function updateHUD(player_color)
     player_board.call("updateUI",pdata)
     --handle case of myst rune owned by player
     if pdata.mystrune ~= nil then
-      log("TODO: updateHUD() enable myst rune button")
+      local active = pdata.active --show when player active
+      active = active and pdata.alteration_action == nil --hide when alteration in play
+      active = active and not(pdata.casting)  --hide when casting
+      active = active and pdata.mystrune_action == nil --hide when mystrune dialog is open
+      local o = getObjectFromGUID(pdata.mystrune)
+      o.UI.setAttribute("ui_panel","active",active)
     end
   end
   if player_color ~= nil then

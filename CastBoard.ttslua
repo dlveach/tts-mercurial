@@ -81,7 +81,6 @@ function onDrop(player_color)
               })
               self.setLock(true)
               self.tooltip = false
-              -- self.interactable = false
             end,
             function() return self.resting end
           )

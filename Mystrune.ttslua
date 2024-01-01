@@ -1,0 +1,19 @@
+
+env={}
+TD={} --Transient (not persistent) data
+
+function onLoad(save_state)
+  env = Global.getTable("env")
+end
+
+function activate(player, button, id)
+  if env.test.debug then log("Mystrune "..self.getGUID()..": activate() "..tostring(player.color)) end
+  if TD.player_color == nil then return end
+  if player.color ~= TD.player_color then return end
+  Global.call("mystruneActivate",{player_color=player.color,action=activate_action})
+end
+
+function assign(pcol)
+  if env.test.debug then log("Mystrune "..self.getGUID()..":assign() "..tostring(pcol)) end
+  TD.player_color = pcol
+end

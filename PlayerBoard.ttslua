@@ -39,38 +39,45 @@ function onLoad(saved_data)
     if env.test.trace then log("Player Board " .. board_name .. " saved load") end
     local restore_data = JSON.decode(saved_data)
     GD = restore_data
-    restoreBoardState()
+    -- restoreBoardState()
+    if GD.initialized then
+      self.tooltip = false        --TODO: needed? toggle survives save/load?
+      self.interactable = false   --TODO: needed? toggle survives save/load?
+    end
   else
     if env.test.trace then log("Player Board " .. board_name .. " fresh load") end
+    if env.test.debug then self.tooltip = true end
+    self.setLock(true)
+    self.interactable = true
     GD.initialized = false
   end
-  loading = false
 end
 
---[[ TODO: is this OBE??? Restore this board's state during a load from saved data. ]]
-function restoreBoardState()
-  if env.test.trace then log(board_name..":restoreBoardState()") end
-  if GD.initialized then
-    self.tooltip = false
-    self.interactable = false
-    self.UI.setAttribute("gross_restore_panel", "active", "true")
-    self.UI.setAttribute("gross_ruin_panel", "active", "true")
-    self.UI.setAttribute("net_restore_panel", "active", "true")
-    self.UI.setAttribute("net_ruin_panel", "active", "true")
-    self.UI.setAttribute("total_myst_panel", "active", "true")
-    self.UI.setAttribute("dice_restore_panel", "active", "true")
-    self.UI.setAttribute("dice_ruin_panel", "active", "true")
-    self.UI.setAttribute("acuity_restore_panel", "active", "true")
-    self.UI.setAttribute("acuity_ruin_panel", "active", "true")
-    -- self.UI.setAttribute("edit_acuity_pnl", "active", "true")
-    self.UI.setAttribute("prestige_panel", "active", "true")
-    self.UI.setAttribute("yellow_sigils_panel", "active", "true")
-    self.UI.setAttribute("green_sigils_panel", "active", "true")
-    self.UI.setAttribute("red_sigils_panel", "active", "true")
-    self.UI.setAttribute("blue_sigils_panel", "active", "true")
-    self.UI.setAttribute("wild_sigils_panel", "active", "true")
-  end
-end
+--[[ TODO: is this OBE??? UI update called from updateHUD() on game load
+Restore this board's state during a load from saved data. ]]
+-- function restoreBoardState()
+--   if env.test.trace then log(board_name..":restoreBoardState()") end
+--   if GD.initialized then
+--     self.tooltip = false
+--     self.interactable = false
+--     self.UI.setAttribute("gross_restore_panel", "active", "true")
+--     self.UI.setAttribute("gross_ruin_panel", "active", "true")
+--     self.UI.setAttribute("net_restore_panel", "active", "true")
+--     self.UI.setAttribute("net_ruin_panel", "active", "true")
+--     self.UI.setAttribute("total_myst_panel", "active", "true")
+--     self.UI.setAttribute("dice_restore_panel", "active", "true")
+--     self.UI.setAttribute("dice_ruin_panel", "active", "true")
+--     self.UI.setAttribute("acuity_restore_panel", "active", "true")
+--     self.UI.setAttribute("acuity_ruin_panel", "active", "true")
+--     -- self.UI.setAttribute("edit_acuity_pnl", "active", "true")
+--     self.UI.setAttribute("prestige_panel", "active", "true")
+--     self.UI.setAttribute("yellow_sigils_panel", "active", "true")
+--     self.UI.setAttribute("green_sigils_panel", "active", "true")
+--     self.UI.setAttribute("red_sigils_panel", "active", "true")
+--     self.UI.setAttribute("blue_sigils_panel", "active", "true")
+--     self.UI.setAttribute("wild_sigils_panel", "active", "true")
+--   end
+-- end
 
 --[[ Save game state ]]
 function onSave()
@@ -115,7 +122,6 @@ Player data table for update is passed as a parameter.
 function updateUI(pdata)
   if env.test.trace then log(board_name..":updateUI()") end
   assert(pdata,board_name..":setPlayer() missing player data")
-  self.UI.setAttribute("edit_acuity_pnl", "active", "true")
   self.UI.setAttribute("gross_restore_txt", "text", tostring(pdata.spell_power.gross_restore))
   self.UI.setAttribute("gross_ruin_txt", "text", tostring(pdata.spell_power.gross_ruin))
   self.UI.setAttribute("net_restore_txt", "text", tostring(pdata.spell_power.net_restore))
@@ -136,16 +142,29 @@ function updateUI(pdata)
   else
     self.UI.setAttribute("wild_sigils_txt", "text", "0")
   end
-  if pdata.active and not(pdata.casting) then
+  local dialog_open = pdata.casting or
+        pdata.alteration_action ~= nil or
+        pdata.mystrune_action ~= nil
+  if pdata.active then
     self.UI.setAttribute("active_player_pnl", "active", true)
-    local state = indexOf(pdata.actions.take,"any") > 0
-    if not(state) then state = state and indexOf(pdata.actions.take,"spell") > 0 end
-    self.UI.setAttribute("cast_spell_pnl","active",state)
-    self.UI.setAttribute("player_done_pnl","active",not(state))
-    state = state and getUsedAlterations() ~= nil
-    self.UI.setAttribute("take_alterations_pnl","active",state)
+    local state = false
+    if not(dialog_open) then
+      state = indexOf(pdata.actions.take,"any") > 0
+      if not(state) then state = state and indexOf(pdata.actions.take,"spell") > 0 end
+      self.UI.setAttribute("cast_spell_pnl","active",pdata.cast_allowed)
+      self.UI.setAttribute("player_done_pnl","active",not(state))
+      state = state and getUsedAlterations() ~= nil
+      self.UI.setAttribute("take_alterations_pnl","active",state)
+      self.UI.setAttribute("edit_acuity_pnl", "active",true)
+    else
+      self.UI.setAttribute("edit_acuity_pnl", "active",false)
+      self.UI.setAttribute("take_alterations_pnl","active",false)
+      self.UI.setAttribute("cast_spell_pnl","active",false)
+      self.UI.setAttribute("player_done_pnl","active",false)
+    end
   else
-    self.UI.setAttribute("active_player_pnl", "active", false)
+    self.UI.setAttribute("edit_acuity_pnl", "active",true)
+    self.UI.setAttribute("active_player_pnl", "active",false)
     self.UI.setAttribute("take_alterations_pnl","active",false)
     self.UI.setAttribute("cast_spell_pnl","active",false)
     self.UI.setAttribute("player_done_pnl","active",false)
