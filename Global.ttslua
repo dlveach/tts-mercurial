@@ -64,6 +64,8 @@ function onLoad(saved_data)
     end
   end
   if not(env.test.in_dev) then
+    getObjectFromGUID(C.guids.dice_flip_chart).setInvisibleTo(Player.getColors())
+    getObjectFromGUID(C.guids.excess_spell_prestige).setInvisibleTo(Player.getColors())
     for _,g in ipairs(C.guids.player_boards) do
       local b = getObjectFromGUID(g)
       if b then b.tooltip = false end
@@ -490,7 +492,6 @@ function finalSetup()
   end
   local d = getObjectFromGUID(C.guids.artifacts_deck)
   if d ~= nil then d.destruct() end
-
   --deal out starting cards
   local p = {
     ["position"] = {},
@@ -513,7 +514,6 @@ function finalSetup()
     object_UI_setAttribute(g_lower, "spells_button_"..tostring(i).."_pnl","active",false)
   end
   object_UI_setAttribute(g_lower, "spells_buttons_pnl","active",true)
-
   -- Place Alteration cards
   deck = getAlterationsDeck()
   for i=1,6 do
@@ -539,7 +539,6 @@ function finalSetup()
   end
   object_UI_setAttribute(g_lower, "alterations_acuity_pnl","active",true)
   object_UI_setAttribute(g_lower, "alterations_buttons_pnl","active",true)
-
   -- Place Heroic cards
   deck = getHeroicsDeck()
   for i=1,6 do
@@ -555,7 +554,6 @@ function finalSetup()
     object_UI_setAttribute(g_upper, "heroics_"..tostring(i).."_pnl","active",false)
   end
   object_UI_setAttribute(g_upper, "heroics_pnl","active",true)
-
   -- Place the random selected myst rune (if Mystcaller not taken)
   if (math.random(1, 10) > 5) then
     GD.game.mystrune = C.guids.myst_rune_1
@@ -582,7 +580,6 @@ function finalSetup()
     myst_rune.setPosition(C.pos.myst_rune)
     Wait.frames(function() myst_rune.setLock(true) end, 1)
   end
-
   -- Random select 3 arcanas
   GD.game.arcanas = {}
   local t = {1, 2, 3, 4, 5, 6,}
@@ -616,7 +613,6 @@ function finalSetup()
   end
   object_UI_setAttribute(g_upper, "heroics_cancel_pnl","active",false)
   object_UI_setAttribute(g_upper, "arcanas_pnl","active",true)
-
   -- Give extra acuity to players in turn order
   local p = GD.game.start_player
   local count = 1
@@ -626,7 +622,6 @@ function finalSetup()
     GD.game.players[pcol].acuity = GD.game.players[pcol].acuity + count
     count = count + 1
   end
-
   --Configure final scoring table and HUD for number of players
   local num_players = #GD.game.player_order
   for i=1,4 do
@@ -640,7 +635,6 @@ function finalSetup()
   end
   local table_size = 360 - ((4 - num_players) * 55)
   UI_setAttribute("score_panel", "height", tostring(table_size))
-
   local inner_hud_panel_size = 220 + (num_players * 30)
   local outer_hud_panel_size = inner_hud_panel_size + 20
   UI_setAttribute("inner_hud_panel","height",tostring(inner_hud_panel_size))
@@ -651,7 +645,15 @@ function finalSetup()
     end
   end
   UI_setAttribute("hud_pnl","active",true)
-
+  --displapy helper charts
+  local flip = getObjectFromGUID(C.guids.dice_flip_chart)
+  flip.setPosition(C.pos.dice_flip)
+  flip.setInvisibleTo({})
+  flip.setLock(true)
+  local excess = getObjectFromGUID(C.guids.excess_spell_prestige)
+  excess.setPosition(C.pos.excess_spell_prestige)
+  excess.setInvisibleTo({})
+  excess.setLock(true)
   --done with final setup
   GD.game.started = true
   --TODO: figure out what to wait on, all card data structures not yet set up.
@@ -1475,7 +1477,6 @@ function alterationDlgHandler(player, button, id)
   if env.test.trace then log("Global: alterationDlgHandler() "..player.color..", "..tostring(id)..", "..tostring(button)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local action = Split(id,"_")[2]
-  -- local alt = GD.game.alteration_action
   local pdata = GD.game.players[player.color]
   local alt = pdata.alteration_action
   local card = alterations[alt.card_id]
@@ -1538,9 +1539,7 @@ function alterationDlgHandler(player, button, id)
         alt.max = n
       end
       close_dialog = false
-
     elseif a.action == "flip" then
-      log("TESTING !!!!!!!!!  dice flip")
       alt.from = {}
       for i,d in ipairs(pdata.dice) do
         if not(d.allocated) then
@@ -1553,7 +1552,6 @@ function alterationDlgHandler(player, button, id)
       alt.state = "flip"
       close_dialog = false
     elseif a.action == "reroll" then
-      log("TESTING !!!!!!!! dice reroll")
       alt.from = {}
       for i,d in ipairs(pdata.dice) do
         if not(d.allocated) then
@@ -1753,6 +1751,7 @@ function alterationDlgHandler(player, button, id)
     if env.debug then log("closing stuff when exiting the dialog"); log(alt) end
     for _,d in ipairs(alt.to_dice) do
       local index = alt.from_dice[d.from_index].index
+      pdata.dice[index].element = d.element
       pdata.dice[index].value = indexOf(C.die_elements, d.element)
     end
     for _,t in ipairs(alt.take_gained) do table.insert(pdata.actions.take,t) end
@@ -2571,6 +2570,27 @@ function takeHeroicBtn(player, button, id)
     for _,sigil in ipairs(data.sigils) do
       pdata.sigils[sigil] = pdata.sigils[sigil] + 1
     end
+    --calculate any prestige from excess spell power
+    local type = "Restore"
+    local power = pdata.spell_power.net_restore
+    if pdata.spell_power.net_ruin > 0 then
+      power = pdata.spell_power.net_ruin
+      type = "Ruin"
+    end
+    local excess = power - data.cost[type]
+    local prestige = 0
+    if type == "Restore" then
+      prestige = math.floor(excess / 4)
+    else
+      prestige = math.floor(excess / 3)
+    end
+    if env.test.debug then log("Prestige from "..tostring(excess).." excess "..type.." = "..tostring(prestige)) end
+    if GD.env.verbose then
+      local txt = player.color.." recieved "..tostring(prestige).." Prestige from "..tostring(excess).." excess "..type
+      broadcastToColor(txt, player.color)
+    end
+    pdata.prestige = pdata.prestige + prestige
+    --check arcanas won
     if pdata.arcanas_won ~= nil then
       for _,e in ipairs(pdata.arcanas_won) do
         object_UI_setAttribute(g_upper, "arcana_"..tostring(e.index).."_pnl","active",true)

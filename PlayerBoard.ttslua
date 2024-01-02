@@ -43,6 +43,23 @@ function onLoad(saved_data)
     if GD.initialized then
       self.tooltip = false        --TODO: needed? toggle survives save/load?
       self.interactable = false   --TODO: needed? toggle survives save/load?
+      --reactivate UI panels
+      self.UI.setAttribute("gross_restore_panel", "active", "true")
+      self.UI.setAttribute("gross_ruin_panel", "active", "true")
+      self.UI.setAttribute("net_restore_panel", "active", "true")
+      self.UI.setAttribute("net_ruin_panel", "active", "true")
+      self.UI.setAttribute("total_myst_panel", "active", "true")
+      self.UI.setAttribute("dice_restore_panel", "active", "true")
+      self.UI.setAttribute("dice_ruin_panel", "active", "true")
+      self.UI.setAttribute("acuity_restore_panel", "active", "true")
+      self.UI.setAttribute("acuity_ruin_panel", "active", "true")
+      -- self.UI.setAttribute("edit_acuity_pnl", "active", "true")
+      self.UI.setAttribute("prestige_panel", "active", "true")
+      self.UI.setAttribute("yellow_sigils_panel", "active", "true")
+      self.UI.setAttribute("green_sigils_panel", "active", "true")
+      self.UI.setAttribute("red_sigils_panel", "active", "true")
+      self.UI.setAttribute("blue_sigils_panel", "active", "true")
+      self.UI.setAttribute("wild_sigils_panel", "active", "true")
     end
   else
     if env.test.trace then log("Player Board " .. board_name .. " fresh load") end
@@ -52,32 +69,6 @@ function onLoad(saved_data)
     GD.initialized = false
   end
 end
-
---[[ TODO: is this OBE??? UI update called from updateHUD() on game load
-Restore this board's state during a load from saved data. ]]
--- function restoreBoardState()
---   if env.test.trace then log(board_name..":restoreBoardState()") end
---   if GD.initialized then
---     self.tooltip = false
---     self.interactable = false
---     self.UI.setAttribute("gross_restore_panel", "active", "true")
---     self.UI.setAttribute("gross_ruin_panel", "active", "true")
---     self.UI.setAttribute("net_restore_panel", "active", "true")
---     self.UI.setAttribute("net_ruin_panel", "active", "true")
---     self.UI.setAttribute("total_myst_panel", "active", "true")
---     self.UI.setAttribute("dice_restore_panel", "active", "true")
---     self.UI.setAttribute("dice_ruin_panel", "active", "true")
---     self.UI.setAttribute("acuity_restore_panel", "active", "true")
---     self.UI.setAttribute("acuity_ruin_panel", "active", "true")
---     -- self.UI.setAttribute("edit_acuity_pnl", "active", "true")
---     self.UI.setAttribute("prestige_panel", "active", "true")
---     self.UI.setAttribute("yellow_sigils_panel", "active", "true")
---     self.UI.setAttribute("green_sigils_panel", "active", "true")
---     self.UI.setAttribute("red_sigils_panel", "active", "true")
---     self.UI.setAttribute("blue_sigils_panel", "active", "true")
---     self.UI.setAttribute("wild_sigils_panel", "active", "true")
---   end
--- end
 
 --[[ Save game state ]]
 function onSave()

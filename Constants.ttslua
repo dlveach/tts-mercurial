@@ -40,6 +40,8 @@ C.guids.myst_rune_2 = "8b61f9"
 C.guids.table_UI = "ba7e59"  --TODO: fix UI
 C.guids.lower_cards = "4635ee"
 C.guids.upper_cards = "2f3d61"
+C.guids.dice_flip_chart = "e7eb8b"
+C.guids.excess_spell_prestige = "b53adf"
 
 C.setup={
   Arcanist = {
@@ -271,5 +273,8 @@ C.pos.heroics[4] = {0.15, 1.07, 3.25}
 C.pos.heroics[5] = {3.27, 1.07, 3.25}
 C.pos.heroics[6] = {6.40, 1.07, 3.25}
 C.pos.myst_rune = {7.25, 1.06, 15.02} --{2.51, 1.06, 12.54}
+C.pos.dice_flip = {-4.87, 0.96, 20.73}
+C.pos.excess_spell_prestige = {5.40, 0.96, 20.98}
+
 C.die_elements = {"Fire", "Earth", "Aether", "Void", "Lightning", "Water"}
 C.die_flip = {6,5,4,3,2,1}
