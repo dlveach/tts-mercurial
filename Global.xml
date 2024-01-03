@@ -276,26 +276,26 @@
       </Row>
       <Row id="Red_hud_sigils_row" preferredHeight="60" visibility="Red">
         <Cell columnSpan="5" padding="20 20 10 5">
-          <HorizontalLayout spacing="25">
-            <HorizontalLayout spacing="5">
+          <HorizontalLayout spacing="20">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="YellowSigil"/>
-              <Text id="Red_hud_sigil_yellow_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Red_hud_sigil_yellow_txt" fontSize="16" color="white" text="0 (0)"/>
             </HorizontalLayout>
-            <HorizontalLayout spacing="5">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="GreenSigil"/>
-              <Text id="Red_hud_sigil_green_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Red_hud_sigil_green_txt" fontSize="16" color="white" text="0 (0)"/>
             </HorizontalLayout>
-            <HorizontalLayout spacing="5">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="RedSigil"/>
-              <Text id="Red_hud_sigil_red_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Red_hud_sigil_red_txt" fontSize="16" color="white" text="0 (0)"/>
             </HorizontalLayout>
-            <HorizontalLayout spacing="5">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="BlueSigil"/>
-              <Text id="Red_hud_sigil_blue_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Red_hud_sigil_blue_txt" fontSize="16" color="white" text="0 (0)"/>
             </HorizontalLayout>
-            <HorizontalLayout spacing="5">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="WildSigil"/>
-              <Text id="Red_hud_sigil_wild_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Red_hud_sigil_wild_txt" fontSize="20" color="white" text=" "/>
             </HorizontalLayout>
           </HorizontalLayout>
         </Cell>
@@ -353,26 +353,26 @@
       </Row>
       <Row id="Blue_hud_sigils_row" preferredHeight="60" visibility="Blue">
         <Cell columnSpan="5" padding="20 20 10 5">
-          <HorizontalLayout spacing="25">
-            <HorizontalLayout spacing="5">
+          <HorizontalLayout spacing="20">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="YellowSigil"/>
-              <Text id="Blue_hud_sigil_yellow_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Blue_hud_sigil_yellow_txt" fontSize="16" color="white" text="0 (0)"/>
             </HorizontalLayout>
-            <HorizontalLayout spacing="5">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="GreenSigil"/>
-              <Text id="Blue_hud_sigil_green_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Blue_hud_sigil_green_txt" fontSize="16" color="white" text="0 (0)"/>
             </HorizontalLayout>
-            <HorizontalLayout spacing="5">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="RedSigil"/>
-              <Text id="Blue_hud_sigil_red_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Blue_hud_sigil_red_txt" fontSize="16" color="white" text="0 (0)"/>
             </HorizontalLayout>
-            <HorizontalLayout spacing="5">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="BlueSigil"/>
-              <Text id="Blue_hud_sigil_blue_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Blue_hud_sigil_blue_txt" fontSize="16" color="white" text="0 (0)"/>
             </HorizontalLayout>
-            <HorizontalLayout spacing="5">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="WildSigil"/>
-              <Text id="Blue_hud_sigil_wild_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Blue_hud_sigil_wild_txt" fontSize="20" color="white" text=" "/>
             </HorizontalLayout>
           </HorizontalLayout>
         </Cell>
@@ -430,26 +430,26 @@
       </Row>
       <Row id="Green_hud_sigils_row" preferredHeight="60" visibility="Green">
         <Cell columnSpan="5" padding="20 20 10 5">
-          <HorizontalLayout spacing="25">
-            <HorizontalLayout spacing="5">
+          <HorizontalLayout spacing="20">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="YellowSigil"/>
-              <Text id="Green_hud_sigil_yellow_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Green_hud_sigil_yellow_txt" fontSize="16" color="white" text="0 (0)"/>
             </HorizontalLayout>
-            <HorizontalLayout spacing="5">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="GreenSigil"/>
-              <Text id="Green_hud_sigil_green_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Green_hud_sigil_green_txt" fontSize="16" color="white" text="0 (0)"/>
             </HorizontalLayout>
-            <HorizontalLayout spacing="5">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="RedSigil"/>
-              <Text id="Green_hud_sigil_red_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Green_hud_sigil_red_txt" fontSize="16" color="white" text="0 (0)"/>
             </HorizontalLayout>
-            <HorizontalLayout spacing="5">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="BlueSigil"/>
-              <Text id="Green_hud_sigil_blue_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Green_hud_sigil_blue_txt" fontSize="16" color="white" text="0 (0)"/>
             </HorizontalLayout>
-            <HorizontalLayout spacing="5">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="WildSigil"/>
-              <Text id="Green_hud_sigil_wild_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Green_hud_sigil_wild_txt" fontSize="20" color="white" text=" "/>
             </HorizontalLayout>
           </HorizontalLayout>
         </Cell>
@@ -507,26 +507,26 @@
       </Row>
       <Row id="Yellow_hud_sigils_row" preferredHeight="60" visibility="Yellow">
         <Cell columnSpan="5" padding="20 20 10 5">
-          <HorizontalLayout spacing="25">
-            <HorizontalLayout spacing="5">
+          <HorizontalLayout spacing="20">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="YellowSigil"/>
-              <Text id="Yellow_hud_sigil_yellow_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Yellow_hud_sigil_yellow_txt" fontSize="16" color="white" text="0 (0)"/>
             </HorizontalLayout>
-            <HorizontalLayout spacing="5">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="GreenSigil"/>
-              <Text id="Yellow_hud_sigil_green_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Yellow_hud_sigil_green_txt" fontSize="16" color="white" text="0 (0)"/>
             </HorizontalLayout>
-            <HorizontalLayout spacing="5">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="RedSigil"/>
-              <Text id="Yellow_hud_sigil_red_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Yellow_hud_sigil_red_txt" fontSize="16" color="white" text="0 (0)"/>
             </HorizontalLayout>
-            <HorizontalLayout spacing="5">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="BlueSigil"/>
-              <Text id="Yellow_hud_sigil_blue_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Yellow_hud_sigil_blue_txt" fontSize="16" color="white" text="0 (0)"/>
             </HorizontalLayout>
-            <HorizontalLayout spacing="5">
+            <HorizontalLayout spacing="0">
               <Image preserveAspect="true" image="WildSigil"/>
-              <Text id="Yellow_hud_sigil_wild_txt" fontSize="20" color="white" text="0"/>
+              <Text id="Yellow_hud_sigil_wild_txt" fontSize="20" color="white" text=" "/>
             </HorizontalLayout>
           </HorizontalLayout>
         </Cell>

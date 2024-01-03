@@ -45,9 +45,9 @@ Future possible stuff for greater enhancement
 env = {}
 env.version = "1.0.2 production release"
 env.test= {}
-env.test.test_players = {"Green", "Blue", "Yellow", "Red"}
+-- env.test.test_players = {"Green", "Blue", "Yellow", "Red"}
 -- env.test.test_players = {"Yellow", "Red", "Blue"}
--- env.test.test_players = {"Red", "Blue"}
+env.test.test_players = {"Red", "Blue"}
 -- env.test.test_players = {"Green", "Blue"}
 -- env.test.test_players = {"Green", "Blue"}
 env.test.auto_switch = true
@@ -3068,7 +3068,13 @@ function updateHUD(player_color)
       end
     end
     for sigil,count in pairs(pdata.sigils) do
-      UI_setAttribute(pcol.."_hud_sigil_"..sigil.."_txt","text",tostring(count))
+      local txt = tostring(count)
+      if sigil == "wild" then
+        if count == 0 then txt = " " end
+      else
+        txt = txt.." ("..tostring(pdata.alt_sigils[sigil])..")"
+      end
+      UI_setAttribute(pcol.."_hud_sigil_"..sigil.."_txt","text",txt)
     end
     UI_setAttribute(pcol.."_hud_takes_text","text",tostring(#pdata.actions.take))
     UI_setAttribute(pcol.."_hud_plays_text","text",tostring(pdata.actions.play))
