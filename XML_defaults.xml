@@ -62,47 +62,4 @@
     color="rgba(0,0,0,0)"
     padding="0 0 0 0" />
 
-  <!-- Heroic panel stuff TODO: move to Global.xml-->
-  <TableLayout class="heroics_table"
-    autoCalculateHeight="true"
-    image="Sprites/Layout/Viewport"
-    useGlobalCellPadding="false"
-    color="#301616" />
-
-  <!-- Score table styles TODO: move to Global.xml -->
-  <TableLayout class="score_table"
-      image="Sprites/Layout/Viewport"
-      color="rgb(0.4,0.1,0)"
-      padding="10 10 10 10"
-      cellSpacing="5"
-      cellPadding="0"
-      columnWidths="140 150 0 0 0 0 0"/>
-
-  <Cell class="table_cell"
-      dontUseTableCellBackground="true"
-      image="Sprites/Layout/Viewport"
-      color="rgb(0.7,0.3,0)" />
-
-  <Cell class="header_cell"
-      dontUseTableCellBackground="true"
-      color="rgba(0,0,0,0)" />
-
-  <Text class="table_title_text"
-      fontSize="28"
-      font="Arial Bold"
-      color="rgb(.9,0.9,0)"
-      shadow="rgba(0,0,0,1)" />
-
-  <Text class="table_data_text"
-      fontSize="20"
-      font="Arial Bold"
-      color="rgb(0.9,0.9,0"
-      shadow="rgb(0,0,0)" />
-
-  <Text class="table_header_text"
-      fontSize="20"
-      font="Arial Bold"
-      color="rgb(1,1,0"
-      shadow="rgb(0,0,0)" />
-
 </Defaults>

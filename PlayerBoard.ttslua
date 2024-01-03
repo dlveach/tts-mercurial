@@ -97,14 +97,12 @@ function initialize(pdata)
   self.UI.setAttribute("dice_ruin_panel", "active", "true")
   self.UI.setAttribute("acuity_restore_panel", "active", "true")
   self.UI.setAttribute("acuity_ruin_panel", "active", "true")
-  -- self.UI.setAttribute("edit_acuity_pnl", "active", "true")
   self.UI.setAttribute("prestige_panel", "active", "true")
   self.UI.setAttribute("yellow_sigils_panel", "active", "true")
   self.UI.setAttribute("green_sigils_panel", "active", "true")
   self.UI.setAttribute("red_sigils_panel", "active", "true")
   self.UI.setAttribute("blue_sigils_panel", "active", "true")
   self.UI.setAttribute("wild_sigils_panel", "active", "true")
-  -- updateUI(pdata)
 end
 
 --[[ Called from Global to refresh UI.
@@ -113,6 +111,7 @@ Player data table for update is passed as a parameter.
 function updateUI(pdata)
   if env.test.trace then log(board_name..":updateUI()") end
   assert(pdata,board_name..":setPlayer() missing player data")
+  self.UI.setAttribute("active_player_pnl", "active", pdata.active)
   self.UI.setAttribute("gross_restore_txt", "text", tostring(pdata.spell_power.gross_restore))
   self.UI.setAttribute("gross_ruin_txt", "text", tostring(pdata.spell_power.gross_ruin))
   self.UI.setAttribute("net_restore_txt", "text", tostring(pdata.spell_power.net_restore))
@@ -123,35 +122,39 @@ function updateUI(pdata)
   self.UI.setAttribute("acuity_restore_txt", "text", tostring(pdata.spell_power.acuity.restore))
   self.UI.setAttribute("acuity_ruin_txt", "text", tostring(pdata.spell_power.acuity.ruin))
   self.UI.setAttribute("prestige_txt", "text", tostring(pdata.prestige))
-  --Sigils
-  self.UI.setAttribute("yellow_sigils_txt", "text", tostring(pdata.sigils.yellow))
-  self.UI.setAttribute("green_sigils_txt", "text", tostring(pdata.sigils.green))
-  self.UI.setAttribute("red_sigils_txt", "text", tostring(pdata.sigils.red))
-  self.UI.setAttribute("blue_sigils_txt", "text", tostring(pdata.sigils.blue))
-  if pdata.class == "Mystcaller" then
-    self.UI.setAttribute("wild_sigils_txt", "text", "1")
-  else
-    self.UI.setAttribute("wild_sigils_txt", "text", "0")
+  for s,n in pairs(pdata.sigils) do
+    local txt
+    if s == "wild" then
+      if n > 0 then txt = tostring(n)
+      else txt = "-" end
+    else txt = tostring(n).." ("..tostring(pdata.alt_sigils[s])..")" end
+    self.UI.setAttribute(s.."_sigils_txt", "text", txt)
   end
-  local dialog_open = pdata.casting or
-        pdata.alteration_action ~= nil or
-        pdata.mystrune_action ~= nil
+  if pdata.endgame then
+    self.UI.setAttribute("edit_acuity_pnl", "active",true)
+    self.UI.setAttribute("active_player_pnl", "active",false)
+    self.UI.setAttribute("take_alterations_pnl","active",false)
+    self.UI.setAttribute("cast_spell_pnl","active",pdata.active)
+    self.UI.setAttribute("player_done_pnl","active",false)
+    return
+  end
   if pdata.active then
-    self.UI.setAttribute("active_player_pnl", "active", true)
-    local state = false
-    if not(dialog_open) then
-      state = indexOf(pdata.actions.take,"any") > 0
-      if not(state) then state = state and indexOf(pdata.actions.take,"spell") > 0 end
-      self.UI.setAttribute("cast_spell_pnl","active",pdata.cast_allowed)
-      self.UI.setAttribute("player_done_pnl","active",not(state))
-      state = state and getUsedAlterations() ~= nil
-      self.UI.setAttribute("take_alterations_pnl","active",state)
-      self.UI.setAttribute("edit_acuity_pnl", "active",true)
-    else
+    if pdata.casting or
+        pdata.alteration_action ~= nil or
+        pdata.mystrune_action ~= nil or
+        pdata.spell_cost ~= nil then
       self.UI.setAttribute("edit_acuity_pnl", "active",false)
       self.UI.setAttribute("take_alterations_pnl","active",false)
       self.UI.setAttribute("cast_spell_pnl","active",false)
       self.UI.setAttribute("player_done_pnl","active",false)
+    else
+      self.UI.setAttribute("edit_acuity_pnl", "active",true)
+      self.UI.setAttribute("cast_spell_pnl","active",pdata.cast_allowed)
+      local state = indexOf(pdata.actions.take,"any") > 0
+      if not(state) then state = state and indexOf(pdata.actions.take,"spell") > 0 end
+      self.UI.setAttribute("player_done_pnl","active",not(state))
+      state = state and getUsedAlterations() ~= nil  --TODO: avoid Physics, use somethign in pdata
+      self.UI.setAttribute("take_alterations_pnl","active",state)
     end
   else
     self.UI.setAttribute("edit_acuity_pnl", "active",true)
@@ -264,18 +267,21 @@ function placeHeroicCard(params)
   local index = params.index
   assert(index, "")
   local pos = self.positionToWorld(heroics_local_pos[index])
+  pos.y = 1.5
   local card = getObjectFromGUID(params.guid)
   assert(card, board_name..":placeHeroicCard():failed to locate obj for guid "..tostring(params.guid))
   card.setLock(false)
   if card.is_face_down then card.flip() end
   card.setPosition(pos)
-  card.setLock(true)
+  Wait.frames(function()
+    Wait.condition(function() card.setLock(true) end, function() return card.resting end)
+  end, 1)
 end
 
 --[[ Place a cast spell card on the spell discard location. --]]
 function placeCastSpell(params)
   assert(params, board_name..":placeCastSpell(): missing params")
-  if env.test.trace then log(board_name..":placeHeroicCard() "..tostring(params.guid)) end
+  if env.test.trace then log(board_name..":placeCastSpell() "..tostring(params.guid)) end
   if env.test.debug then log(params) end
   local pos = self.positionToWorld(spell_discards_local_pos)
   pos.y = 3
@@ -284,6 +290,35 @@ function placeCastSpell(params)
   spell.setLock(false)
   if not(spell.is_face_down) then spell.flip() end
   spell.setPosition(pos)
+end
+
+--[[ Place a deck of link spells in the spell discard location.
+  Returns a list of card IDs placed.
+--]]
+function placeLinkSpellDeck(params)
+  assert(params, board_name..":placeLinkSpellDeck(): missing params")
+  if env.test.trace then log(board_name..":placeLinkSpellDeck() "..tostring(params.index)) end
+  if env.test.debug then log(params) end
+  local slot = self.positionToWorld(link_spells_local_pos[params.index])
+  local obj = findObject(slot, {"Deck","Card"}, {1,1,1}, env.test.debug)
+  assert(obj, board_name..":placeLinkSpellDeck(): no card/deck object at index "..params.index)
+  local discard_pos = self.positionToWorld(spell_discards_local_pos)
+  discard_pos.y = 3
+  local list = {}
+  if obj.tag == "Deck" then
+    for _,c in ipairs(obj.getObjects()) do
+      table.insert(list, tonumber(c.gm_notes))
+    end
+  elseif obj.tag == "Card" then
+    table.insert(list, tonumber(obj.getGMNotes()))
+  else
+    log("WARN: "..board_name..":placeLinkSpellDeck(): unexpected obj type at index "..params.index)
+  end
+  if #list > 0 then
+    if not(obj.is_face_down) then obj.flip() end
+    obj.setPosition(discard_pos)
+  end
+  return list
 end
 
 --[[ Place a newly acquired Arcana. --]]

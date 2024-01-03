@@ -218,27 +218,32 @@
 <!-- Sigils -->
 
 <Panel id="yellow_sigils_panel"
-  position="-185 -51 -6">
-  <Text id="yellow_sigils_txt" text="-" />
+  width="60"
+  position="-195 -51 -6">
+  <Text id="yellow_sigils_txt" text="- -" />
 </Panel>
 
 <Panel id="green_sigils_panel"
-  position="-185 -27 -6">
-  <Text id="green_sigils_txt" text="-" />
+  width="60"
+  position="-195 -27 -6">
+  <Text id="green_sigils_txt" text="- -" />
 </Panel>
 
 <Panel id="red_sigils_panel"
-  position="-185 -3 -6">
-  <Text id="red_sigils_txt" text="-" />
+  width="60"
+  position="-195 -3 -6">
+  <Text id="red_sigils_txt" text="- -" />
 </Panel>
 
 <Panel id="blue_sigils_panel"
-  position="-185 21 -6">
-  <Text id="blue_sigils_txt" text="-" />
+  width="60"
+  position="-195 21 -6">
+  <Text id="blue_sigils_txt" text="- -" />
 </Panel>
 
 <Panel id="wild_sigils_panel"
-  position="-185 45 -6">
+  width="60"
+  position="-195 45 -6">
   <Text id="wild_sigils_txt" text="-" />
 
 </Panel>

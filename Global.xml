@@ -37,6 +37,7 @@
     preserveAspect="true" />
   <Image class="image_active" active = "true" />
   <Image class="image_inactive" active = "false" />
+  <Image class="die_test" active="true" onClick="testDie" />
 
   <!-- HUD specifics -->
   <Text class="hud_header"
@@ -45,14 +46,41 @@
   <Image class="hud_image" active="false"
     image="Myst" />
 
+  <!-- Heroic panel stuff TODO: cleanup-->
+  <!-- <TableLayout class="heroics_table"
+    autoCalculateHeight="true"
+    image="Sprites/Layout/Viewport"
+    useGlobalCellPadding="false"
+    color="#301616" /> -->
+
   <!-- Alteration dialog specifics -->
   <Text class="alt_action_btn_txt"
     color="rgb(0.8,0.8,0)"
     fontSize="20"/>
 
-  <!-- Score dialog stuffs -->
-  <Row class="score_data_row"
-      preferredHeight="50" />
+  <!-- Score panel stuffs -->
+  <Cell class="header_cell"
+    dontUseTableCellBackground="true"
+    color="rgba(0,0,0,0)" />
+
+  <Cell class="table_cell"
+    dontUseTableCellBackground="true"
+    image="Sprites/Layout/Viewport"
+    color="rgb(0.7,0.3,0)" />
+
+  <!-- <TableLayout class="score_table"
+    image="Sprites/Layout/Viewport"
+    color="rgb(0.4,0.1,0)"
+    padding="10 10 10 10"
+    cellSpacing="5"
+    cellPadding="0"
+    columnWidths="140 150 0 0 0 0 0"/> -->
+
+  <Text class="table_title_text"
+    fontSize="28"
+    color="rgb(.9,0.9,0)"
+    shadow="rgba(0,0,0,1)" />
+
 </Defaults>
 
 <!-- Start Panel -->
@@ -132,28 +160,52 @@
         <Cell><Text class="hud_header" text="Score"/></Cell>
       </Row>
       <Row id="hud_row_1" preferredHeight="30">
-        <Cell><Text id="hud_row_1_player" fontSize="18" text="Red" color="Red"/></Cell>
+        <Cell padding="5 5 0 0">
+          <Panel id="hud_row_1_player_pnl" color="rgba(0,0,0,0)" padding="1 1 1 1">
+            <Panel color="#190609" >
+              <Text id="hud_row_1_player" fontSize="18" text="Red" color="Red"/>
+            </Panel>
+          </Panel>
+        </Cell>
         <Cell><Text id="hud_row_1_spell" class="hud_row" text="0"/></Cell>
         <Cell padding="0 20 0 0"><Image id="hud_row_1_image" class="hud_image"/></Cell>
         <Cell><Text id="hud_row_1_heroics" class="hud_row" text=""/></Cell>
         <Cell><Text id="hud_row_1_score" class="hud_row" text="0"/></Cell>
       </Row>
       <Row id="hud_row_2" preferredHeight="30">
-        <Cell><Text id="hud_row_2_player" fontSize="18" text="Blue" color="Blue"/></Cell>
+        <Cell padding="5 5 0 0">
+          <Panel id="hud_row_2_player_pnl" color="rgba(0,0,0,0)" padding="1 1 1 1">
+            <Panel color="#190609" >
+              <Text id="hud_row_2_player" fontSize="18" text="Blue" color="Blue"/>
+            </Panel>
+          </Panel>
+        </Cell>
         <Cell><Text id="hud_row_2_spell" class="hud_row" text="0"/></Cell>
         <Cell padding="0 20 0 0"><Image id="hud_row_2_image" class="hud_image"/></Cell>
         <Cell><Text id="hud_row_2_heroics" class="hud_row" text=""/></Cell>
         <Cell><Text id="hud_row_2_score" class="hud_row" text="0"/></Cell>
       </Row>
       <Row id="hud_row_3" preferredHeight="30">
-        <Cell><Text id="hud_row_3_player" fontSize="18" text="Green" color="Green"/></Cell>
+        <Cell padding="5 5 0 0">
+          <Panel id="hud_row_3_player_pnl" color="rgba(0,0,0,0)" padding="1 1 1 1">
+            <Panel color="#190609" >
+              <Text id="hud_row_3_player" fontSize="18" text="Green" color="Green"/>
+            </Panel>
+          </Panel>
+        </Cell>
         <Cell><Text id="hud_row_3_spell" class="hud_row" text="0"/></Cell>
         <Cell padding="0 20 0 0"><Image id="hud_row_3_image" class="hud_image"/></Cell>
         <Cell><Text id="hud_row_3_heroics" class="hud_row" text=""/></Cell>
         <Cell><Text id="hud_row_3_score" class="hud_row" text="0"/></Cell>
       </Row>
       <Row id="hud_row_4" preferredHeight="30">
-        <Cell><Text id="hud_row_4_player" fontSize="18" text="Yellow" color="Yellow"/></Cell>
+        <Cell padding="5 5 0 0">
+          <Panel id="hud_row_4_player_pnl" color="rgba(0,0,0,0)" padding="1 1 1 1">
+            <Panel color="#190609" >
+              <Text id="hud_row_4_player" fontSize="18" text="Yellow" color="Yellow"/>
+            </Panel>
+          </Panel>
+        </Cell>
         <Cell><Text id="hud_row_4_spell" class="hud_row" text="0"/></Cell>
         <Cell padding="0 20 0 0"><Image id="hud_row_4_image" class="hud_image"/></Cell>
         <Cell><Text id="hud_row_4_heroics" class="hud_row" text=""/></Cell>
@@ -487,290 +539,315 @@
 <Panel id="spell_card_pnl" active="false"
   class="draggable dark viewport"
   offsetXY="0 250"
-  height="350" width="1120">
-  <Panel id="inner_spell_cost_pnl"
-    height="330" width="1100">
-    <TableLayout class="dark viewport" columnWidths="200 900">
-      <Row preferredHeight="330">
-        <Cell padding="5 5 5 5">
-          <Image id="spell_cost_card_img" preserveAspect="true" image="" />
-        </Cell>
-        <Cell>
-          <TableLayout class="dark viewport">
-            <Row preferredHeight="30" class="title_row">
-              <Cell>
-                <Text fontSize="20" class="hud_header" text="Available resources to pay for spell:"/>
-              </Cell>
-            </Row>
-            <Row preferredHeight="80">
-              <Cell padding="0 0 10 10">
-                <TableLayout columnWidths="40 40 30 50 40 30 40 70 20 70 20 70 20 70 20 70 20 70 20 70">
-                  <Row>
-                    <Cell/>
-                    <Cell><Image id="spell_cost_mana_img" image="Mana" class="image_active" onClick="spellCostHandler"/></Cell>
-                    <Cell><Text id="spell_cost_mana_txt" color="White" fontSize="24" text="10"/></Cell>
-                    <Cell/>
-                    <Cell><Image id="spell_cost_acuity_img" image="Acuity" class="image_active" onClick="spellCostHandler"/></Cell>
-                    <Cell><Text id="spell_cost_acuity_txt" color="White" fontSize="24" text="10"/></Cell>
-                    <Cell/>
-                    <Cell><Image id="spell_cost_die_1_img" image="Earth" class="image_active" onClick="spellCostHandler"/></Cell>
-                    <Cell/>
-                    <Cell><Image id="spell_cost_die_2_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
-                    <Cell/>
-                    <Cell><Image id="spell_cost_die_3_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
-                    <Cell/>
-                    <Cell><Image id="spell_cost_die_4_img" image="Fire" class="image_active" onClick="spellCostHandler"/></Cell>
-                    <Cell/>
-                    <Cell><Image id="spell_cost_die_5_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
-                    <Cell/>
-                    <Cell><Image id="spell_cost_die_6_img" image="Lightning" class="image_active" onClick="spellCostHandler"/></Cell>
-                    <Cell/>
-                    <Cell><Image id="spell_cost_die_7_img" image="Lightning" class="image_active" onClick="spellCostHandler"/></Cell>
-                  </Row>
-                </TableLayout>
-              </Cell>
-            </Row>
-            <Row preferredHeight="30" class="title_row">
-              <Cell>
-                <Text fontSize="20" class="hud_header" text="Selected resources:"/>
-              </Cell>
-            </Row>
-            <Row preferredHeight="80">
-              <Cell padding="0 0 10 10">
-                <TableLayout columnWidths="110 40 30 50 40 30 40 70 20 70 20 70 20 70 20 70 20 70 0">
-                  <Row>
-                    <Cell/>
-                    <Cell><Image id="spell_assigned_mana_img" image="Mana" class="image_active" onClick="spellCostHandler"/></Cell>
-                    <Cell><Text id="spell_assigned_mana_txt" color="White" fontSize="24" text="0"/></Cell>
-                    <Cell/>
-                    <Cell><Image id="spell_assigned_acuity_img" image="Acuity" class="image_active" onClick="spellCostHandler"/></Cell>
-                    <Cell><Text id="spell_assigned_acuity_txt" color="White" fontSize="24" text="0"/></Cell>
-                    <Cell/>
-                    <Cell><Image id="spell_assigned_die_1_img" image="Earth" preserveAspect="true" onClick="spellCostHandler"/></Cell>
-                    <Cell/>
-                    <Cell><Image id="spell_assigned_die_2_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
-                    <Cell/>
-                    <Cell><Image id="spell_assigned_die_3_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
-                    <Cell/>
-                    <Cell><Image id="spell_assigned_die_4_img" image="Fire" class="image_active" onClick="spellCostHandler"/></Cell>
-                    <Cell/>
-                    <Cell><Image id="spell_assigned_die_5_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
-                    <Cell/>
-                  </Row>
-                </TableLayout>
-              </Cell>
-            </Row>
-            <Row preferredHeight="110">
-              <Cell padding="0 0 0 0">
-                <HorizontalLayout spacing="60">
-                  <Panel>
-                    <TableLayout columnWidths="0 40">
-                      <Row preferredHeight="30">
-                        <Cell columnspan="2">
-                          <Text class="hud_header" fontSize="16" text="Discounts:"/>
-                        </Cell>
-                      </Row>
-                      <Row preferredHeight="30">
-                        <Cell><Text class="hud_header" alignment="MiddleRight" fontSize="14" text="Mana:  "/></Cell>
-                        <Cell><Text id="spell_cost_mana_disc_txt" alignment="MiddleLeft" fontSize="16" color="white" text="0"/></Cell>
-                      </Row>
-                      <Row preferredHeight="30">
-                        <Cell><Text class="hud_header" alignment="MiddleRight" fontSize="14" text="Acuity:  "/></Cell>
-                        <Cell><Text id="spell_cost_acuity_disc_txt" alignment="MiddleLeft" fontSize="16" color="white" text="0"/></Cell>
-                      </Row>
-                    </TableLayout>
-                  </Panel>
-                  <Panel><Panel id="spell_cost_cancel_pnl" padding="0 0 25 25">
-                      <Button id="spell_cost_cancel_btn" text="Cancel" fontSize="24" onClick="spellCostHandler"/>
-                  </Panel></Panel>
-                  <Panel><Panel id="spell_cost_assign_pnl" padding="0 0 25 25">
-                      <Button id="spell_cost_assign_btn" text="Assign" fontSize="24" onClick="spellCostHandler"/>
-                  </Panel></Panel>
-                  <Panel padding="0 40 0 0">
-                    <TableLayout id="spell_cost_excess_tbl" columnWidths="0 40">
-                      <Row preferredHeight="30">
-                        <Cell columnspan="2">
-                          <Text class="hud_header" fontSize="16" text="Excess:"/>
-                        </Cell>
-                      </Row>
-                      <Row preferredHeight="30">
-                        <Cell><Text class="hud_header" alignment="MiddleRight" fontSize="14" text="Mana:  "/></Cell>
-                        <Cell><Text id="spell_cost_mana_excess_txt" alignment="MiddleLeft" fontSize="16" color="white" text="0"/></Cell>
-                      </Row>
-                      <Row preferredHeight="30">
-                        <Cell><Text class="hud_header" alignment="MiddleRight" fontSize="14" text="Acuity:  "/></Cell>
-                        <Cell><Text id="spell_cost_acuity_excess_txt" alignment="MiddleLeft" fontSize="16" color="white" text="0"/></Cell>
-                      </Row>
-                    </TableLayout>
-                  </Panel>
-                </HorizontalLayout>
-              </Cell>
-            </Row>
-          </TableLayout>
-        </Cell>
-      </Row>
-    </TableLayout>
-  </Panel>
+  height="350" width="1120"
+  padding="10 10 10 10">
+  <TableLayout class="dark viewport" columnWidths="200 900">
+    <Row preferredHeight="330">
+      <Cell padding="5 5 5 5">
+        <Image id="spell_cost_card_img" preserveAspect="true" image="Spell-3" />
+      </Cell>
+      <Cell>
+        <TableLayout>
+          <Row preferredHeight="30" class="title_row">
+            <Cell>
+              <Text fontSize="20" class="hud_header" text="Available resources to pay for spell:"/>
+            </Cell>
+          </Row>
+          <Row preferredHeight="80">
+            <Cell padding="0 0 10 10">
+              <TableLayout columnWidths="40 40 30 50 40 30 40 70 20 70 20 70 20 70 20 70 20 70 20 70">
+                <Row>
+                  <Cell/>
+                  <Cell><Image id="spell_cost_mana_img" image="Mana" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell><Text id="spell_cost_mana_txt" color="White" fontSize="24" text="10"/></Cell>
+                  <Cell/>
+                  <Cell><Image id="spell_cost_acuity_img" image="Acuity" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell><Text id="spell_cost_acuity_txt" color="White" fontSize="24" text="10"/></Cell>
+                  <Cell/>
+                  <Cell><Image id="spell_cost_die_1_img" image="Earth" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell/>
+                  <Cell><Image id="spell_cost_die_2_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell/>
+                  <Cell><Image id="spell_cost_die_3_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell/>
+                  <Cell><Image id="spell_cost_die_4_img" image="Fire" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell/>
+                  <Cell><Image id="spell_cost_die_5_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell/>
+                  <Cell><Image id="spell_cost_die_6_img" image="Lightning" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell/>
+                  <Cell><Image id="spell_cost_die_7_img" image="Lightning" class="image_active" onClick="spellCostHandler"/></Cell>
+                </Row>
+              </TableLayout>
+            </Cell>
+          </Row>
+          <Row preferredHeight="30" class="title_row">
+            <Cell>
+              <Text fontSize="20" class="hud_header" text="Selected resources:"/>
+            </Cell>
+          </Row>
+          <Row preferredHeight="80">
+            <Cell padding="0 0 10 10">
+              <TableLayout columnWidths="110 40 30 50 40 30 40 70 20 70 20 70 20 70 20 70 20 70 0">
+                <Row>
+                  <Cell/>
+                  <Cell><Image id="spell_assigned_mana_img" image="Mana" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell><Text id="spell_assigned_mana_txt" color="White" fontSize="24" text="0"/></Cell>
+                  <Cell/>
+                  <Cell><Image id="spell_assigned_acuity_img" image="Acuity" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell><Text id="spell_assigned_acuity_txt" color="White" fontSize="24" text="0"/></Cell>
+                  <Cell/>
+                  <Cell><Image id="spell_assigned_die_1_img" image="Earth" preserveAspect="true" onClick="spellCostHandler"/></Cell>
+                  <Cell/>
+                  <Cell><Image id="spell_assigned_die_2_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell/>
+                  <Cell><Image id="spell_assigned_die_3_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell/>
+                  <Cell><Image id="spell_assigned_die_4_img" image="Fire" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell/>
+                  <Cell><Image id="spell_assigned_die_5_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell/>
+                </Row>
+              </TableLayout>
+            </Cell>
+          </Row>
+          <Row preferredHeight="110">
+            <Cell padding="0 0 0 0">
+              <HorizontalLayout spacing="60">
+                <Panel>
+                  <TableLayout columnWidths="0 40">
+                    <Row preferredHeight="30">
+                      <Cell columnspan="2">
+                        <Text class="hud_header" fontSize="16" text="Discounts:"/>
+                      </Cell>
+                    </Row>
+                    <Row preferredHeight="30">
+                      <Cell><Text class="hud_header" alignment="MiddleRight" fontSize="14" text="Mana:  "/></Cell>
+                      <Cell><Text id="spell_cost_mana_disc_txt" alignment="MiddleLeft" fontSize="16" color="white" text="0"/></Cell>
+                    </Row>
+                    <Row preferredHeight="30">
+                      <Cell><Text class="hud_header" alignment="MiddleRight" fontSize="14" text="Acuity:  "/></Cell>
+                      <Cell><Text id="spell_cost_acuity_disc_txt" alignment="MiddleLeft" fontSize="16" color="white" text="0"/></Cell>
+                    </Row>
+                  </TableLayout>
+                </Panel>
+                <Panel><Panel id="spell_cost_cancel_pnl" padding="0 0 25 25">
+                    <Button id="spell_cost_cancel_btn" text="Cancel" fontSize="24" onClick="spellCostHandler"/>
+                </Panel></Panel>
+                <Panel><Panel id="spell_cost_assign_pnl" padding="0 0 25 25">
+                    <Button id="spell_cost_assign_btn" text="Assign" fontSize="24" onClick="spellCostHandler"/>
+                </Panel></Panel>
+                <Panel padding="0 40 0 0">
+                  <TableLayout id="spell_cost_excess_tbl" columnWidths="0 40">
+                    <Row preferredHeight="30">
+                      <Cell columnspan="2">
+                        <Text class="hud_header" fontSize="16" text="Excess:"/>
+                      </Cell>
+                    </Row>
+                    <Row preferredHeight="30">
+                      <Cell><Text class="hud_header" alignment="MiddleRight" fontSize="14" text="Mana:  "/></Cell>
+                      <Cell><Text id="spell_cost_mana_excess_txt" alignment="MiddleLeft" fontSize="16" color="white" text="0"/></Cell>
+                    </Row>
+                    <Row preferredHeight="30">
+                      <Cell><Text class="hud_header" alignment="MiddleRight" fontSize="14" text="Acuity:  "/></Cell>
+                      <Cell><Text id="spell_cost_acuity_excess_txt" alignment="MiddleLeft" fontSize="16" color="white" text="0"/></Cell>
+                    </Row>
+                  </TableLayout>
+                </Panel>
+              </HorizontalLayout>
+            </Cell>
+          </Row>
+        </TableLayout>
+      </Cell>
+    </Row>
+  </TableLayout>
 </Panel>
 
 <!-- Alteration card panel -->
 <Panel id="alteration_card_pnl" active="false"
   class="draggable dark viewport"
   offsetXY="0 50"
-  height="350" width="1120"
+  height="360" width="1120"
   padding="10 10 10 10">
-  <TableLayout class="base_table" color="#301616" columnWidths="200 900">
-    <Row preferredHeight="330">
+  <TableLayout class="dark viewport" columnWidths="200 900">
+    <Row preferredHeight="340">
       <Cell padding="5 5 5 5">
         <Image id="alteration_card_img" preserveAspect="true" image="Alt-1" onClick="alterationDlgHandler"/>
       </Cell>
       <Cell>
-        <!-- Select action -->
-        <TableLayout id="alteration_select_action_tbl" class="base_table" ignoreLayout="true" active="true"
-          rectAlignment="UpperCenter" height="270" width="900">
-          <Row class="base_table_row" preferredHeight="135">
-            <Cell padding="20 20 10 10">
-              <HorizontalLayout spacing="20">
-                <Panel>
-                  <Button padding="20 20 0 10" id="alteration_primary_action_btn" onClick="alterationDlgHandler">
-                    <Text id="alteration_primary_action_txt" class="alt_action_btn_txt" text="Primary" />
-                  </Button>
-                </Panel>
-                <Panel id="alteration_primary_or_action_pnl">
-                  <Button padding="20 20 0 10" id="alteration_primary_or_action_btn" onClick="alterationDlgHandler">
-                    <Text id="alteration_primary_or_action_txt" class="alt_action_btn_txt" text="OR Primary" />
-                  </Button>
-                </Panel>
-              </HorizontalLayout>
-            </Cell>
-          </Row>
-          <Row class="base_table_row" preferredHeight="135">
-            <Cell padding="20 20 10 10">
-              <HorizontalLayout spacing="20">
-                <Panel id="alteration_secondary_action_pnl">
-                  <Button padding="20 20 0 10" id="alteration_secondary_action_btn" onClick="alterationDlgHandler">
-                    <Text id="alteration_secondary_action_txt" class="alt_action_btn_txt" text="Secondary" />
-                  </Button>
-                </Panel>
-                <Panel id="alteration_discard_action_pnl">
-                  <Button padding="20 20 0 10" id="alteration_discard_action_btn" onClick="alterationDlgHandler">
-                    <Text id="alteration_discard_action_txt" class="alt_action_btn_txt"
-                      text="DISCARD: Spend one Acuity and then take another card." />
-                  </Button>
-                </Panel>
-              </HorizontalLayout>
-            </Cell>
-          </Row>
-        </TableLayout>
-        <!-- Pay acuity -->
-        <TableLayout id="alteration_pay_acuity_tbl" class="base_table" ignoreLayout="true" active="false"
-          columnWidths="0 0"
-          rectAlignment="UpperCenter" height="270" width="900">
-          <Row class="base_table_row">
-            <Cell columnSpan="2">
-              <Text class="table_title_text" text="Pay Acuity to convert:"/>
-            </Cell>
-          </Row>
-          <Row class="base_table_row">
-            <Cell padding="5">
-              <VerticalLayout>
-                <Text class="hud_header" fontSize="20" text="Available Acuity:"/>
-                <Text id="alteration_available_acuity_txt" fontSize="24" color="white" text="0"/>
-              </VerticalLayout>
-            </Cell>
-            <Cell padding="5">
-              <VerticalLayout>
-                <Text class="hud_header" fontSize="20" text="Acuity to pay:"/>
-                <Text id="alteration_paid_acuity_txt" fontSize="24" color="white" text="0"/>
-              </VerticalLayout>
-            </Cell>
-          </Row>
-          <Row class="base_table_row">
-            <Cell/>
+        <TableLayout>
+          <!-- Select action -->
+          <Row id="alteration_select_action_row" preferredHeight="270" active="true">
             <Cell>
-              <HorizontalLayout>
-                <Panel padding="80 40 20 20">
-                  <Button padding="0 0 0 5" id="alteration_dec_acuity_btn" fontSize="40" text="-" onClick="alterationDlgHandler"/>
-                </Panel>
-                <Panel padding="40 80 20 20">
-                  <Button id="alteration_inc_acuity_btn" fontSize="40" text="+" onClick="alterationDlgHandler"/>
-                </Panel>
-              </HorizontalLayout>
-            </Cell>
-          </Row>
-        </TableLayout>
-        <!-- Convert dice -->
-        <TableLayout id="alteration_convert_dice_tbl" class="base_table" ignoreLayout="true" active="false"
-          columnWidths="0 0"
-          rectAlignment="UpperCenter" height="270" width="900">
-          <Row class="base_table_row">
-            <Cell padding="0 0 10 10">
-              <TableLayout columnWidths="0 20 70 20 70 20 70 20 70 20 70 20 70 20 70 20">
-                <Row>
-                  <Cell>
-                    <Text class="hud_header" fontSize="24" text="Available Dice:"/>
-                  </Cell>
-                  <Cell/>
-                  <Cell><Image id="convert_from_die_1_img" image="Earth" class="image_active" onClick="alterationDlgHandler"/></Cell>
-                  <Cell/>
-                  <Cell><Image id="convert_from_die_2_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
-                  <Cell/>
-                  <Cell><Image id="convert_from_die_3_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
-                  <Cell/>
-                  <Cell><Image id="convert_from_die_4_img" image="Fire" class="image_active" onClick="alterationDlgHandler"/></Cell>
-                  <Cell/>
-                  <Cell><Image id="convert_from_die_5_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
-                  <Cell/>
-                  <Cell><Image id="convert_from_die_6_img" image="Lightning" class="image_active" onClick="alterationDlgHandler"/></Cell>
-                  <Cell/>
-                  <Cell><Image id="convert_from_die_7_img" image="Lightning" class="image_active" onClick="alterationDlgHandler"/></Cell>
-                  <Cell/>
-                </Row>
-                <Row>
-                  <Cell>
-                    <VerticalLayout>
-                      <Text id="convert_to_dice_title_txt" class="hud_header" fontSize="24" text="Converted Dice:"/>
-                      <Text class="hud_header" fontSize="16" text="Right Click to return a die"/>
-                      <Panel id="convert_cycle_to_die_pnl">
-                        <Text id="convert_cycle_to_die_txt" class="hud_header" fontSize="16" text="Click to cycle elements"/>
+              <TableLayout >
+                <Row preferredHeight="135">
+                  <Cell padding="20 20 10 10">
+                    <HorizontalLayout spacing="20">
+                      <Panel>
+                        <Button padding="20 20 0 10" id="alteration_primary_action_btn" onClick="alterationDlgHandler">
+                          <Text id="alteration_primary_action_txt" class="alt_action_btn_txt" text="Primary" />
+                        </Button>
                       </Panel>
-                    </VerticalLayout>
+                      <Panel id="alteration_primary_or_action_pnl">
+                        <Button padding="20 20 0 10" id="alteration_primary_or_action_btn" onClick="alterationDlgHandler">
+                          <Text id="alteration_primary_or_action_txt" class="alt_action_btn_txt" text="OR Primary" />
+                        </Button>
+                      </Panel>
+                    </HorizontalLayout>
                   </Cell>
-                  <Cell/>
-                  <Cell><Image id="convert_to_die_1_img" image="Earth" class="image_active" onClick="alterationDlgHandler"/></Cell>
-                  <Cell/>
-                  <Cell><Image id="convert_to_die_2_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
-                  <Cell/>
-                  <Cell><Image id="convert_to_die_3_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
-                  <Cell/>
-                  <Cell><Image id="convert_to_die_4_img" image="Fire" class="image_active" onClick="alterationDlgHandler"/></Cell>
-                  <Cell/>
-                  <Cell><Image id="convert_to_die_5_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
-                  <Cell/>
-                  <Cell><Image id="convert_to_die_6_img" image="Lightning" class="image_active" onClick="alterationDlgHandler"/></Cell>
-                  <Cell/>
-                  <Cell><Image id="convert_to_die_7_img" image="Lightning" class="image_active" onClick="alterationDlgHandler"/></Cell>
-                  <Cell/>
+                </Row>
+                <Row preferredHeight="135">
+                  <Cell padding="20 20 10 10">
+                    <HorizontalLayout spacing="20">
+                      <Panel id="alteration_secondary_action_pnl">
+                        <Button padding="20 20 0 10" id="alteration_secondary_action_btn" onClick="alterationDlgHandler">
+                          <Text id="alteration_secondary_action_txt" class="alt_action_btn_txt" text="Secondary" />
+                        </Button>
+                      </Panel>
+                      <Panel id="alteration_discard_action_pnl">
+                        <Button padding="20 20 0 10" id="alteration_discard_action_btn" onClick="alterationDlgHandler">
+                          <Text id="alteration_discard_action_txt" class="alt_action_btn_txt"
+                            text="DISCARD: Spend one Acuity and then take another card." />
+                        </Button>
+                      </Panel>
+                    </HorizontalLayout>
+                  </Cell>
                 </Row>
               </TableLayout>
             </Cell>
           </Row>
+          <!-- Pay acuity -->
+          <Row id="alteration_pay_acuity_row" preferredHeight="270" active="false">
+            <Cell>
+              <TableLayout columnWidths="0 0" >
+                <Row>
+                  <Cell columnSpan="2">
+                    <Text class="table_title_text" text="Pay Acuity to convert:"/>
+                  </Cell>
+                </Row>
+                <Row >
+                  <Cell padding="5">
+                    <VerticalLayout>
+                      <Text class="hud_header" fontSize="20" text="Available Acuity:"/>
+                      <Text id="alteration_available_acuity_txt" fontSize="24" color="white" text="0"/>
+                    </VerticalLayout>
+                  </Cell>
+                  <Cell padding="5">
+                    <VerticalLayout>
+                      <Text class="hud_header" fontSize="20" text="Acuity to pay:"/>
+                      <Text id="alteration_paid_acuity_txt" fontSize="24" color="white" text="0"/>
+                    </VerticalLayout>
+                  </Cell>
+                </Row>
+                <Row >
+                  <Cell/>
+                  <Cell>
+                    <HorizontalLayout>
+                      <Panel padding="80 40 20 20">
+                        <Button padding="0 0 0 5" id="alteration_dec_acuity_btn" fontSize="40" text="-" onClick="alterationDlgHandler"/>
+                      </Panel>
+                      <Panel padding="40 80 20 20">
+                        <Button id="alteration_inc_acuity_btn" fontSize="40" text="+" onClick="alterationDlgHandler"/>
+                      </Panel>
+                    </HorizontalLayout>
+                  </Cell>
+                </Row>
+              </TableLayout>
+            </Cell>
+          </Row>
+          <!-- Convert dice -->
+          <Row id="alteration_convert_dice_row" preferredHeight="270" active="false">
+            <Cell>
+              <TableLayout>
+                <Row preferredHeight="30" class="title_row">
+                  <Cell>
+                    <Text fontSize="20" class="hud_header" text="Unassigned dice availble to convert:"/>
+                  </Cell>
+                </Row>
+                <Row preferredHeight="100">
+                  <Cell padding="0 0 10 10">
+                    <TableLayout columnWidths="0 20 70 20 70 20 70 20 70 20 70 20 70 20 70 20">
+                      <Row>
+                        <Cell>
+                          <Text class="hud_header" fontSize="18" text="Click to select"/>
+                        </Cell>
+                        <Cell/>
+                        <Cell><Image id="convert_from_die_1_img" image="Earth" class="image_active" onClick="alterationDlgHandler"/></Cell>
+                        <Cell/>
+                        <Cell><Image id="convert_from_die_2_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
+                        <Cell/>
+                        <Cell><Image id="convert_from_die_3_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
+                        <Cell/>
+                        <Cell><Image id="convert_from_die_4_img" image="Fire" class="image_active" onClick="alterationDlgHandler"/></Cell>
+                        <Cell/>
+                        <Cell><Image id="convert_from_die_5_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
+                        <Cell/>
+                        <Cell><Image id="convert_from_die_6_img" image="Lightning" class="image_active" onClick="alterationDlgHandler"/></Cell>
+                        <Cell/>
+                        <Cell><Image id="convert_from_die_7_img" image="Lightning" class="image_active" onClick="alterationDlgHandler"/></Cell>
+                        <Cell/>
+                      </Row>
+                    </TableLayout>
+                  </Cell>
+                </Row>
+                <Row preferredHeight="30" class="title_row">
+                  <Cell>
+                    <Text id="convert_to_dice_title_txt" fontSize="20" class="hud_header" text="Converted Dice:"/>
+                  </Cell>
+                </Row>
+                <Row preferredHeight="100">
+                  <Cell padding="0 0 10 10">
+                    <TableLayout columnWidths="0 20 70 20 70 20 70 20 70 20 70 20 70 20 70 20">
+                      <Row>
+                        <Cell>
+                          <VerticalLayout>
+                            <Text class="hud_header" fontSize="16" text="Right Click to deselect"/>
+                            <Panel id="convert_cycle_to_die_pnl">
+                              <Text id="convert_cycle_to_die_txt" class="hud_header" fontSize="16" text="Click to cycle elements"/>
+                            </Panel>
+                          </VerticalLayout>
+                        </Cell>
+                        <Cell/>
+                        <Cell><Image id="convert_to_die_1_img" image="Earth" class="image_active" onClick="alterationDlgHandler"/></Cell>
+                        <Cell/>
+                        <Cell><Image id="convert_to_die_2_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
+                        <Cell/>
+                        <Cell><Image id="convert_to_die_3_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
+                        <Cell/>
+                        <Cell><Image id="convert_to_die_4_img" image="Fire" class="image_active" onClick="alterationDlgHandler"/></Cell>
+                        <Cell/>
+                        <Cell><Image id="convert_to_die_5_img" image="Water" class="image_active" onClick="alterationDlgHandler"/></Cell>
+                        <Cell/>
+                        <Cell><Image id="convert_to_die_6_img" image="Lightning" class="image_active" onClick="alterationDlgHandler"/></Cell>
+                        <Cell/>
+                        <Cell><Image id="convert_to_die_7_img" image="Lightning" class="image_active" onClick="alterationDlgHandler"/></Cell>
+                        <Cell/>
+                      </Row>
+                    </TableLayout>
+                  </Cell>
+                </Row>
+              </TableLayout>
+            </Cell>
+          </Row>
+          <!-- Buttons -->
+          <Row preferredHeight="70">
+            <Cell padding="0 0 0 10">
+              <HorizontalLayout spacing="20" >
+                <Panel/>
+                <Panel padding="10 10 5 5" id="alteration_cancel_pnl">
+                  <Button padding="0 0 0 5" id="alteration_cancel_btn" text="Cancel" fontSize="20" onClick="alterationDlgHandler"/>
+                </Panel>
+                <Panel padding="10 10 5 5" id="alteration_done_pnl" active="false">
+                  <Button padding="0 0 0 5" id="alteration_done_btn" text="Done" fontSize="20" onClick="alterationDlgHandler"/>
+                </Panel>
+                <Panel padding="10 10 5 5" id="alteration_next_pnl" active="false">
+                  <Button padding="0 0 0 5" id="alteration_next_btn" text="Next" fontSize="20" onClick="alterationDlgHandler"/>
+                </Panel>
+                <Panel/>
+              </HorizontalLayout>
+            </Cell>
+          </Row>
         </TableLayout>
-        <!-- Buttons -->
-        <HorizontalLayout id="alteration_card_buttons" ignoreLayout="true" active="true"
-          color="#301616" spacing="20" rectAlignment="LowerCenter" height="60" width="900">
-          <Panel/>
-          <Panel padding="10 10 5 5" id="alteration_cancel_pnl">
-            <Button padding="0 0 0 5" id="alteration_cancel_btn" text="Cancel" fontSize="20" onClick="alterationDlgHandler"/>
-          </Panel>
-          <Panel padding="10 10 5 5" id="alteration_done_pnl" active="false">
-            <Button padding="0 0 0 5" id="alteration_done_btn" text="Done" fontSize="20" onClick="alterationDlgHandler"/>
-          </Panel>
-          <Panel padding="10 10 5 5" id="alteration_next_pnl" active="false">
-            <Button padding="0 0 0 5" id="alteration_next_btn" text="Next" fontSize="20" onClick="alterationDlgHandler"/>
-          </Panel>
-          <Panel/>
-        </HorizontalLayout>
       </Cell>
     </Row>
   </TableLayout>
@@ -975,12 +1052,12 @@
 </Panel>
 
 <!-- Heroics panel -->
-<Panel id="heroic_pnl" active="false"
+<!-- <Panel id="heroic_pnl" active="false"
   class="draggable dark viewport"
   offsetXY="0 350"
   height="350" width="920">
   <Panel id="inner_heroic_panel" height="330" width="900">
-    <TableLayout class="heroics_table">
+    <TableLayout class="dark viewport">
       <Row preferredHeight="30" >
         <Cell columnSpan="6">
           <Text class="hud_header">Claim one Heroic card</Text>
@@ -1040,134 +1117,157 @@
       </Row>
     </TableLayout>
   </Panel>
+</Panel> -->
+
+<!-- Endgame panel -->
+<Panel id="endgame_pnl" active="false"
+  class="draggable dark viewport"
+  offsetXY="0 350"
+  padding = "10"
+  height="120" width="520">
+  <Panel class="dark viewport">
+    <TableLayout class="dark viewport">
+      <Row preferredHeight="50">
+        <Cell>
+          <Text id="endgame_txt" class="hud_header" fontSize="24" text="End of Game triggered by Green"/>
+        </Cell>
+      </Row>
+      <Row preferredHeight="50">
+        <Cell>
+          <Text class="hud_header" fontSize="20" text="Remaining players cast spells in turn order"/>
+        </Cell>
+      </Row>
+    </TableLayout>
+  </Panel>
 </Panel>
 
 <!-- Final Scoring table -->
 <Panel id="score_panel" active="false"
-  width="900" height="360"
-  showAnimation="Grow" hideAnimation="Shrink">
-  <TableLayout class="score_table">
-    <Row id="table_1_title_row" class="title_row">
+  width="920" height="320" padding="10 10 10 10"
+  class="draggable dark viewport">
+  <TableLayout class="dark viewport"
+    columnWidths="140 150 0 0 0 0 0">
+    <Row id="table_1_title_row" class="title_row" preferredHeight="50">
       <Cell class="header_cell" columnSpan="7">
-        <Text id="table_1_title_text" class="table_title_text" text="Final Scoring" />
+        <Text id="score_title_text" class="table_title_text" text="Final Scoring" />
       </Cell>
     </Row>
     <Row id="score_table_header" preferredHeight="50">
       <Cell class="header_cell">
-        <Text id="score_table_header_text_1" class="table_header_text" text="Player" />
+        <Text id="score_table_header_text_1" class="hud_header" fontSize="20" text="" />
       </Cell>
       <Cell class="header_cell">
-        <Text id="score_table_header_text_2" class="table_header_text" text="Class" />
+        <Text id="score_table_header_text_2" class="hud_header" fontSize="20"  text="Class" />
       </Cell>
       <Cell class="header_cell">
-        <Text id="score_table_header_text_3" class="table_header_text" text="Heroics" />
+        <Text id="score_table_header_text_3" class="hud_header" fontSize="20"  text="Heroics" />
       </Cell>
       <Cell class="header_cell">
-        <Text id="score_table_header_text_4" class="table_header_text" text="Sigils" />
+        <Text id="score_table_header_text_4" class="hud_header" fontSize="20"  text="Sigils" />
       </Cell>
       <Cell class="header_cell">
-        <Text id="score_table_header_text_5" class="table_header_text" text="Prestige" />
+        <Text id="score_table_header_text_5" class="hud_header" fontSize="20"  text="Prestige" />
       </Cell>
       <Cell class="header_cell">
-        <Text id="score_table_header_text_6" class="table_header_text" text="Arcanas" />
+        <Text id="score_table_header_text_6" class="hud_header" fontSize="20"  text="Arcanas" />
       </Cell>
       <Cell class="header_cell">
-        <Text id="score_table_header_text_7" class="table_header_text" text="Total" />
+        <Text id="score_table_header_text_7" class="hud_header" fontSize="20"  text="Total" />
       </Cell>
     </Row>
-    <Row id="score_table_row_1" active="true" class="score_data_row">
-      <Cell class="table_cell">
-        <Text id="score_table_row_1_text_1" class="table_data_text" text="color"/>
+    <Row id="score_table_row_1" active="true" preferredHeight="50">
+      <Cell class="dark">
+        <Text id="score_table_row_1_text_1" class="hud_header" fontSize="20" text="color"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_1_text_2" class="table_data_text" text="class"/>
+        <Text id="score_table_row_1_text_2" class="hud_header" fontSize="16" text="class"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_1_text_3" class="table_data_text" text="0"/>
+        <Text id="score_table_row_1_text_3" fontSize="20" text="0"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_1_text_4" class="table_data_text" text="0"/>
+        <Text id="score_table_row_1_text_4" fontSize="20" text="0"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_1_text_5" class="table_data_text" text="0"/>
+        <Text id="score_table_row_1_text_5" fontSize="20" text="0"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_1_text_6" class="table_data_text" text="0"/>
+        <Text id="score_table_row_1_text_6" fontSize="20" text="0"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_1_text_7" class="table_data_text" text="0"/>
-      </Cell>
-    </Row>
-
-    <Row id="score_table_row_2" active="true" class="score_data_row">
-      <Cell class="table_cell">
-        <Text id="score_table_row_2_text_1" class="table_data_text" text="color"/>
-      </Cell>
-      <Cell class="table_cell">
-        <Text id="score_table_row_2_text_2" class="table_data_text" text="class"/>
-      </Cell>
-      <Cell class="table_cell">
-        <Text id="score_table_row_2_text_3" class="table_data_text" text="0"/>
-      </Cell>
-      <Cell class="table_cell">
-        <Text id="score_table_row_2_text_4" class="table_data_text" text="0"/>
-      </Cell>
-      <Cell class="table_cell">
-        <Text id="score_table_row_2_text_5" class="table_data_text" text="0"/>
-      </Cell>
-      <Cell class="table_cell">
-        <Text id="score_table_row_2_text_6" class="table_data_text" text="0"/>
-      </Cell>
-      <Cell class="table_cell">
-        <Text id="score_table_row_2_text_7" class="table_data_text" text="0"/>
+        <Text id="score_table_row_1_text_7" fontSize="20" text="0"/>
       </Cell>
     </Row>
 
-    <Row id="score_table_row_3" active="true" class="score_data_row">
-      <Cell class="table_cell">
-        <Text id="score_table_row_3_text_1" class="table_data_text" text="color"/>
+    <Row id="score_table_row_2" active="true" preferredHeight="50">
+      <Cell class="dark">
+        <Text id="score_table_row_2_text_1" class="hud_header" fontSize="20" text="color"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_3_text_2" class="table_data_text" text="class"/>
+        <Text id="score_table_row_2_text_2" class="hud_header" fontSize="16" text="class"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_3_text_3" class="table_data_text" text="0"/>
+        <Text id="score_table_row_2_text_3" fontSize="20" text="0"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_3_text_4" class="table_data_text" text="0"/>
+        <Text id="score_table_row_2_text_4" fontSize="20" text="0"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_3_text_5" class="table_data_text" text="0"/>
+        <Text id="score_table_row_2_text_5" fontSize="20" text="0"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_3_text_6" class="table_data_text" text="0"/>
+        <Text id="score_table_row_2_text_6" fontSize="20" text="0"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_3_text_7" class="table_data_text" text="0"/>
+        <Text id="score_table_row_2_text_7" fontSize="20" text="0"/>
       </Cell>
     </Row>
 
-    <Row id="score_table_row_4" active="true" class="score_data_row">
-      <Cell class="table_cell">
-        <Text id="score_table_row_4_text_1" class="table_data_text" text="color"/>
+    <Row id="score_table_row_3" active="true" preferredHeight="50">
+      <Cell class="dark">
+        <Text id="score_table_row_3_text_1" class="hud_header" fontSize="20" text="color"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_4_text_2" class="table_data_text" text="class"/>
+        <Text id="score_table_row_3_text_2" class="hud_header" fontSize="16" text="class"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_4_text_3" class="table_data_text" text="0"/>
+        <Text id="score_table_row_3_text_3" fontSize="20" text="0"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_4_text_4" class="table_data_text" text="0"/>
+        <Text id="score_table_row_3_text_4" fontSize="20" text="0"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_4_text_5" class="table_data_text" text="0"/>
+        <Text id="score_table_row_3_text_5" fontSize="20" text="0"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_4_text_6" class="table_data_text" text="0"/>
+        <Text id="score_table_row_3_text_6" fontSize="20" text="0"/>
       </Cell>
       <Cell class="table_cell">
-        <Text id="score_table_row_4_text_7" class="table_data_text" text="0"/>
+        <Text id="score_table_row_3_text_7" fontSize="20" text="0"/>
+      </Cell>
+    </Row>
+
+    <Row id="score_table_row_4" active="true" preferredHeight="50">
+      <Cell class="dark">
+        <Text id="score_table_row_4_text_1" class="hud_header" fontSize="20" text="color"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_4_text_2" class="hud_header" fontSize="16" text="class"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_4_text_3" fontSize="20" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_4_text_4" fontSize="20" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_4_text_5" fontSize="20" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_4_text_6" fontSize="20" text="0"/>
+      </Cell>
+      <Cell class="table_cell">
+        <Text id="score_table_row_4_text_7" fontSize="20" text="0"/>
       </Cell>
     </Row>
 

@@ -901,7 +901,7 @@ heroics = {
   {
     id = 14,
     guid = "83b8d5",
-    cost = {Ruin = 21, Restore = 21},
+    cost = {Ruin = 21, Restore = 30},
     vp = 13,
     sigils = {"green"},
     desc = "",

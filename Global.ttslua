@@ -2,27 +2,41 @@
 
 Work items for converstion of beta to production version:
 
-  --BUG: convert enchant spell does not convert dice spell power (probably also not acuity spell power)
-          coded this to only affect card spell power.  Confirm what's right with rules.
+  --BUG MINOR don't show any buttons (cast/take) while edit acuity spell panel is active.
+
+  --TODO: Endgame stuff.  MVP done. All needs to be tested.
+        -- DONE all take buttons disabled
+        -- mystrune disabled (or not)???
+        -- DONE disallow card play
+        -- DONE only enable cast button
+        -- Maybe blow away the g_lower board?  Or cover it with an endgame dialog?
+
   --BUG: something wrong with image asset "Spell-4".  Will not load.
+        --HACK: WORKAROUND: just load Spell-3 whenever Spell-4 comes up.
+
+Future possible stuff for greater enhancement
+
+  --TODO: add undo for some functions
+      -- take alteration card for sure
+      -- recycle spell?
+      -- take back used alterations?
+
+  --TODO: smart spell card placement.  In generating map.
+      -- move link spell(s) to highest value base spell (easy)
+      -- auto convert option base spells (hard?)
+      -- how to take into account enchant spells? (VERY hard)
+
+  - TODO: start options in UI start game panel
+
+  --TODO: change arcanas into cards, move data into cards.ttslua
 
   --TODO: OPTIMIZE add discarded alteration cards counter to player data.  Check on playerboard
         ui update to avoid locating deck with physics everyt time.  Only do if count > 0.
 
-  --TODO: change arcanas into cards, move data into cards.ttslua
-
-  --TODO: move updateSpellButtons() and updateAlterationButtons() into updateHUD()
-          NOTE: would have to only run those for the active player.
-          Effectively make updateHUD into updateUI (the entire UI)
-  --TODO: Mostly done.  Call UI updates on game restore.
-  --TODO: Change UI_setAttribute back to UI.setAttribute in UI update functions,
+  --TODO: MAYBE? Change UI_setAttribute back to UI.setAttribute in UI update functions,
           persistent state no longer needed there.
 
-  - TODO: start options in UI start game panel
-
   --TODO: eleminate redundancy in Spell card info and images.  Bunch of same.
-
-Future possible stuff for greater enhancement
 
   --TODO: automate assigning resources to spell cards???  At least for fixed dice slots.
 
@@ -31,15 +45,15 @@ Future possible stuff for greater enhancement
 env = {}
 env.version = "1.0.2 production release"
 env.test= {}
--- env.test.test_players = {"Green", "Blue", "Yellow", "Red"}
+env.test.test_players = {"Green", "Blue", "Yellow", "Red"}
 -- env.test.test_players = {"Yellow", "Red", "Blue"}
-env.test.test_players = {"Red", "Blue"}
+-- env.test.test_players = {"Red", "Blue"}
 -- env.test.test_players = {"Green", "Blue"}
 -- env.test.test_players = {"Green", "Blue"}
 env.test.auto_switch = true
 env.test.in_dev = false
 env.test.trace = true
-env.test.debug = true
+env.test.debug = false
 env.test.force_fresh_save = false
 env.game = {}
 env.game.player_table_order = {"Red", "Blue", "Green", "Yellow"}  --clockwise
@@ -84,11 +98,11 @@ function onLoad(saved_data)
     for _,a in ipairs(C.arcanas) do
       getObjectFromGUID(a.guid).setInvisibleTo(Player.getColors())
     end
-    --persistent state data
+    --persistent UI state data
     GD.states = {}
     GD.states.UI = {}
+    GD.states.UI_class = {}
     GD.states.object_UI = {}
-    GD.states.table_UI = {} --TODO: remove!!!
     --persistent environment vars
     GD.env = {}
     GD.env.verbose = env.game.verbose
@@ -156,16 +170,25 @@ end
 
 --[[  Wrapper function for saving Global UI attributes for game restore. ]]
 function UI_setAttribute(id, field, value)
-  if env.test.trace then log("UI_setAttribute() "..tostring(id)..", "..tostring(field)..", "..tostring(value)) end
+  -- if env.test.trace then log("UI_setAttribute() "..tostring(id)..", "..tostring(field)..", "..tostring(value)) end
   assert(type(id) == "string", "id must be a string")
   assert(type(field) == "string", "field must be a string")
   UI.setAttribute(id, field, value)
   GD.states.UI[id..":"..field] = value
 end
 
+--[[  Wrapper function for saving Global UI setClass for game restore. ]]
+function UI_setClass(id, value)
+  if env.test.trace then log("UI_setClass() "..tostring(id)..", "..tostring(value)) end
+  assert(type(id) == "string", "id must be a string")
+  assert(type(value) == "string", "value must be a string")
+  UI.setClass(id, value)
+  GD.states.UI_class[id] = value
+end
+
 --[[  Wrapper function for saving object UI attributes for game restore. ]]
 function object_UI_setAttribute(guid, id, field, value)
-  if env.test.trace then log("object_UI_setAttribute() "..tostring(guid)..", "..tostring(id)..", "..tostring(field)..", "..tostring(value)) end
+  -- if env.test.trace then log("object_UI_setAttribute() "..tostring(guid)..", "..tostring(id)..", "..tostring(field)..", "..tostring(value)) end
   assert(guid, "object_UI_setAttribute(): missing guid")
   assert(type(id) == "string", "object_UI_setAttribute(): id must be a string")
   assert(type(field) == "string", "object_UI_setAttribute(): field must be a string")
@@ -180,6 +203,9 @@ end
 function onSave()
   local data_to_save = GD
   local saved_data = JSON.encode(data_to_save)
+  if env.test.save_stats then
+    log("Saved data length: "..tostring(#saved_data))
+  end
   if env.test.force_fresh_save then
     saved_data = ""
   end
@@ -205,6 +231,9 @@ function restoreGameState()
     local field = Split(key, ':')[2]
     UI.setAttribute(id, field, value)
   end
+  for id,value in pairs(GD.states.UI_class) do
+    UI.setClass(id,value)
+  end
   --restore persistent UI state for objects
   for key,value in pairs(GD.states.object_UI) do
     local params = Split(key,":")
@@ -221,11 +250,14 @@ function restoreGameState()
     local pcol = GD.game.player_order[GD.game.current_player]
     --handle mystrune token
     if GD.game.players[pcol].mystrune ~= nil then
+      if env.test.debug then log("reassign mystrune to "..pcol) end
       local o = getObjectFromGUID(GD.game.players[pcol].mystrune)
       o.call("assign",pcol)
     end
-    updateSpellButtons(true)  --TODO: move into update HUD?
-    updateAlterationButtons(true)   --TODO: move into update HUD?
+    local o = getObjectFromGUID(C.guids.dice_flip_chart)
+    if o then o.setInvisibleTo({}) end
+    local o = getObjectFromGUID(C.guids.excess_spell_prestige)
+    if o then o.setInvisibleTo({}) end
   end
 end
 
@@ -311,7 +343,6 @@ end
     Calls back to player board to finish setup if successful. ]]
 function setPlayerClass(params)
   if env.test.trace then log("Global: setPlayerClass()") end
-  log(params)
   assert(params.player, "parameter 'player' missing")
   assert(params.guid, "parameter 'guid' missing")
   assert(params.position, "parameter 'position' missing")
@@ -365,11 +396,17 @@ function setPlayerClass(params)
     for i=1,setup.start_dice do
       local val = math.random(1,6)
       table.insert(player.dice, {value=val,allocated=false,element=C.die_elements[val]})
+      UI_setAttribute(pcol.."_hud_die_"..tostring(i).."_image", "image", C.die_elements[val])
+      UI_setClass(pcol.."_hud_die_"..tostring(i).."_image", "image_active")
+    end
+    for i=setup.start_dice+1,7 do
+      UI_setClass(pcol.."_hud_die_"..tostring(i).."_image", "image_inactive")
     end
     player.mana = setup.start_mana
     player.spent_mana = 0
     player.acuity = setup.start_acuity
-    player.sigils = { red = 0, blue = 0, green = 0, yellow = 0 }
+    player.sigils = { red = 0, blue = 0, green = 0, yellow = 0, wild = 0}
+    player.alt_sigils = { red = 0, blue = 0, green = 0, yellow = 0, }
     player.sigils[setup.board_sigil] = 1
     player.dice_translation = simpleDeepCopy(setup.dice_translation)
     if setup.aetherflow then player.aetherflow = setup.aetherflow end
@@ -586,6 +623,7 @@ function finalSetup()
   for i=1,3 do
     local n = math.random(1,#t)
     local arcana = simpleDeepCopy(C.arcanas[t[n]])
+    arcana.taken = false
     table.insert(GD.game.arcanas, arcana)
     local o = getObjectFromGUID(C.arcanas[t[n]].guid)
     o.setInvisibleTo({})
@@ -620,6 +658,7 @@ function finalSetup()
     if p > GD.game.player_count then p = 1 end --wrap around
     local pcol = GD.game.player_order[p]
     GD.game.players[pcol].acuity = GD.game.players[pcol].acuity + count
+    if GD.env.verbose then print(pcol.." starts with "..tostring(count).." extra Acuity") end
     count = count + 1
   end
   --Configure final scoring table and HUD for number of players
@@ -633,17 +672,12 @@ function finalSetup()
       UI_setAttribute("hud_row_"..tostring(i).."_player", "color", GD.game.player_order[i])
     end
   end
-  local table_size = 360 - ((4 - num_players) * 55)
-  UI_setAttribute("score_panel", "height", tostring(table_size))
+  local panel_size = 120 + (num_players * 50)
+  UI_setAttribute("score_panel", "height", tostring(panel_size))
   local inner_hud_panel_size = 220 + (num_players * 30)
   local outer_hud_panel_size = inner_hud_panel_size + 20
   UI_setAttribute("inner_hud_panel","height",tostring(inner_hud_panel_size))
   UI_setAttribute("hud_pnl","height",tostring(outer_hud_panel_size))
-  for _,pcol in ipairs(env.game.player_table_order) do
-    for i=1,7 do
-      UI_setAttribute(pcol.."_hud_die_"..tostring(i).."_image","actve","false")
-    end
-  end
   UI_setAttribute("hud_pnl","active",true)
   --displapy helper charts
   local flip = getObjectFromGUID(C.guids.dice_flip_chart)
@@ -682,8 +716,6 @@ function takeUsedAlterationsBtn(player, button, id)
   else log("WARN: takeUsedAlterationsBtn(): unable to decrement take actions") end
   pdata.cast_allowed = false
   updateHUD()
-  updateAlterationButtons(true)
-  updateSpellButtons(true)
 end
 
 --[[ Return all used alteration cards to player's hand and set them unused. ]]
@@ -751,41 +783,68 @@ function startPlayerTurn(pcol)
   if env.test.debug then log(GD.game.players[pcol]) end
   if pcol ~= GD.game.player_order[GD.game.current_player] then return end
   local pdata = GD.game.players[pcol]
-  pdata.actions.take = {"any"}
-  pdata.actions.play = 1
-  object_UI_setAttribute(g_lower, "recycle_spell_pnl", "active", true)
-  for i=1,6 do
-    object_UI_setAttribute(g_lower, "alterations_button_"..tostring(i).."_pnl", "active", true)
+  if GD.game.endgame then
+    pdata.active = true
+    object_UI_setAttribute(g_lower, "recycle_spell_pnl", "active", false)
+    updateHUD()
+  else
+    pdata.actions.take = {"any"}
+    pdata.actions.play = 1
+    object_UI_setAttribute(g_lower, "recycle_spell_pnl", "active", true)
+    for i=1,6 do
+      object_UI_setAttribute(g_lower, "alterations_button_"..tostring(i).."_pnl", "active", true)
+    end
+    pdata.active = true
+    pdata.cast_allowed = true
+    if GD.env.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
+    updateHUD()
   end
-  pdata.active = true
-  pdata.cast_allowed = true
-  if GD.env.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
-  updateHUD()
-  updateAlterationButtons(true)
-  updateSpellButtons(true)
 end
 
 --[[ Set the next player in player_order.
   Wraps to first player if last is current. ]]
 function setNextPlayer()
   if env.test.trace then log("Global: setNextPlayer()") end
-  --disable previous player stuffs
-  updateAlterationButtons(false)
-  updateSpellButtons(false)
-  local pdata = GD.game.players[GD.game.player_order[GD.game.current_player]]
-  pdata.active = false
-  --advance curent player
-  if GD.game.current_player == #GD.game.player_order then
-    GD.game.current_player = 1
+  log("------- setNextPlayer, endgame = "..tostring(GD.game.endgame))
+  if GD.game.endgame then
+    if env.test.debug then log("setNextPlayer() end game!!!") end
+    if #GD.game.endgame_players == 0 then
+      updateHUD()
+      finalScore()
+      return
+    else
+      --disable previous player stuffs
+      local pdata = GD.game.players[GD.game.player_order[GD.game.current_player]]
+      pdata.active = false
+      local pcol = GD.game.endgame_players[1]
+      log("Starting endgame player turn for "..pcol)
+      --TODO: check if player has nothing and skip them
+      if GD.env.verbose then broadcastToAll("Player "..pcol.." Cast your final Spell.") end
+      table.remove(GD.game.endgame_players,1)
+      GD.game.current_player = indexOf(GD.game.player_order, pcol)
+      if env.test.auto_switch then autoSwitch(pcol) end
+      if GD.env.verbose then print("Active player is "..pcol) end
+      refillHeroics()
+      -- startPlayerTurn(pcol)
+      Wait.frames(function() startPlayerTurn(pcol) end,10)
+    end
   else
-    GD.game.current_player = GD.game.current_player + 1
+    --disable previous player stuffs
+    local pdata = GD.game.players[GD.game.player_order[GD.game.current_player]]
+    pdata.active = false
+    --advance curent player
+    if GD.game.current_player == #GD.game.player_order then
+      GD.game.current_player = 1
+    else
+      GD.game.current_player = GD.game.current_player + 1
+    end
+    refillCards()
+    local pcol = GD.game.player_order[GD.game.current_player]
+    if env.test.auto_switch then autoSwitch(GD.game.player_order[GD.game.current_player]) end
+    if GD.env.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
+    --TODO: figure out how to wait for refillCards()
+    Wait.frames(function() startPlayerTurn(pcol) end,10)
   end
-  refillCards()
-  local pcol = GD.game.player_order[GD.game.current_player]
-  if env.test.auto_switch then autoSwitch(GD.game.player_order[GD.game.current_player]) end
-  if GD.env.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
-  --TODO: figure out how to wait for refillCards()
-  Wait.time(function() startPlayerTurn(pcol) end,2)
 end
 
 --[[ Called from setNextPlayer (on turn "done") --]]
@@ -1032,10 +1091,8 @@ function updateSpellPower(pcol)
   local s = pdata.spell_power
   s.gross_restore = 0
   s.gross_ruin = 0
-
   --Spell Cards
   local slots = {{restore=0,ruin=0},{restore=0,ruin=0},{restore=0,ruin=0},{restore=0,ruin=0},{restore=0,ruin=0},}
-  --calculate spell power for each card slot
   for i=1,5 do
     local spell = spells[s.card_map.base_spells[i].id]
     if spell then
@@ -1062,33 +1119,16 @@ function updateSpellPower(pcol)
       end
     end
   end
-  log(slots)
-  --total up all card slots
+  --total up all card slots and add to gross
   s.cards.restore = 0
   s.cards.ruin = 0
   for i=1,5 do
     s.cards.restore = s.cards.restore + slots[i].restore
     s.cards.ruin = s.cards.ruin + slots[i].ruin
   end
-  -- handle enchantment spells in modifying spell power
-  for i=1,3 do
-    local spell = spells[s.card_map.enchant_spells[i].id]
-    if spell then
-      if spell.enchant then
-        if spell.enchant.restore > 0 then
-          s.cards.restore = s.cards.restore + (s.cards.ruin * spell.enchant.restore)
-          s.cards.ruin = 0
-        elseif spell.enchant.ruin > 0 then
-          s.cards.ruin = s.cards.ruin + (s.cards.restore * spell.enchant.ruin)
-          s.cards.restore = 0
-        end
-      end
-    end
-  end
-
   s.gross_restore = s.gross_restore + s.cards.restore
   s.gross_ruin = s.gross_ruin + s.cards.ruin
-  --Dice
+  --Unallocated Dice
   s.dice.restore = 0
   s.dice.ruin = 0
   for _,d in ipairs(pdata.dice) do
@@ -1102,12 +1142,27 @@ function updateSpellPower(pcol)
   end
   s.gross_restore = s.gross_restore + s.dice.restore
   s.gross_ruin = s.gross_ruin + s.dice.ruin
-  --Acuity
+  --Any Acuity spell power bought
   s.gross_restore = s.gross_restore + s.acuity.restore
   s.gross_ruin = s.gross_ruin + s.acuity.ruin
   --Mystrune
   s.gross_restore = s.gross_restore + s.mystrune.restore
   s.gross_ruin = s.gross_ruin + s.mystrune.ruin
+  -- after all above, handle enchantment spells in converting total spell power
+  for i=1,3 do
+    local spell = spells[s.card_map.enchant_spells[i].id]
+    if spell then
+      if spell.enchant then
+        if spell.enchant.restore > 0 then
+          s.gross_restore = s.gross_restore + (s.gross_ruin * spell.enchant.restore)
+          s.gross_ruin = 0
+        elseif spell.enchant.ruin > 0 then
+          s.gross_ruin = s.gross_ruin + (s.gross_restore * spell.enchant.ruin)
+          s.gross_restore = 0
+        end
+      end
+    end
+  end
   --totals
   s.net_restore = 0
   s.net_ruin = 0
@@ -1135,46 +1190,56 @@ function updateScore(pcol)
   end
   pdata.score.total = pdata.score.total + pdata.score.heroics
   --sigils
-  for s,n in pairs(pdata.sigils) do
-    if n > 2 then pdata.score.sigils = pdata.score.sigils + n
-    elseif n == 2 then pdata.score.sigils = pdata.score.sigils + 1
+  local sigils = simpleDeepCopy(pdata.sigils)
+  for s,n in pairs(pdata.alt_sigils) do sigils[s] = sigils[s] + n end --add in alteration sigils
+  local pair = false
+  local count = 0
+  for s,n in pairs(sigils) do
+    count = count + n
+    if n > 2 then
+      pdata.score.sigils = pdata.score.sigils + n
+    elseif n == 2 then
+      pdata.score.sigils = pdata.score.sigils + 1
+      pair=true
     end
+  end
+  if pdata.sigils["wild"] > 0 and count > 0 then
+    if pair then pdata.score.sigils = pdata.score.sigils + 2
+    else pdata.score.sigils = pdata.score.sigils + 1 end
   end
   pdata.score.total = pdata.score.total + pdata.score.sigils
   --arcanas
   for _,a in ipairs(pdata.arcanas) do
     pdata.score.arcanas = pdata.score.arcanas + a.base_vp
-    log("spell_type: "..tostring(a.bonus.spell_type))
     if a.bonus.spell_type == "Fire" or a.bonus.spell_type == "Water" then
-      log("checking '"..a.bonus.spell_type.."' spell count bonus")
-      log(a)
       local c = 0
       for _,s in ipairs(pdata.cast_spells) do
-        log(spells[s.id].dice)
-        if contains(spells[s.id].dice, a.bonus.spell_type) then c = c + 1 end
+        local d = spells[s.id]
+        if contains(d.dice, a.bonus.spell_type) then c = c + 1 end
       end
-      log("contains "..tostring(c).." "..a.bonus.spell_type.." spells")
       local bonus = math.floor(c/a.bonus.count)
-      log("arcana bonus: "..tostring(bonus))
       pdata.score.arcanas = pdata.score.arcanas + bonus
     elseif a.bonus.spell_type == "any" then
       pdata.score.arcanas = pdata.score.arcanas + math.floor(#pdata.cast_spells/a.bonus.count)
     elseif a.bonus.spell_type == "slot_count" then
       local c = 0
       for _,s in ipairs(pdata.cast_spells) do
-        if s.slots >= a.bonus.slot_count then c = c + 1 end
+        local d = spells[s.id]
+        if d.slots >= a.bonus.slot_count then c = c + 1 end
       end
       pdata.score.arcanas = pdata.score.arcanas + math.floor(c/a.bonus.count)
     elseif a.bonus.spell_type == "aether_mod" then
       local c = 0
       for _,s in ipairs(pdata.cast_spells) do
-        if s.aether_mod then c = c + 1 end
+        local d = spells[s.id]
+        if d.aether_mod then c = c + 1 end
       end
       pdata.score.arcanas = pdata.score.arcanas + math.floor(c/a.bonus.count)
     elseif a.bonus.spell_type == "not_aether" then
       local c = 0
       for _,s in ipairs(pdata.cast_spells) do
-        if not(s.aether_mod) then c = c + 1 end
+        local d = spells[s.id]
+        if not(d.aether_mod) then c = c + 1 end
       end
       pdata.score.arcanas = pdata.score.arcanas + math.floor(c/a.bonus.count)
     else
@@ -1205,7 +1270,7 @@ function onObjectDrop(pcol, obj)
       assert(map, "Global:onObjectDrop(): player_board locateSpell() did not return a map")
       GD.game.players[pcol].spell_power.card_map = simpleDeepCopy(map)
       updateSpellPower(pcol)
-      updateHUD()
+      updateHUD()  --TODO: ok to update spell/alteration buttons here?
     elseif obj.hasTag("Alteration") then
       if contains(Player[pcol].getHandObjects(), obj) then return end --ignore moving in hand
       local current = GD.game.player_order[GD.game.current_player]
@@ -1216,7 +1281,10 @@ function onObjectDrop(pcol, obj)
           player_board.call("placeUsedAlterationCard",{guid=obj.guid})
         else
           if memo.player == pcol then
-            if pcol == current and GD.game.players[pcol].actions.play > 0 then
+            if GD.game.endgame then
+              obj.deal(1,pcol)
+              if GD.env.verbose then broadcastToColor("No card play in endgame.", pcol) end
+            elseif pcol == current and GD.game.players[pcol].actions.play > 0 then
               local index = tonumber(obj.getGMNotes())
               obj.setLock(true)
               showAlterationDlg(obj.getGUID(), index)
@@ -1246,9 +1314,9 @@ function setSpellCardDecal(card, pcol)
   if card.memo ~= nil then
     --Set decal based on previous setting stored in card memo
     if card.memo == "Restore" then
-      card.addDecal(card_decals["Restore"])
+      card.addDecal(C.card_decals["Restore"])
     elseif card.memo == "Ruin" then
-      card.addDecal(card_decals["Ruin"])
+      card.addDecal(C.card_decals["Ruin"])
     else
       log(self.getName().." ERROR: unexpected memo value on card "..card.getGUID())
     end
@@ -1309,7 +1377,7 @@ function cardButton(card, player_color, mouse)
       log("Global: cardButton() ERROR: unidentified decal on card")
     end
     updateSpellPower(player_color)
-    updateHUD()
+    updateHUD()  --TODO: ok to update spell/alteration buttons here?
   end
 end
 
@@ -1329,16 +1397,19 @@ function takeAlterationBtn(player, button, id)
   card.memo = JSON.encode({used=false,player=player.color})
   card.deal(1,player.color)
   for _,s in ipairs(alterations[tonumber(card.getGMNotes())].sigils) do
-    pdata.sigils[s] = pdata.sigils[s] + 1
+    pdata.alt_sigils[s] = pdata.alt_sigils[s] + 1
   end
   pdata.acuity = pdata.acuity + GD.game.alterations[index].acuity
+  if GD.env.verbose then print(pdata.player_color.." gains "..tostring(GD.game.alterations[index].acuity).." Acuity") end
+  if pdata.acuity > 10 then
+    if GD.env.verbose then print(pdata.player_color.." discards "..tostring(pdata.acuity-10).." Acuity") end
+    pdata.acuity = 10
+  end
   local index = indexOf(pdata.actions.take, "any")
   if index > 0 then table.remove(pdata.actions.take, index)
   else log("WARN: takeAlterationBtn(): unable to decrement take actions") end
   pdata.cast_allowed = false
   updateHUD()
-  updateAlterationButtons(true)
-  updateSpellButtons(true)
 end
 
 --[[ Show the initial Alteration card dialog when playier plays an alteration card. ]]
@@ -1366,8 +1437,6 @@ function showAlterationDlg(guid, card_index)
   if env.test.debug then log(alt) end
   updateAlterationDlg()
   UI_setAttribute("alteration_card_pnl","visibility",pcol)
-  updateAlterationButtons(false)
-  updateSpellButtons(false)
   updateHUD(pcol)
 end
 
@@ -1401,40 +1470,40 @@ function updateAlterationDlg()
     end
     UI_setAttribute("alteration_secondary_action_pnl","active",secondary)
     UI_setAttribute("alteration_discard_action_pnl","active",card.discard == true)
-    UI_setAttribute("alteration_pay_acuity_tbl","active",false)
-    UI_setAttribute("alteration_convert_dice_tbl","active",false)
-    UI_setAttribute("alteration_select_action_tbl","active",true)
+    UI_setAttribute("alteration_pay_acuity_row","active",false)
+    UI_setAttribute("alteration_convert_dice_row","active",false)
+    UI_setAttribute("alteration_select_action_row","active",true)
     UI_setAttribute("alteration_done_pnl","active",false)
     UI_setAttribute("alteration_next_pnl","active",false)
     UI_setAttribute("alteration_cancel_pnl","active",true)
   elseif alt.state == "pay_acuity" then
     UI_setAttribute("alteration_available_acuity_txt","text",tostring(alt.acuity_available))
     UI_setAttribute("alteration_paid_acuity_txt","text",tostring(alt.acuity_paid))
-    UI_setAttribute("alteration_pay_acuity_tbl","active",true)
+    UI_setAttribute("alteration_pay_acuity_row","active",true)
     UI_setAttribute("alteration_next_pnl","active",alt.acuity_paid >= alt.acuity_min)
-    UI_setAttribute("alteration_select_action_tbl","active",false)
+    UI_setAttribute("alteration_select_action_row","active",false)
     UI_setAttribute("alteration_done_pnl","active",false)
     UI_setAttribute("alteration_cancel_pnl","active",true)
   elseif alt.state == "convert" then
     UI_setAttribute("convert_to_dice_title_txt","text","Converted Dice:")
-    UI_setAttribute("alteration_select_action_tbl","active",false)
-    UI_setAttribute("alteration_pay_acuity_tbl","active",false)
+    UI_setAttribute("alteration_select_action_row","active",false)
+    UI_setAttribute("alteration_pay_acuity_row","active",false)
     for i=1,7 do
       if alt.from_dice[i] and not(alt.from_dice[i].assigned) then
         UI_setAttribute("convert_from_die_"..tostring(i).."_img","image",alt.from_dice[i].element)
-        UI.setClass("convert_from_die_"..tostring(i).."_img","image_active")
+        UI_setClass("convert_from_die_"..tostring(i).."_img","image_active")
       else
-        UI.setClass("convert_from_die_"..tostring(i).."_img","image_inactive")
+        UI_setClass("convert_from_die_"..tostring(i).."_img","image_inactive")
       end
       if alt.to_dice[i] then
         UI_setAttribute("convert_to_die_"..tostring(i).."_img","image",alt.to_dice[i].element)
-        UI.setClass("convert_to_die_"..tostring(i).."_img","image_active")
+        UI_setClass("convert_to_die_"..tostring(i).."_img","image_active")
       else
-        UI.setClass("convert_to_die_"..tostring(i).."_img","image_inactive")
+        UI_setClass("convert_to_die_"..tostring(i).."_img","image_inactive")
       end
     end
     UI_setAttribute("convert_cycle_to_die_txt","active",(#alt.to > 1))
-    UI_setAttribute("alteration_convert_dice_tbl","active",true)
+    UI_setAttribute("alteration_convert_dice_row","active",true)
     UI_setAttribute("alteration_done_pnl","active", #alt.to_dice > 0 )
     UI_setAttribute("alteration_cancel_pnl","active",true)
     UI_setAttribute("alteration_next_pnl","active",false)
@@ -1444,23 +1513,23 @@ function updateAlterationDlg()
     else
       UI_setAttribute("convert_to_dice_title_txt","text","Dice to Flip:")
     end
-    UI_setAttribute("alteration_select_action_tbl","active",false)
+    UI_setAttribute("alteration_select_action_row","active",false)
     for i=1,7 do
       if alt.from_dice[i] and not(alt.from_dice[i].assigned) then
         UI_setAttribute("convert_from_die_"..tostring(i).."_img","image",alt.from_dice[i].element)
-        UI.setClass("convert_from_die_"..tostring(i).."_img","image_active")
+        UI_setClass("convert_from_die_"..tostring(i).."_img","image_active")
       else
-        UI.setClass("convert_from_die_"..tostring(i).."_img","image_inactive")
+        UI_setClass("convert_from_die_"..tostring(i).."_img","image_inactive")
       end
       if alt.to_dice[i] then
         UI_setAttribute("convert_to_die_"..tostring(i).."_img","image",alt.to_dice[i].element)
-        UI.setClass("convert_to_die_"..tostring(i).."_img","image_active")
+        UI_setClass("convert_to_die_"..tostring(i).."_img","image_active")
       else
-        UI.setClass("convert_to_die_"..tostring(i).."_img","image_inactive")
+        UI_setClass("convert_to_die_"..tostring(i).."_img","image_inactive")
       end
     end
     UI_setAttribute("convert_cycle_to_die_txt","active",false)
-    UI_setAttribute("alteration_convert_dice_tbl","active",true)
+    UI_setAttribute("alteration_convert_dice_row","active",true)
     UI_setAttribute("alteration_done_pnl","active", #alt.to_dice > 0 )
     UI_setAttribute("alteration_cancel_pnl","active",true)
     UI_setAttribute("alteration_next_pnl","active",false)
@@ -1485,14 +1554,13 @@ function alterationDlgHandler(player, button, id)
 
   --//////////////////////////////////////////////////////////////////////
   local function execute_action(a)
-    if env.test.debug then log("execute_action(): "..a.action..", "..tostring(a.desc)) end
-    log(a)
+    if env.test.trace then log("execute_action(): "..a.action..", "..tostring(a.desc)) end
+    if env.test.debug then log(a) end
     if a.pre then
       if a.pre.type == "pay_acuity" then alt.acuity_paid = a.pre.amount
       end
     end
     if a.action == "convert" then
-      log("setup and show dice conversion")
       alt.min = 1 --always
       if a.max ~= nil then alt.max = a.max else alt.max = 1 end
       alt.to = simpleDeepCopy(a.to)
@@ -1524,12 +1592,15 @@ function alterationDlgHandler(player, button, id)
         alt.acuity_min = 2  --pay at least 2 to convert 1 die (the minimum)
         alt.acuity_max = #alt.from_dice + 1 --can't pay more than available dice to convert (+1)
       elseif a.reverse_mod then  --TODO: TEST THIS handle reverse_mod
-        if pdata.sigils[a.reverse_mod.sigil] >= a.reverse_mod.amount then
+        local n = pdata.sigils[a.reverse_mod.sigil]
+        n = n + pdata.sigils["wild"]
+        if n >= a.reverse_mod.amount then
           for _,e in ipairs(a.from) do table.insert(alt.to, e) end
           for _,e in ipairs(a.to) do table.insert(alt.from, e) end
         end
       elseif a.convert_mod then
         local n = pdata.sigils[a.convert_mod.sigil]
+        n = n + pdata.sigils["wild"]
         alt.max = alt.max + n * a.convert_mod.mod
       elseif a.count_mod then
         local n = 0
@@ -1577,12 +1648,13 @@ function alterationDlgHandler(player, button, id)
       return
     end
     if a.post then
-      if env.debug then log("executing post action"); log(a.post) end
+      if env.test.debug then log("executing post action"); log(a.post) end
       if a.post.type == "gain_acuity" then
         alt.acuity_gained = alt.acuity_gained + a.post.amount
         if a.post.sigil then
           local mod = a.post.mod * pdata.sigils[a.post.sigil]
-          if env.debug then log("modding post action acuity gained + "..tostring(mod)) end
+          mod = mod + pdata.sigils["wild"]
+          if env.test.debug then log("modding post action acuity gained + "..tostring(mod)) end
           alt.acuity_gained = alt.acuity_gained + mod
         end
       elseif a.post.type == "gain_play" then alt.play_gained = alt.play_gained + a.post.amount
@@ -1593,11 +1665,11 @@ function alterationDlgHandler(player, button, id)
   --//////////////////////////////////////////////////////////////////////
 
   if action == "primary" then
-    if env.debug then log("executing primary action(s) for card "..tostring(card.id)) end
+    if env.test.debug then log("executing primary action(s) for card "..tostring(card.id)) end
     if card.primary.requirements then
       local satisfied = true
       for i,r in ipairs(card.primary.requirements) do
-        if env.debug then log("checking primary action requirement "..tostring(i)); log(r) end
+        if env.test.debug then log("checking primary action requirement "..tostring(i)); log(r) end
         if r.type == "Dice" then
           local count = 0
           for _,d in ipairs(pdata.dice) do
@@ -1676,7 +1748,6 @@ function alterationDlgHandler(player, button, id)
     table.insert(alt.take_gained, "any")
     alt.acuity_paid = alt.acuity_paid + 1
   elseif action == "next" then
-    log("TODO: special case: player paid n+1 acuity, continue for n convert")
     alt.max = alt.acuity_paid - 1
     alt.state = "convert"
     close_dialog = false
@@ -1708,8 +1779,6 @@ function alterationDlgHandler(player, button, id)
     pdata.alteration_action = nil
     UI_setAttribute("alteration_card_pnl","visibility","Pink")
     updateHUD(player.color)
-    updateSpellButtons(true)
-    updateAlterationButtons(true)
     return
   elseif action == "from" then
     local index = tonumber(Split(id,"_")[4])
@@ -1748,7 +1817,7 @@ function alterationDlgHandler(player, button, id)
     return
   end
   if close_dialog then
-    if env.debug then log("closing stuff when exiting the dialog"); log(alt) end
+    if env.test.debug then log("closing stuff when exiting the dialog"); log(alt) end
     for _,d in ipairs(alt.to_dice) do
       local index = alt.from_dice[d.from_index].index
       pdata.dice[index].element = d.element
@@ -1756,14 +1825,23 @@ function alterationDlgHandler(player, button, id)
     end
     for _,t in ipairs(alt.take_gained) do table.insert(pdata.actions.take,t) end
     pdata.acuity = pdata.acuity - alt.acuity_paid
+    if GD.env.verbose then print(pdata.player_color.." pays "..tostring(alt.acuity_paid).." Acuity") end
     pdata.acuity = pdata.acuity + alt.acuity_gained
-    if pdata.acuity > 10 then pdata.acuity = 10 end
+    if GD.env.verbose then print(pdata.player_color.." gains "..tostring(alt.acuity_gained).." Acuity") end
+    if pdata.acuity > 10 then
+      if GD.env.verbose then print(pdata.player_color.." discards "..tostring(pdata.acuity-10).." Acuity") end
+      pdata.acuity = 10
+    end
     pdata.actions.play = pdata.actions.play + alt.play_gained
     if alt.opp_acuity_gained > 0 then
-      for pcol,p in ipairs(GD.game.players) do
+      for pcol,p in pairs(GD.game.players) do
         if pcol ~= player.color then
           p.acuity = p.acuity + alt.opp_acuity_gained
-          if p.acuity > 10 then p.acuity = 10 end
+          if GD.env.verbose then print(pcol.." gains "..tostring(alt.opp_acuity_gained).." Acuity") end
+          if p.acuity > 10 then
+            if GD.env.verbose then print(pcol.." discards "..tostring(p.acuity-10).." Acuity") end
+            p.acuity = 10
+          end
         end
       end
     end
@@ -1783,8 +1861,6 @@ function alterationDlgHandler(player, button, id)
     UI_setAttribute("alteration_card_pnl","visibility","Pink")
     pdata.alteration_action = nil
     updateHUD()
-    updateAlterationButtons(true)
-    updateSpellButtons(true)
   else
     updateAlterationDlg()
   end
@@ -1846,16 +1922,14 @@ function mystruneActivate(params)
   end
   for i=1,7 do
     if i > #pdata.mystrune_action.from_dice then
-      UI.setClass("mystrune_from_die_"..tostring(i).."_img","image_inactive")
+      UI_setClass("mystrune_from_die_"..tostring(i).."_img","image_inactive")
     else
-      UI.setClass("mystrune_from_die_"..tostring(i).."_img","image_active")
+      UI_setClass("mystrune_from_die_"..tostring(i).."_img","image_active")
     end
   end
   updateMystruneActivateDlg()
   UI_setAttribute("activate_mystrune_pnl","visibility",pcol)
   updateHUD(pcol)
-  updateSpellButtons(false)
-  updateAlterationButtons(false)
 end
 
 --[[ Update the mystrune dialog from the dlg data structure. ]]
@@ -1866,17 +1940,17 @@ function updateMystruneActivateDlg()
   local data = pdata.mystrune_action
   for i,d in ipairs(data.from_dice) do
     if d.assigned then
-      UI.setClass("mystrune_from_die_"..tostring(i).."_img","image_inactive")
+      UI_setClass("mystrune_from_die_"..tostring(i).."_img","image_inactive")
     else
       UI_setAttribute("mystrune_from_die_"..tostring(i).."_img","image",d.element)
-      UI.setClass("mystrune_from_die_"..tostring(i).."_img","image_active")
+      UI_setClass("mystrune_from_die_"..tostring(i).."_img","image_active")
     end
   end
   if data.to_dice ~= nil then
     UI_setAttribute("mystrune_to_die_img","image",data.to_dice.element)
-    UI.setClass("mystrune_to_die_img","image_active")
+    UI_setClass("mystrune_to_die_img","image_active")
   else
-    UI.setClass("mystrune_to_die_img","image_inactive")
+    UI_setClass("mystrune_to_die_img","image_inactive")
   end
   UI_setAttribute("mystrune_done_pnl","active",data.to_dice ~= nil)
 end
@@ -1893,8 +1967,6 @@ function mystruneActivateDlg(player, button, id)
     pdata.mystrune_action = nil
     UI_setAttribute("activate_mystrune_pnl","visibility","Pink")
     updateHUD()
-    updateSpellButtons(true)
-    updateAlterationButtons(true)
     return
   elseif action == "done" then
     if data.to_dice == nil then
@@ -1909,8 +1981,6 @@ function mystruneActivateDlg(player, button, id)
     UI_setAttribute("activate_mystrune_pnl","visibility","Pink")
     returnMystRune(player.color)
     updateHUD()
-    updateSpellButtons(true)
-    updateAlterationButtons(true)
     return
   elseif action == "from" then
     if data.to_dice ~= nil then return end
@@ -1962,22 +2032,21 @@ function showPaySpellDlg(card_index, pcol)
   local card = getObjectFromGUID(GD.game.spells[card_index].card_guid)
   assert(card,"showPaySpellDlg(): missing spell card object")
   local spell = spells[tonumber(card.getGMNotes())]
-  local player = GD.game.players[pcol]
   assert(spell,"showPaySpellDlg() missing spell card data")
-  assert(player, "showPaySpellDlg() missing player data")
+  local pdata = GD.game.players[pcol]
   local pos = card.getPosition()
   pos.y = pos.y + 2
   card.setPosition(pos)
   card.setLock(true)
-  GD.game.spell_cost = {
+  pdata.spell_cost = {
     card_index = card_index,
     player_color = pcol,
     element = "",
     available_dice = {},
     assigned_dice = {},
-    available_mana = player.mana,
+    available_mana = pdata.mana,
     assigned_mana = 0,
-    available_acuity = player.acuity,
+    available_acuity = pdata.acuity,
     assigned_acuity = 0,
     flex_spots = spell.flex,
     fixed_spots = spell.slots - spell.flex,
@@ -1988,12 +2057,12 @@ function showPaySpellDlg(card_index, pcol)
     excess_mana = 0,
     excess_acuity = 0,
   }
-  local dlg = GD.game.spell_cost
-  if player.acuity_discount then dlg.acuity_discount = dlg.acuity_discount + player.acuity_discount end
+  local dlg = pdata.spell_cost
+  if pdata.acuity_discount then dlg.acuity_discount = dlg.acuity_discount + pdata.acuity_discount end
   if card_index == 1 then dlg.mana_discount = dlg.mana_discount + 1 end
   if card_index == 2 then dlg.acuity_discount = dlg.acuity_discount + 1 end
   --availble dice
-  for i,die in ipairs(player.dice) do
+  for i,die in ipairs(pdata.dice) do
     if not(die.allocated) then
       local e = C.die_elements[die.value]
       if contains(spell.dice, e) then
@@ -2022,11 +2091,11 @@ function showPaySpellDlg(card_index, pcol)
   end
   --TODO: pre-populate selections with matching fixed die if possible?
   for i=1,5 do
-    UI.setClass("spell_assigned_die_"..tostring(i).."_img","image_inactive")
+    UI_setClass("spell_assigned_die_"..tostring(i).."_img","image_inactive")
   end
   updateSpellCostDlg()
   local id = card.getGMNotes()
-  if id == "4" then id = "3" end --HACK: BUG: Spell-4 image won't load, Spell-3 is the same image
+  if id == "4" then id = "3" end --HACK: BUG: Spell-4 image won't load, WORKAROUND: Spell-3 is the same image
   local card_image = "Spell-"..card.getGMNotes()
   if env.test.debug then
     log("---- Clearing card image")
@@ -2039,23 +2108,23 @@ function showPaySpellDlg(card_index, pcol)
     UI_setAttribute("spell_cost_card_img","image",card_image)
   end
   UI_setAttribute("spell_card_pnl","visibility",pcol)
-  updateSpellButtons(false)
-  updateAlterationButtons(false)
+  updateHUD(pcol)
 end
 
 --[[ Update the spell cost dialog with latest data.  ]]
 function updateSpellCostDlg()
   if env.test.trace then log("Global: updateSpellCostDlg") end
-  local dlg = GD.game.spell_cost
+  local pcol = GD.game.player_order[GD.game.current_player]
+  local dlg = GD.game.players[pcol].spell_cost
   --availble resources
   UI_setAttribute("spell_cost_mana_txt","text",tostring(dlg.available_mana))
   UI_setAttribute("spell_cost_acuity_txt","text",tostring(dlg.available_acuity))
   for i,die in ipairs(dlg.available_dice) do
     UI_setAttribute("spell_cost_die_"..tostring(i).."_img","image",die.element)
-    UI.setClass("spell_cost_die_"..tostring(i).."_img","image_active")
+    UI_setClass("spell_cost_die_"..tostring(i).."_img","image_active")
   end
   for i=(#dlg.available_dice+1),7 do
-    UI.setClass("spell_cost_die_"..tostring(i).."_img","image_inactive")
+    UI_setClass("spell_cost_die_"..tostring(i).."_img","image_inactive")
   end
   --selected resources
   UI_setAttribute("spell_assigned_mana_txt","text",tostring(dlg.assigned_mana))
@@ -2064,18 +2133,18 @@ function updateSpellCostDlg()
     if slot.filled then
       if slot.die > 0 then
         UI_setAttribute("spell_assigned_die_"..tostring(i).."_img","image",dlg.element)
-        UI.setClass("spell_assigned_die_"..tostring(i).."_img","image_active")
+        UI_setClass("spell_assigned_die_"..tostring(i).."_img","image_active")
       else
         UI_setAttribute("spell_assigned_die_"..tostring(i).."_img","image","Filled-flex")
-        UI.setClass("spell_assigned_die_"..tostring(i).."_img","image_active")
+        UI_setClass("spell_assigned_die_"..tostring(i).."_img","image_active")
       end
     else
       if slot.flex then
         UI_setAttribute("spell_assigned_die_"..tostring(i).."_img","image","Empty-flex")
-        UI.setClass("spell_assigned_die_"..tostring(i).."_img","image_active")
+        UI_setClass("spell_assigned_die_"..tostring(i).."_img","image_active")
       else
         UI_setAttribute("spell_assigned_die_"..tostring(i).."_img","image","Empty-fixed")
-        UI.setClass("spell_assigned_die_"..tostring(i).."_img","image_active")
+        UI_setClass("spell_assigned_die_"..tostring(i).."_img","image_active")
       end
     end
   end
@@ -2095,10 +2164,9 @@ end
 function spellCostHandler(player, button, id)
   if env.test.trace then log("Global: spellCostHandler() "..tostring(player.color)..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
-  local dlg = GD.game.spell_cost
+  local dlg = GD.game.players[player.color].spell_cost
   --////////////////////////////
   local function updateSlots()
-    log("*********** updateSlots() ***************")
     --initialize the table of slots
     dlg.filled = 0
     for i=1,#dlg.slots do
@@ -2120,36 +2188,27 @@ function spellCostHandler(player, button, id)
     local _mana = dlg.assigned_mana + dlg.mana_discount
     local _acuity = dlg.assigned_acuity + dlg.acuity_discount
     local _eff = _mana + math.floor(_acuity / 2)
-    log("Mana to use: "..tostring(_mana))
-    log("Acuity to use: "..tostring(_acuity))
-    log("Total effective mana: "..tostring(_eff))
     -- fill unfilled slots front to back now with mana / acuity
     local mana_used = 0
     local acuity_used = 0
     for i,slot in ipairs(dlg.slots) do
-      log("--- process slot "..tostring(i))
       if not(slot.filled) and slot.flex then
         if _mana - mana_used >= 2 then --fill with 2 mana
-          log("   --- filled, with 2 mana ")
           slot.mana = 2
           slot.filled = true
         elseif _mana - mana_used == 1 then
           slot.mana = 1
           if _acuity - acuity_used >= 2 then  -- fill with 1 mana and 2 acuity
-            log("   --- filled, with 1 mana, 2 acuity ")
             slot.acuity = 2
             slot.filled = true
           elseif _acuity - acuity_used == 1 then  --not filled
-            log("   --- unfilled, with 1 mana, 1 acuity ")
             slot.acuity = 1
             slot.filled = false
           end
         elseif _acuity - acuity_used >= 4 then  -- fill with 4 acuity
-          log("   --- filled, with 4 acuity ")
           slot.acuity = 4
           slot.filled = true
         elseif _acuity - acuity_used > 0 then  -- not filled
-          log("   --- unfilled, with remaining acuity")
           slot.acuity = _acuity - acuity_used
           slot.filled = false
         end
@@ -2157,28 +2216,24 @@ function spellCostHandler(player, button, id)
         mana_used = mana_used + slot.mana
         acuity_used = acuity_used + slot.acuity
       else
-        if slot.filled then log("   --- slot filled")
-        elseif not(slot.flex) then log("   --- not flex") end
+        if env.test.debug then
+          if slot.filled then log("   --- slot filled")
+          elseif not(slot.flex) then log("   --- not flex") end
+        end
       end
     end
-    log("After processing:")
-    log(dlg.slots)
-    log("   mana_used: "..tostring(mana_used))
-    log("   acuity_used "..tostring(acuity_used))
     local actual_used = mana_used - dlg.mana_discount
     if actual_used < 0 then actual_used = 0 end
     dlg.excess_mana = dlg.assigned_mana - actual_used
     actual_used = acuity_used - dlg.acuity_discount
     if actual_used < 0 then actual_used = 0 end
     dlg.excess_acuity = dlg.assigned_acuity - actual_used
-    log("   excess mana: "..tostring(dlg.excess_mana))
-    log("   excess acuity: "..tostring(dlg.excess_acuity))
   end
   --////////////////////////////
   local action = Split(id,"_")[3]
   if action == "cancel" then
     UI_setAttribute("spell_card_pnl","visibility","Pink")
-    GD.game.spell_cost = {}
+    GD.game.players[player.color].spell_cost = nil
     local card = getObjectFromGUID(GD.game.spells[dlg.card_index].card_guid)
     assert(card,"spellCostHandler(): missing spell card object")
     card.setLock(false)
@@ -2186,8 +2241,6 @@ function spellCostHandler(player, button, id)
       Wait.condition(function() card.setLock(true) end, function() return card.resting end)
     end,1)
     updateHUD(player.color)
-    updateSpellButtons(true)
-    updateAlterationButtons(true)
   elseif action == "assign" then
     --count up only assigned acuity and/or mana to pay, accounting for discounts
     local mana = 0
@@ -2243,17 +2296,7 @@ function spellCostHandler(player, button, id)
     table.remove(pdata.actions.take, index)
     pdata.cast_allowed = false
     UI_setAttribute("spell_card_pnl","visibility","Pink")
-    if #pdata.actions.take == 0 then  --TODO: move all this to updateHUD()?
-      updateSpellButtons(false)
-      updateAlterationButtons(false)
-      object_UI_setAttribute(g_lower, "recycle_spell_pnl", "active", false)   --TODO: move to updateHUD()
-      -- object_UI_setAttribute(pdata.player_board, "player_done_pnl", "active", true)  --TODO: handled in updateHUD()?
-    else
-      updateAlterationButtons(true)
-      updateSpellButtons(true)
-    end
-    GD.game.spell_cost = {}
-    -- updateHUD()
+    pdata.spell_cost = nil
     Wait.condition(function()
       --after card rests on class board, auto locate in 1st available spell position
       local map = board.call("locateSpell", params)
@@ -2404,7 +2447,7 @@ end
 function recycleSpellBtn(player, button, id)
   if env.test.trace then log("Global: recycleSpellBtn() "..tostring(player.color)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
-  -- get leftmost spell card
+  local pdata = GD.game.players[player.color]
   if GD.game.spells[1].card_guid == "" then
     broadcastToColor("No spell card in position 1 to recycle.", player.color)
     return
@@ -2416,39 +2459,53 @@ function recycleSpellBtn(player, button, id)
   local deck = getSpellsDeck()
   if deck then
     if deck.tag == "Deck" then
-      Wait.condition(function() deck.putObject(card) end, function() return card.resting end)
-    elseif deck.tag == "Card" then
+      deck.setLock(false)
+      deck.putObject(card)
       Wait.condition(function()
-          local pos = deck.getPosition()
-          deck.setPosition(Vector(pos.x, pos.y + 3, pos.z))
-          card.setPosition(pos)
-        end,
-        function() return card.resting end)
-      GD.game.spells_deck_guid = getSpellDeck().getGUID()
+        deck.setLock(true)
+      end, function() return card.isDestroyed() end)
+    elseif deck.tag == "Card" then
+      local pos = deck.getPosition()
+      deck.setPosition(Vector(pos.x, pos.y + 3, pos.z))
+      card.setPosition(pos)
+      Wait.condition(function()
+        local d = getSpellsDeck()
+        d.setLock(true)
+        GD.game.spells_deck_guid = d.getGUID()
+      end, function() return card.isDestroyed() end)
     else
-      log("Global: Error: recycleSpellBtn() unknown spell deck object")
+      assert(false, "Global:recycleSpellBtn() unknown spell deck object")
     end
   else
     card.setPosition(C.spells_deck_position)
     GD.game.spells_deck_guid = card.getGUID()
+    Wait.condition(function() card.setLock(true) end, function() return card.resting end)
   end
-  -- give player one acuity
-  GD.game.players[player.color].acuity = GD.game.players[player.color].acuity + 1
+  GD.game.spells[1].card_guid = ""
+  GD.game.spells[1].card_id = 0
+  -- give player one acuity and use up a take
+  pdata.acuity = pdata.acuity + 1
+  if GD.env.verbose then print(pdata.player_color.." gains 1 Acuity") end
+  if pdata.acuity > 10 then
+    if GD.env.verbose then print(pdata.player_color.." discards "..tostring(pdata.acuity-10).." Acuity") end
+    pdata.acuity = 10
+  end
+  local index = indexOf(pdata.actions.take, "any")
+  if index > 0 then table.remove(pdata.actions.take, index)
+  else log("WARN: takeAlterationBtn(): unable to decrement take actions") end
+  pdata.cast_allowed = false
+  updateHUD()
 end
 
 --////////// Spell Cast stuffs ////////////
 
---[[ Handler for the Cast spell button. ] ]]  --TODO: myst rune dialog
+--[[ Handler for the Cast spell button. ] ]]
 function castSpellBtn(player, button, id)
   if env.test.trace then log("Global: castSpellBtn() "..player.color..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local pdata = GD.game.players[player.color]
-  --disable all action buttons for player
   pdata.casting = true
-  updateSpellButtons(false)
-  updateAlterationButtons(false)
   updateHUD()
-  --show appropriate dialog
   if pdata.mystrune ~= nil then
     UI_setAttribute("cast_mystrune_img","image","MystRune_"..GD.game.mystrune_type)
     UI_setAttribute("cast_mystrune_pnl","visibility",player.color)
@@ -2497,31 +2554,33 @@ function checkArcanas(pcol)
   local pdata = GD.game.players[pcol]
   local result = {}
   for i,arcana in ipairs(GD.game.arcanas) do
-    local satisfied = true
-    if arcana.requirement.elements ~= nil then
-      for _,e in ipairs(arcana.requirement.elements) do
-        local not_found = true
-        for _,c in ipairs(pdata.active_spell_cards) do
-          local spell = spells[c.card_id]
-          if contains(spell.dice, e) then not_found = false; break end
+    if not(arcana.taken) then
+      local satisfied = true
+      if arcana.requirement.elements ~= nil then
+        for _,e in ipairs(arcana.requirement.elements) do
+          local not_found = true
+          for _,c in ipairs(pdata.active_spell_cards) do
+            local spell = spells[c.card_id]
+            if contains(spell.dice, e) then not_found = false; break end
+          end
+          if not_found then satisfied = false; break end
         end
-        if not_found then satisfied = false; break end
+      elseif arcana.requirement.cards ~= nil then
+        satisfied = #pdata.active_spell_cards >= 4
+      elseif arcana.requirement.spell_power ~= nil then
+        satisfied = pdata.spell_power.net_restore >= arcana.requirement.spell_power.restore or
+          pdata.spell_power.net_ruin >= arcana.requirement.spell_power.ruin
+      elseif arcana.requirement.aether_mod ~= nil then
+        local n = 0
+        for _,s in ipairs(pdata.active_spell_cards) do
+          if spells[s.card_id].aether_mod then n = n + 1 end
+        end
+        satisfied = n >= 3 and hasAether(pcol)
+      elseif arcana.requirement.myst ~= nil then
+        satisfied = pdata.spell_power.myst >= 12
       end
-    elseif arcana.requirement.cards ~= nil then
-      satisfied = #pdata.active_spell_cards >= 4
-    elseif arcana.requirement.spell_power ~= nil then
-      satisfied = pdata.spell_power.net_restore >= arcana.requirement.spell_power.restore or
-        pdata.spell_power.net_ruin >= arcana.requirement.spell_power.ruin
-    elseif arcana.requirement.aether_mod ~= nil then
-      local n = 0
-      for _,s in ipairs(pdata.active_spell_cards) do
-        if spells[s.card_id].aether_mod then n = n + 1 end
-      end
-      satisfied = n >= 3 and hasAether(pcol)
-    elseif arcana.requirement.myst ~= nil then
-      satisfied = pdata.spell_power.myst >= 12
+      if satisfied then table.insert(result,{index=i,arcana=arcana}) end
     end
-    if satisfied then table.insert(result,{index=i,arcana=arcana}) end
   end
   if env.test.debug then log(result) end
   if #result > 0 then return result
@@ -2549,8 +2608,6 @@ function takeHeroicBtn(player, button, id)
       o.call("assign",player.color)
     end
     updateHUD()
-    updateSpellButtons(true)
-    updateAlterationButtons(true)
   else
     local index = tonumber(Split(id,"_")[2])
     local card = getObjectFromGUID(GD.game.heroics[index].card_guid)
@@ -2563,10 +2620,17 @@ function takeHeroicBtn(player, button, id)
     board.call("placeHeroicCard",{guid=card.getGUID(),index=#pdata.heroics})
     GD.game.heroics[index].card_id = ""
     GD.game.heroics[index].card_guid = ""
+    if GD.env.verbose then print("Heroic bonus: "..pdata.player_color.." gains 1 Mana and 1 Acuity") end
     pdata.mana = pdata.mana + 1
-    if pdata.mana > 10 then pdata.mana = 10 end
+    if pdata.mana > 10 then
+      if GD.env.verbose then print(pdata.player_color.." discards "..tostring(pdata.mana-10).." Mana") end
+      pdata.mana = 10
+    end
     pdata.acuity = pdata.acuity + 1
-    if pdata.acuity > 10 then pdata.acuity = 10 end
+    if pdata.acuity > 10 then
+      if GD.env.verbose then print(pdata.player_color.." discards "..tostring(pdata.acuity-10).." Acuity") end
+      pdata.acuity = 10
+    end
     for _,sigil in ipairs(data.sigils) do
       pdata.sigils[sigil] = pdata.sigils[sigil] + 1
     end
@@ -2584,12 +2648,11 @@ function takeHeroicBtn(player, button, id)
     else
       prestige = math.floor(excess / 3)
     end
-    if env.test.debug then log("Prestige from "..tostring(excess).." excess "..type.." = "..tostring(prestige)) end
-    if GD.env.verbose then
-      local txt = player.color.." recieved "..tostring(prestige).." Prestige from "..tostring(excess).." excess "..type
-      broadcastToColor(txt, player.color)
-    end
     pdata.prestige = pdata.prestige + prestige
+    if env.test.debug then log("Prestige from "..tostring(excess).." excess "..type.." = "..tostring(prestige)) end
+    if GD.env.verbose and prestige > 0 then
+      print(player.color.." recieved "..tostring(prestige).." Prestige from "..tostring(excess).." excess "..type)
+    end
     --check arcanas won
     if pdata.arcanas_won ~= nil then
       for _,e in ipairs(pdata.arcanas_won) do
@@ -2628,9 +2691,9 @@ function showCastConsolationDialog(pcol)
     log("WARN: Global: showCastConsolationDialog() no spell power.")
   end
   if type == "" then
-    UI.setClass("cast_cons_spell_type_img","image_inactive")
+    UI_setClass("cast_cons_spell_type_img","image_inactive")
   else
-    UI.setClass("cast_cons_spell_type_img","image_active")
+    UI_setClass("cast_cons_spell_type_img","image_active")
     UI_setAttribute("cast_cons_spell_type_img","image",type)
   end
   UI_setAttribute("cast_cons_spell_power_txt","text",tostring(power))
@@ -2655,7 +2718,13 @@ function castConsolationHandler(player, button, id)
     end
     pdata.prestige = pdata.prestige + prestige
     if pdata.arcanas_won ~= nil then
-      --TODO: show take Arcana buttons
+      --it could happen!
+      for _,e in ipairs(pdata.arcanas_won) do
+        object_UI_setAttribute(g_upper, "arcana_"..tostring(e.index).."_pnl","active",true)
+      end
+      if GD.env.verbose then
+        broadcastToColor("Choose an Arcana to claim.", player.color)
+      end
     else
       castCleanup(player.color)
     end
@@ -2663,16 +2732,25 @@ function castConsolationHandler(player, button, id)
     --reset player state to cancel cast
     pdata.casting = false
     pdata.arcanas_won = nil
+    if pdata.spell_power.mystrune.restore > 0 or pdata.spell_power.mystrune.ruin > 0 then
+      --return and reset the mystrune HACK: is there a better way around this?
+      local board = getObjectFromGUID(pdata.player_board)
+      assert(board, "Global:takeHeroicBtn() could not locate player board")
+      board.call("placeMystRune", {guid=GD.game.mystrune})
+      pdata.spell_power.mystrune.restore = 0
+      pdata.spell_power.mystrune.ruin = 0
+      pdata.mystrune = GD.game.mystrune
+      local o = getObjectFromGUID(pdata.mystrune)
+      o.call("assign",player.color)
+    end
     updateHUD()
-    updateSpellButtons(true)
-    updateAlterationButtons(true)
   else
     assert(false, "Global:castConsolationHandler() invalid action id")
   end
   UI_setAttribute("cast_cons_pnl","visibility","Pink")
 end
 
---[[ Display the myst spell power selection dialog to a player. ]] --TODO: implement
+--[[ Display the myst spell power selection dialog to a player. ]]
 function showMystDialog(pcol)
   if env.test.trace then log("Global:showMystDialog() "..tostring(pcol)) end
   local pdata = GD.game.players[pcol]
@@ -2709,7 +2787,13 @@ function castMystHandler(player, button, id)
     if type == "restore" then restore = 34
     else ruin = 24 end
   end
+  if type == "restore" then
+    pdata.spell_power.net_restore = restore
+  else
+    pdata.spell_power.net_ruin = ruin
+  end
   updateCast(restore, ruin, player.color)
+  UI_setAttribute("cast_myst_pnl","visibility","Pink")
 end
 
 --[[ Handler for the Myst Rune choice dialog.]]
@@ -2717,26 +2801,34 @@ function castMystruneHandler(player, button, id)
   if env.test.trace then log("Global:castMystruneHandler() "..tostring(player.color)..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local pdata = GD.game.players[player.color]
-  local restore = pdata.spell_power.net_restore
-  local ruin = pdata.spell_power.net_ruin
   local action = Split(id,"_")[3]
   if action == "no" then
     --TODO: anything?
   elseif action == "yes" then
     if GD.game.mystrune_type == "Restore" then
-      restore = restore + 3
       pdata.spell_power.mystrune = {restore=3,ruin=0}
     else
-      ruin = ruin + 2
       pdata.spell_power.mystrune = {restore=0,ruin=2}
     end
+    updateSpellPower(player.color)
     returnMystRune(player.color)
   else
     assert(false, "Global:castMystruneHandler() unknown action id")
   end
   UI_setAttribute("cast_mystrune_pnl","visibility","Pink")
   updateHUD()
-  updateCast(restore, ruin, player.color)
+  --check to see if myst generated after mystrune mod
+  local restore = pdata.spell_power.gross_restore
+  local ruin = pdata.spell_power.gross_ruin
+  if env.test.debug then
+    log("gross restore: "..tostring(restore))
+    log("gross ruin: "..tostring(ruin))
+  end
+  if pdata.spell_power.myst > 0 then
+    showMystDialog(player.color)
+  else
+    updateCast(restore, ruin, player.color)
+  end
 end
 
 --[[ Handler for the take Arcana buttons. ]]
@@ -2746,6 +2838,7 @@ function takeArcanaBtn(player, button, id)
   local pdata = GD.game.players[player.color]
   local index = tonumber(Split(id,"_")[2])
   local arcana = GD.game.arcanas[index]
+  arcana.taken = true
   table.insert(pdata.arcanas, arcana)
   local board = getObjectFromGUID(pdata.player_board)
   assert(board, "Global:takeArcanaBtn() could not locate player board")
@@ -2759,12 +2852,31 @@ end
 
 --[[ Perform post spell cast cleanup for a player. ]]
 function castCleanup(pcol)
-  if env.test.trace then log("Global: castCleanup() "..tostring(pcol)) end
+  if env.test.trace then log("Global:castCleanup() "..tostring(pcol)) end
   local pdata = GD.game.players[pcol]
   local board = getObjectFromGUID(pdata.player_board)
-  for _,s in ipairs(pdata.active_spell_cards) do
-    board.call("placeCastSpell",{guid=s.guid})
-    table.insert(pdata.cast_spells, {id=s.card_id})
+  for _,s in ipairs(pdata.spell_power.card_map.base_spells) do
+    if s.guid ~= "" then
+      board.call("placeCastSpell",{guid=s.guid})
+      table.insert(pdata.cast_spells, {id=s.id})
+    end
+  end
+  for _,s in ipairs(pdata.spell_power.card_map.enchant_spells) do
+    if s.guid ~= "" then
+      board.call("placeCastSpell",{guid=s.guid})
+      table.insert(pdata.cast_spells, {id=s.id})
+    end
+  end
+  for i,link in ipairs(pdata.spell_power.card_map.link_spells) do
+    if #link == 1 then --single card
+      board.call("placeCastSpell",{guid=link[1].guid})
+      table.insert(pdata.cast_spells, {id=link[1].id})
+    elseif #link > 1 then --handle a deck here
+      local list = board.call("placeLinkSpellDeck",{index=i})
+      for _,card_id in ipairs(list) do
+        table.insert(pdata.cast_spells, {id=card_id})
+      end
+    end
   end
   --return used alteration cards
   returnUsedAlterations(pcol)
@@ -2783,6 +2895,22 @@ function castCleanup(pcol)
         p.mystrune = nil
       end
     end
+  end
+  --handle myst awards if earned
+  if pdata.spell_power.myst >= 12 then
+    if GD.env.verbose then print("Myst bonus:"..pdata.player_color.." recieves +1 Prestige and +2 Acuity") end
+    pdata.acuity = pdata.acuity + 2
+    pdata.prestige = pdata.prestige + 1
+  elseif pdata.spell_power.myst >= 10 then
+    if GD.env.verbose then print("Myst bonus:"..pdata.player_color.." recieves +2 Acuity") end
+    pdata.acuity = pdata.acuity + 2
+  elseif pdata.spell_power.myst >= 8 then
+    if GD.env.verbose then print("Myst bonus:"..pdata.player_color.." recieves +1 Acuity") end
+    pdata.acuity = pdata.acuity + 1
+  end
+  if pdata.acuity > 10 then
+    if GD.env.verbose then print(pdata.player_color.." discards "..tostring(pdata.acuity-10).." Acuity") end
+    pdata.acuity = 10
   end
   --reset player data structure
   pdata.spent_mana = 0
@@ -2815,13 +2943,23 @@ function castCleanup(pcol)
     net_ruin = 0,
     myst = 0,
   }
+  if not(GD.game.endgame) then checkEndGame(pcol) end
   --reroll player's dice and set un-allocated
-  for _,d in ipairs(pdata.dice) do
-    local val = math.random(1,6)
-    d.value = val
-    d.element = C.die_elements[val]
-    d.allocated = false
+  if GD.game.endgame then
+    for _,d in ipairs(pdata.dice) do
+      d.value = 4
+      d.element = C.die_elements[4]
+      d.allocated = true
+    end
+  else
+    for _,d in ipairs(pdata.dice) do
+      local val = math.random(1,6)
+      d.value = val
+      d.element = C.die_elements[val]
+      d.allocated = false
+    end
   end
+  -- checkEndGame(pcol)
   setNextPlayer()
 end
 
@@ -2867,7 +3005,7 @@ end
 --[[ Update HUD and board UIs with current data.
 Parameters:
   player_color: (opt) if supplied update only this players info
-TODO: move updateSpellButtons and updateAlterationButtons into this function.
+NOTE: Have moved updateSpellButtons and updateAlterationButtons into this function.
       Effectively making this into update all UI atomically.
 NOTE: this function triggers updates to the following things:
     player spell power recalculation
@@ -2879,9 +3017,9 @@ TODO: evaluate if there's any duplication or REALLY BAD: recursion going on with
 --]]
 function updateHUD(player_color)
   if env.test.trace then log("Global: updateHUD() "..tostring(player_color)) end
-  local max_heroics = 4
-  if GD.game.player_count == 3 then  max_heroics = 3
-  elseif GD.game.player_count == 4 then max_heroics = 2 end
+  local max_heroics = 5
+  if GD.game.player_count == 3 then  max_heroics = 4
+  elseif GD.game.player_count == 4 then max_heroics = 3 end
   local function updatePlayerHUD(i, pcol)
     if env.test.debug then log("updatePlayerHUD() i: "..tostring(i).." "..tostring(pcol)) end
     local pdata = GD.game.players[pcol]
@@ -2906,6 +3044,11 @@ function updateHUD(player_color)
       }
     end
     local heroics = #pdata.heroics
+    if pdata.active then
+      UI_setAttribute("hud_row_"..tostring(i).."_player_pnl", "color", "Cyan")
+    else
+      UI_setAttribute("hud_row_"..tostring(i).."_player_pnl", "color", "rgba(0,0,0,0)")
+    end
     UI_setAttribute("hud_row_"..tostring(i).."_spell", "text", tostring(spell.power))
     if spell.type ~= "None" then
       UI_setAttribute("hud_row_"..tostring(i).."_image", "image", tostring(spell.type))
@@ -2918,7 +3061,6 @@ function updateHUD(player_color)
     for i,d in ipairs(pdata.dice) do
       local id = pcol.."_hud_die_"..tostring(i).."_image"
       UI.setAttribute(id,"image",C.die_elements[d.value])
-      UI.setClass(id, "image_active")
       if d.allocated then   --TODO: use gray border same as in class board?
         UI.setAttribute(id, "color", "rgb(0.4,0.4,0.4)")
       else
@@ -2933,18 +3075,35 @@ function updateHUD(player_color)
     UI_setAttribute(pcol.."_hud_mana_text","text",tostring(pdata.mana))
     UI_setAttribute(pcol.."_hud_acuity_text","text",tostring(pdata.acuity))
     UI_setAttribute(pcol.."_hud_hand_text","text",tostring(#pdata.alteration_cards).." / 10")
+    --update board UIs
     local class_board = getObjectFromGUID(pdata.class_board)
     class_board.call("updateUI",pdata)
     local player_board = getObjectFromGUID(pdata.player_board)
     player_board.call("updateUI",pdata)
-    --handle case of myst rune owned by player
-    if pdata.mystrune ~= nil then
-      local active = pdata.active --show when player active
-      active = active and pdata.alteration_action == nil --hide when alteration in play
-      active = active and not(pdata.casting)  --hide when casting
-      active = active and pdata.mystrune_action == nil --hide when mystrune dialog is open
-      local o = getObjectFromGUID(pdata.mystrune)
-      o.UI.setAttribute("ui_panel","active",active)
+    if pdata.active then
+      local dialog_open = pdata.casting or
+            pdata.alteration_action ~= nil or
+            pdata.mystrune_action ~= nil or
+            pdata.spell_cost ~= nil
+      if dialog_open or #pdata.actions.take == 0 or GD.game.endgame then
+        updateSpellButtons(false)
+        updateAlterationButtons(false)
+        object_UI_setAttribute(g_lower, "recycle_spell_pnl", "active", false)
+      else
+        updateSpellButtons(true)
+        updateAlterationButtons(true)
+        object_UI_setAttribute(g_lower, "recycle_spell_pnl", "active", true)
+      end
+      --handle case of myst rune owned by player
+      if pdata.mystrune then
+        local o = getObjectFromGUID(pdata.mystrune)
+        o.UI.setAttribute("ui_panel","active", not(dialog_open))
+      end
+    else
+      if pdata.mystrune then
+        local o = getObjectFromGUID(pdata.mystrune)
+        o.UI.setAttribute("ui_panel","active", false)
+      end
     end
   end
   if player_color ~= nil then
@@ -3128,32 +3287,67 @@ end
 
 --////////// End Game ////////////
 
---[[ TODO: revamp for new redesign
-Final game scoring.
-  tiebreaker: first #arcanas, then #spells --]]           --TODO: redesign this !!!
+--[[ Check end game conditions.  Set state if reached. ]]
+function checkEndGame(pcol)
+  if env.test.trace then log("Global: checkEndGame() "..tostring(pcol)) end
+  -- if GD.game.endgame then return end --already triggered
+  local max = 5
+  if #GD.game.player_order == 3 then
+    max = 4
+  elseif #GD.game.player_order == 4 then
+    max = 3
+  end
+  if #GD.game.players[pcol].heroics == max then
+    for _,pdata in pairs(GD.game.players) do
+      pdata.actions.take = {}
+      pdata.actions.play = 0
+      pdata.active = false
+      pdata.endgame = true
+    end
+    GD.game.endgame_players = {}
+    local index = indexOf(GD.game.player_order, pcol)
+    for i=1,#GD.game.player_order-1 do
+      index = index + 1
+      if index > #GD.game.player_order then index = 1 end
+      table.insert(GD.game.endgame_players, GD.game.player_order[index])
+    end
+    if GD.env.verbose then
+      print("Endgame triggered by player "..pcol.."!")
+      print("Remaining players may only cast spells.")
+    end
+    UI_setAttribute("endgame_pnl","active", true)
+    --remove spell cards
+    for _,card in ipairs(GD.game.spells) do
+      local o = getObjectFromGUID(card.card_guid)
+      if o then o.destruct() end
+    end
+    --remove alteration cards & acuity
+    for i,card in ipairs(GD.game.alterations) do
+      local o = getObjectFromGUID(card.card_guid)
+      if o then o.destruct() end
+      object_UI_setAttribute(g_lower, "alterations_acuity_"..tostring(i).."_pnl","active",false)
+    end
+    if env.test.debug then
+      log("Endgame triggered by "..pcol)
+      log("Remaining players only cast spells.")
+      log(GD.game.endgame_players)
+    end
+    GD.game.endgame = true
+    updateHUD()
+  end
+end
+
+--[[ Final game scoring.  Sort players by score and display results.
+  Tiebreaker: arcanas points.
+--]]
 function finalScore()
   if env.test.trace then log("Global: finalScore()") end
+  UI_setAttribute("endgame_pnl","active", false)
   local scores = {}
-  for color,pinfo in pairs(GD.game.players) do
-    local pdata = {}
-    pdata.player = color
-    pdata.class = pinfo.class
-    local board = getObjectFromGUID(pinfo.class_board)
-    board.call("updateScore", {})
-    local bd=board.getTable("GD")
-    local values = bd.board.scoring.values
-    pdata.total = 0
-    pdata.heroics = values.heroics
-    pdata.total = pdata.total + values.heroics
-    pdata.sigils = values.sigils
-    pdata.total = pdata.total + values.sigils
-    pdata.prestige = values.prestige
-    pdata.total = pdata.total + values.prestige
-    pdata.arcanas = values.arcanas
-    pdata.total = pdata.total + values.arcanas
-    pdata.num_arcanas = sizeOf(bd.board.scoring.arcanas)
-    pdata.num_spells = sizeOf(bd.board.scoring.spells)
-    local new_data = simpleDeepCopy(pdata)
+  for pcol,pdata in pairs(GD.game.players) do
+    local new_data = simpleDeepCopy(pdata.score)
+    new_data.player = pcol
+    new_data.class = pdata.class
     if #scores == 0 then
       table.insert(scores, new_data)
     else
@@ -3163,23 +3357,22 @@ function finalScore()
           table.insert(scores, i, new_data)
           found = true
           break
-        elseif new_data.total == scores[i].total then
-          --first tie breaker
-          if new_data.num_arcanas > scores[i].num_arcanas then
-            print(new_data.player.." wins 1st tie breaker with "..scores[i].player.." on #arcanas")
+        elseif new_data.total == scores[i].total then --tie breaker
+          if new_data.arcanas > scores[i].arcanas then
+            print(new_data.player.." wins tie breaker with "..scores[i].player.." on arcana points")
             table.insert(scores, i, new_data)
             found = true
             break
-          elseif new_data.num_arcanas == scores[i].num_arcanas then
-            --second tie breaker
-            if new_data.num_spells > scores[i].num_spells then
-              print(new_data.player.." wins 2nd tie breaker with "..scores[i].player.." on #spells")
-              table.insert(scores, i, new_data)
-              found = true
-              break
-            else
-              print(new_data.player.." and "..scores[i].player.." still tied after all tie breakers.")
-            end
+          elseif scores[i].arcanas > new_data.arcanas then
+            print(scores[i].player.." wins tie breaker with "..new_data.player.." on arcana points")
+            table.insert(scores, i+1, new_data)
+            found = true
+            break
+          else
+            print(new_data.player.." and "..scores[i].player.." share a tie.")
+            table.insert(scores, i+1, new_data)
+            found = true
+            break
           end
         end
       end
@@ -3188,12 +3381,14 @@ function finalScore()
       end
     end
   end
-  --update the score display and show it
-  log("score:")
-  log(scores)
+  if env.test.debug then
+    log("score:")
+    log(scores)
+  end
   local i = 1
   for _,data in ipairs(scores) do
     UI_setAttribute("score_table_row_"..tostring(i).."_text_1", "text", data.player)
+    UI_setAttribute("score_table_row_"..tostring(i).."_text_1", "color", data.player)
     UI_setAttribute("score_table_row_"..tostring(i).."_text_2", "text", data.class)
     UI_setAttribute("score_table_row_"..tostring(i).."_text_3", "text", data.heroics)
     UI_setAttribute("score_table_row_"..tostring(i).."_text_4", "text", data.sigils)
@@ -3202,39 +3397,50 @@ function finalScore()
     UI_setAttribute("score_table_row_"..tostring(i).."_text_7", "text", data.total)
     i = i + 1
   end
+  local pname = GD.game.players[scores[1].player].name
+  UI_setAttribute("score_title_text","text",pname.." wins the game!!!")
   broadcastToAll(scores[1].player.." wins the game!!!")
   UI_setAttribute("score_panel","active",true)
 end
 
 
 
+--[[ ******** TESTING ******** --]]
 
+function enableDieTesting(on)
+  log("enableDieTesting() "..tostring(state))
+  if not(GD.game.started) then
+    log("Usage: after all players placed class boards.")
+    return
+  end
+  if on == nil then on = true end
+  local class = "image_active"
+  if on then class = "die_test" end
+  log("setting dice to class "..class)
+  for pcol,pdata in pairs(GD.game.players) do
+    log("Player "..pcol)
+    for i,d in ipairs(pdata.dice) do
+      UI.setClass(pcol.."_hud_die_"..tostring(i).."_image",class)
+    end
+  end
+end
 
-
-
-
-
---////////// TODO: Old stuff to evaluate ////////////
-
---[[ Used by player boards during scoring --]]       --TODO: OBE???
--- function getPlayerCount()
---   return #GD.game.player_order
--- end
-
---[[ Return player class board guid. --]]        --TODO: OBE???
--- function getPlayerClassBoardGUID(params)
---   assert(params)
---   local pdata = GD.game.players[params.player_color]
---   if pdata ~= nil then
---     return pdata.class_board
---   else
---     log("Global: ERROR: unable to get player data")
---     return ""
---   end
--- end
-
-
---[[ ******** UTILITY ******** --]]
+function testDie(player, button, id)
+  log("testDie(): "..player.color.." "..tostring(id).." "..tostring(button))
+  local dice = GD.game.players[player.color].dice
+  local index = tonumber(Split(id,"_")[4])
+  if button == "-2" then
+    log("Toggle "..player.color.." die "..tostring(index).." allocated state.")
+    dice[index].allocated = not(dice[index].allocated)
+  elseif button == "-1" then
+    log("Cycle "..player.color.." die "..tostring(index).." value.")
+    local val = dice[index].value + 1
+    if val > 6 then val = 1 end
+    dice[index].value = val
+    dice[index].element = C.die_elements[val]
+  end
+  updateHUD(player.color)
+end
 
 --[[ Get obj position (DEVELOPMENT ONLY) ]]
 function savePosition(g)
