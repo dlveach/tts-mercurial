@@ -5,82 +5,37 @@
   <Include src="XML_defaults.xml"/>
 
 <Defaults>
-  <Panel class="draggable"
-    allowDragging="true"
-    returnToOriginalPositionWhenReleased="false" />
-  <Panel class="viewport"
-    image="Sprites/Layout/Viewport"/>
-  <Panel class="dark"
-    color="rgb(0.7,0.3,0)" />
+  <Panel class="draggable" allowDragging="true" returnToOriginalPositionWhenReleased="false" />
+  <Panel class="viewport" image="Sprites/Layout/Viewport"/>
+  <Panel class="dark" color="rgb(0.7,0.3,0)" />
 
-  <TableLayout
-    autoCalculateHeight="true"
-    useGlobalCellPadding="false" />
-  <TableLayout class="viewport"
-    image="Sprites/Layout/Viewport"/>
-  <TableLayout class="dark"
-    color="#301616" />
+  <TableLayout autoCalculateHeight="true" useGlobalCellPadding="false" />
+  <TableLayout class="viewport" image="Sprites/Layout/Viewport"/>
+  <TableLayout class="dark" color="#301616" />
 
-  <Row
-    dontUseTableRowBackground="true" />
-  <Row class="title_row"
-    image="Sprites/Layout/Title"
-    color="rgb(0.7,0.3,0)" />
+  <!-- this doesn't work why??? -->
+  <VerticalLayout class="viewport" image="Sprites/Layout/Viewport"/>
+  <VerticalLayout class="dark" color="#301616" />
+
+  <Row dontUseTableRowBackground="true" />
+  <Row class="title_row" image="Sprites/Layout/Title" color="rgb(0.7,0.3,0)" />
 
   <!-- Cell dontUseTableCellBackground false during dev to show lines -->
-  <Cell
-    dontUseTableCellBackground="true"
-    color="rgba(0,0,0,0)"
-    padding="0 0 0 0" />
+  <Cell dontUseTableCellBackground="true" color="rgba(0,0,0,0)" padding="0 0 0 0" />
 
-  <Image
-    preserveAspect="true" />
+  <Image preserveAspect="true" />
   <Image class="image_active" active = "true" />
   <Image class="image_inactive" active = "false" />
   <Image class="die_test" active="true" onClick="testDie" />
 
   <!-- HUD specifics -->
-  <Text class="hud_header"
-    color="rgb(0.8,0.8,0)"
-    fontSize="14"/>
-  <Image class="hud_image" active="false"
-    image="Myst" />
-
-  <!-- Heroic panel stuff TODO: cleanup-->
-  <!-- <TableLayout class="heroics_table"
-    autoCalculateHeight="true"
-    image="Sprites/Layout/Viewport"
-    useGlobalCellPadding="false"
-    color="#301616" /> -->
-
-  <!-- Alteration dialog specifics -->
-  <Text class="alt_action_btn_txt"
-    color="rgb(0.8,0.8,0)"
-    fontSize="20"/>
+  <Text class="hud_header" color="rgb(0.8,0.8,0)" fontSize="14"/>
+  <Image class="hud_image" active="false" image="Myst" />
 
   <!-- Score panel stuffs -->
-  <Cell class="header_cell"
-    dontUseTableCellBackground="true"
-    color="rgba(0,0,0,0)" />
-
-  <Cell class="table_cell"
-    dontUseTableCellBackground="true"
-    image="Sprites/Layout/Viewport"
-    color="rgb(0.7,0.3,0)" />
-
-  <!-- <TableLayout class="score_table"
-    image="Sprites/Layout/Viewport"
-    color="rgb(0.4,0.1,0)"
-    padding="10 10 10 10"
-    cellSpacing="5"
-    cellPadding="0"
-    columnWidths="140 150 0 0 0 0 0"/> -->
-
-  <Text class="table_title_text"
-    fontSize="28"
-    color="rgb(.9,0.9,0)"
-    shadow="rgba(0,0,0,1)" />
-
+  <Cell class="header_cell" dontUseTableCellBackground="true" color="rgba(0,0,0,0)" />
+  <Cell class="table_cell" dontUseTableCellBackground="true" image="Sprites/Layout/Viewport" color="rgb(0.7,0.3,0)" />
+  <Text class="table_title_text" fontSize="28" color="rgb(.9,0.9,0)" shadow="rgba(0,0,0,1)" />
 </Defaults>
 
 <!-- Start Panel -->
@@ -169,7 +124,7 @@
         </Cell>
         <Cell><Text id="hud_row_1_spell" class="hud_row" text="0"/></Cell>
         <Cell padding="0 20 0 0"><Image id="hud_row_1_image" class="hud_image"/></Cell>
-        <Cell><Text id="hud_row_1_heroics" class="hud_row" text=""/></Cell>
+        <Cell><Text id="hud_row_1_heroics" class="hud_row" text="0 / 0"/></Cell>
         <Cell><Text id="hud_row_1_score" class="hud_row" text="0"/></Cell>
       </Row>
       <Row id="hud_row_2" preferredHeight="30">
@@ -182,7 +137,7 @@
         </Cell>
         <Cell><Text id="hud_row_2_spell" class="hud_row" text="0"/></Cell>
         <Cell padding="0 20 0 0"><Image id="hud_row_2_image" class="hud_image"/></Cell>
-        <Cell><Text id="hud_row_2_heroics" class="hud_row" text=""/></Cell>
+        <Cell><Text id="hud_row_2_heroics" class="hud_row" text="0 / 0"/></Cell>
         <Cell><Text id="hud_row_2_score" class="hud_row" text="0"/></Cell>
       </Row>
       <Row id="hud_row_3" preferredHeight="30">
@@ -195,7 +150,7 @@
         </Cell>
         <Cell><Text id="hud_row_3_spell" class="hud_row" text="0"/></Cell>
         <Cell padding="0 20 0 0"><Image id="hud_row_3_image" class="hud_image"/></Cell>
-        <Cell><Text id="hud_row_3_heroics" class="hud_row" text=""/></Cell>
+        <Cell><Text id="hud_row_3_heroics" class="hud_row" text="0 / 0"/></Cell>
         <Cell><Text id="hud_row_3_score" class="hud_row" text="0"/></Cell>
       </Row>
       <Row id="hud_row_4" preferredHeight="30">
@@ -208,7 +163,7 @@
         </Cell>
         <Cell><Text id="hud_row_4_spell" class="hud_row" text="0"/></Cell>
         <Cell padding="0 20 0 0"><Image id="hud_row_4_image" class="hud_image"/></Cell>
-        <Cell><Text id="hud_row_4_heroics" class="hud_row" text=""/></Cell>
+        <Cell><Text id="hud_row_4_heroics" class="hud_row" text="0 / 0"/></Cell>
         <Cell><Text id="hud_row_4_score" class="hud_row" text="0"/></Cell>
       </Row>
       <Row class="title_row" preferredHeight="30" visibility="Red">
@@ -564,19 +519,19 @@
                   <Cell><Image id="spell_cost_acuity_img" image="Acuity" class="image_active" onClick="spellCostHandler"/></Cell>
                   <Cell><Text id="spell_cost_acuity_txt" color="White" fontSize="24" text="10"/></Cell>
                   <Cell/>
-                  <Cell><Image id="spell_cost_die_1_img" image="Earth" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell><Image id="spell_cost_die_1_img" image="Fire" class="image_active" onClick="spellCostHandler"/></Cell>
                   <Cell/>
-                  <Cell><Image id="spell_cost_die_2_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell><Image id="spell_cost_die_2_img" image="Water" class="image_inactive" onClick="spellCostHandler"/></Cell>
                   <Cell/>
-                  <Cell><Image id="spell_cost_die_3_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell><Image id="spell_cost_die_3_img" image="Water" class="image_inactive" onClick="spellCostHandler"/></Cell>
                   <Cell/>
-                  <Cell><Image id="spell_cost_die_4_img" image="Fire" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell><Image id="spell_cost_die_4_img" image="Fire" class="image_inactive" onClick="spellCostHandler"/></Cell>
                   <Cell/>
-                  <Cell><Image id="spell_cost_die_5_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell><Image id="spell_cost_die_5_img" image="Water" class="image_inactive" onClick="spellCostHandler"/></Cell>
                   <Cell/>
-                  <Cell><Image id="spell_cost_die_6_img" image="Lightning" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell><Image id="spell_cost_die_6_img" image="Lightning" class="image_inactive" onClick="spellCostHandler"/></Cell>
                   <Cell/>
-                  <Cell><Image id="spell_cost_die_7_img" image="Lightning" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell><Image id="spell_cost_die_7_img" image="Lightning" class="image_inactive" onClick="spellCostHandler"/></Cell>
                 </Row>
               </TableLayout>
             </Cell>
@@ -597,15 +552,15 @@
                   <Cell><Image id="spell_assigned_acuity_img" image="Acuity" class="image_active" onClick="spellCostHandler"/></Cell>
                   <Cell><Text id="spell_assigned_acuity_txt" color="White" fontSize="24" text="0"/></Cell>
                   <Cell/>
-                  <Cell><Image id="spell_assigned_die_1_img" image="Earth" preserveAspect="true" onClick="spellCostHandler"/></Cell>
+                  <Cell><Image id="spell_assigned_die_1_img" image="Empty-flex" preserveAspect="true" onClick="spellCostHandler"/></Cell>
                   <Cell/>
-                  <Cell><Image id="spell_assigned_die_2_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell><Image id="spell_assigned_die_2_img" image="Empty-fixed" class="image_active" onClick="spellCostHandler"/></Cell>
                   <Cell/>
-                  <Cell><Image id="spell_assigned_die_3_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell><Image id="spell_assigned_die_3_img" image="Water" class="image_inactive" onClick="spellCostHandler"/></Cell>
                   <Cell/>
-                  <Cell><Image id="spell_assigned_die_4_img" image="Fire" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell><Image id="spell_assigned_die_4_img" image="Fire" class="image_inactive" onClick="spellCostHandler"/></Cell>
                   <Cell/>
-                  <Cell><Image id="spell_assigned_die_5_img" image="Water" class="image_active" onClick="spellCostHandler"/></Cell>
+                  <Cell><Image id="spell_assigned_die_5_img" image="Water" class="image_inactive" onClick="spellCostHandler"/></Cell>
                   <Cell/>
                 </Row>
               </TableLayout>
@@ -672,7 +627,7 @@
   <TableLayout class="dark viewport" columnWidths="200 900">
     <Row preferredHeight="340">
       <Cell padding="5 5 5 5">
-        <Image id="alteration_card_img" preserveAspect="true" image="Alt-1" onClick="alterationDlgHandler"/>
+        <Image id="alteration_card_img" preserveAspect="true" image="Alt-1"/>
       </Cell>
       <Cell>
         <TableLayout>
@@ -685,12 +640,12 @@
                     <HorizontalLayout spacing="20">
                       <Panel>
                         <Button padding="20 20 0 10" id="alteration_primary_action_btn" onClick="alterationDlgHandler">
-                          <Text id="alteration_primary_action_txt" class="alt_action_btn_txt" text="Primary" />
+                          <Text id="alteration_primary_action_txt" class="hud_header" fontSize="20" text="Primary" />
                         </Button>
                       </Panel>
                       <Panel id="alteration_primary_or_action_pnl">
                         <Button padding="20 20 0 10" id="alteration_primary_or_action_btn" onClick="alterationDlgHandler">
-                          <Text id="alteration_primary_or_action_txt" class="alt_action_btn_txt" text="OR Primary" />
+                          <Text id="alteration_primary_or_action_txt" class="hud_header" fontSize="20" text="OR Primary" />
                         </Button>
                       </Panel>
                     </HorizontalLayout>
@@ -701,12 +656,12 @@
                     <HorizontalLayout spacing="20">
                       <Panel id="alteration_secondary_action_pnl">
                         <Button padding="20 20 0 10" id="alteration_secondary_action_btn" onClick="alterationDlgHandler">
-                          <Text id="alteration_secondary_action_txt" class="alt_action_btn_txt" text="Secondary" />
+                          <Text id="alteration_secondary_action_txt" class="hud_header" fontSize="20" text="Secondary" />
                         </Button>
                       </Panel>
                       <Panel id="alteration_discard_action_pnl">
                         <Button padding="20 20 0 10" id="alteration_discard_action_btn" onClick="alterationDlgHandler">
-                          <Text id="alteration_discard_action_txt" class="alt_action_btn_txt"
+                          <Text id="alteration_discard_action_txt" class="hud_header" fontSize="20"
                             text="DISCARD: Spend one Acuity and then take another card." />
                         </Button>
                       </Panel>
@@ -853,7 +808,7 @@
   </TableLayout>
 </Panel>
 
-<!-- Alteration card panel -->
+<!-- Use MystRune panel -->
 <Panel id="activate_mystrune_pnl" active="false"
   class="draggable dark viewport"
   offsetXY="0 50"
@@ -1272,6 +1227,22 @@
     </Row>
 
   </TableLayout>
+</Panel>
+
+<Panel id="dmeo_pnl" active="false"
+  class="draggable dark viewport"
+  rectAlignment="LowerCenter"
+  height="250" width="200"
+  padding="10 10 10 10">
+  <Panel padding="20 20 10 10" class="dark viewport">
+    <VerticalLayout image="Sprites/Layout/Viewport" color="#301616" spacing="5">
+      <Button id="demo_hud" onClick="demo">HUD</Button>
+      <Button id="demo_spell" onClick="demo">Spell</Button>
+      <Button id="demo_alt_select" onClick="demo">Alt Select</Button>
+      <Button id="demo_alt_dice" onClick="demo">Alt Dice</Button>
+      <Button id="demo_close" onClick="demo">Close</Button>
+    </VerticalLayout>
+  </Panel>
 </Panel>
 
 </XmlLayout>

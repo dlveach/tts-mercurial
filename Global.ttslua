@@ -47,10 +47,10 @@ env.version = "1.0.2 production release"
 env.test= {}
 -- env.test.test_players = {"Green", "Blue", "Yellow", "Red"}
 -- env.test.test_players = {"Yellow", "Red", "Blue"}
-env.test.test_players = {"Red", "Blue"}
+-- env.test.test_players = {"Red", "Blue"}
 -- env.test.test_players = {"Green", "Blue"}
 -- env.test.test_players = {"Green", "Blue"}
-env.test.auto_switch = true
+env.test.auto_switch = false
 env.test.in_dev = false
 env.test.trace = true
 env.test.debug = false
@@ -244,16 +244,18 @@ function restoreGameState()
     assert(obj, "restoreGameState() unable to locate object for guid "..tostring(guid))
     obj.UI.setAttribute(id, field, value)
   end
-  --update all UI states with current data
   if GD.game.started then
+    --update all UI states with current data
     updateHUD()
-    local pcol = GD.game.player_order[GD.game.current_player]
     --handle mystrune token
-    if GD.game.players[pcol].mystrune ~= nil then
-      if env.test.debug then log("reassign mystrune to "..pcol) end
-      local o = getObjectFromGUID(GD.game.players[pcol].mystrune)
-      o.call("assign",pcol)
+    for pcol,pdata in pairs(GD.game.players) do
+      if pdata.mystrune ~= nil then
+        if env.test.debug then log("reassign mystrune to "..pcol) end
+        local o = getObjectFromGUID(GD.game.players[pcol].mystrune)
+        o.call("assign",pcol)
+      end
     end
+    --make sure some things are visible
     local o = getObjectFromGUID(C.guids.dice_flip_chart)
     if o then o.setInvisibleTo({}) end
     local o = getObjectFromGUID(C.guids.excess_spell_prestige)
@@ -1740,13 +1742,61 @@ function alterationDlgHandler(player, button, id)
     alt.secondary = true --needed for Chaosmancer special case on secondary rerolls
     execute_action(card.secondary)
   elseif action == "discard" then
+    --immediate for alteration discard, handle everything here
     if env.test.debug then log("executing discard action for card "..tostring(card.id)) end
     if pdata.acuity == 0 then
       broadcastToColor("Requirements for discard action not met.", player.color)
       return
     end
-    table.insert(alt.take_gained, "any")
-    alt.acuity_paid = alt.acuity_paid + 1
+    --return the Alteration to the deck
+    local obj = getObjectFromGUID(card.guid)
+    local index = indexOf(pdata.alteration_cards,obj.getGUID())
+    assert(index > 0, "Global:alterationDlgHandler() unable to index alteration card in player data")
+    table.remove(pdata.alteration_cards, index)
+    --remove any sigils for this card from pdata
+    local sigils = alterations[tonumber(obj.getGMNotes())].sigils
+    for _,s in ipairs(sigils) do
+      if pdata.alt_sigils[s] > 0 then pdata.alt_sigils[s] = pdata.alt_sigils[s] - 1
+      else log("Global:alterationDlgHandler() unable to decrement sigil "..s.." during alt discard") end
+    end
+    --put the alt card back at bottom of alt deck
+    obj.memo = nil
+    obj.setLock(false)
+    if not(obj.is_face_down) then obj.flip() end
+    local deck = getAlterationsDeck()
+    if deck then
+      if deck.tag == "Deck" then
+        deck.setLock(false)
+        deck.putObject(obj)
+        Wait.condition(function()
+          deck.setLock(true)
+        end, function() return obj.isDestroyed() end)
+      elseif deck.tag == "Card" then
+        local pos = deck.getPosition()
+        deck.setPosition(Vector(pos.x, pos.y + 3, pos.z))
+        obj.setPosition(pos)
+        Wait.condition(function()
+          local d = getAlterationsDeck()
+          d.setLock(true)
+          GD.game.alterations_deck_guid = d.getGUID()
+        end, function() return obj.isDestroyed() end)
+      else
+        assert(false, "Global:alterationDlgHandler() unknown alterations deck object")
+      end
+    else
+      obj.setPosition(C.alterations_deck_pos)
+      GD.game.alterations_deck_guid = obj.getGUID()
+      Wait.condition(function() obj.setLock(true) end, function() return obj.resting end)
+    end
+    --update pdata
+    table.insert(pdata.actions.take, "any")
+    pdata.alteration_action = nil
+    pdata.acuity = pdata.acuity - 1
+    pdata.cast_allowed = false
+    pdata.actions.play = pdata.actions.play - 1
+    UI_setAttribute("alteration_card_pnl","visibility","Pink")
+    updateHUD()
+    return --special case
   elseif action == "next" then
     alt.max = alt.acuity_paid - 1
     alt.state = "convert"
@@ -1847,17 +1897,17 @@ function alterationDlgHandler(player, button, id)
     end
     pdata.cast_allowed = false
     pdata.actions.play = pdata.actions.play - 1
-    local card = getObjectFromGUID(card.guid)
-    assert(card, "alterationDlgHandler(): could not instantiate card object")
-    local memo = JSON.decode(card.memo)
+    local c = getObjectFromGUID(card.guid)
+    assert(c, "alterationDlgHandler(): could not instantiate card object")
+    local memo = JSON.decode(c.memo)
     if env.test.debug then
       log("alterationDlgHandler():"); log(memo)
       assert(memo.player == player.color, "alterationDlgHandler(): player does not own card")
     end
     memo.used = true
-    card.memo = JSON.encode(memo)
+    c.memo = JSON.encode(memo)
     local board = getObjectFromGUID(pdata.player_board)
-    board.call("placeUsedAlterationCard",{guid=card.guid})
+    board.call("placeUsedAlterationCard",{guid=c.guid})
     UI_setAttribute("alteration_card_pnl","visibility","Pink")
     pdata.alteration_action = nil
     updateHUD()
@@ -2388,7 +2438,7 @@ end
     If current player has no takes all buttons are disabled.
   --]]
 function updateSpellButtons(state)
-  if env.test.trace then log("Global:updateSpellButtons()") end
+  if env.test.trace then log("Global:updateSpellButtons() "..tostring(state)) end
   local state = state and true
   local pcol = GD.game.player_order[GD.game.current_player]
   state = state and indexOf(GD.game.players[pcol].actions.take,"any") > 0
@@ -2408,13 +2458,16 @@ end
 function checkSpellRequirements(loc, pcol)
   if env.test.trace then log("Global:checkSpellRequirements() "..tostring(loc)..", "..tostring(pcol)) end
   local id = GD.game.spells[loc].card_id
-  local mana = GD.game.players[pcol].mana
+  local pdata = GD.game.players[pcol]
+  local mana = pdata.mana
   if loc == 1 then mana = mana + 1 end  --discount
-  local acuity = GD.game.players[pcol].acuity
+  local acuity = pdata.acuity
   if loc == 2 then acuity = acuity + 1 end  --discount
-  local flex_die = math.floor(mana / 2) + math.floor(acuity / 4)
+  if pdata.acuity_discount then acuity = acuity + pdata.acuity_discount end
+  mana = mana + math.floor(acuity / 2)
+  local flex_die = math.floor(mana / 2)
   local dice = {}
-  for _,d in ipairs(GD.game.players[pcol].dice) do
+  for _,d in ipairs(pdata.dice) do
     if not(d.allocated) then
       local element = C.die_elements[d.value]
       if dice[element] then dice[element] = dice[element] + 1
@@ -3409,7 +3462,81 @@ function finalScore()
   UI_setAttribute("score_panel","active",true)
 end
 
-
+function demo(player, button, id)
+  if player == nil and button == nil and id == nil then
+    UI.setAttribute("start_pnl","active",false)
+    UI.setAttribute("dmeo_pnl","active",true)
+    GD.game.demo = true
+    return
+  end
+  log("Global: demo() "..tostring(player.color)..", "..tostring(id)..", "..tostring(button))
+  if id == "demo_hud" then
+    for _,pcol in ipairs(env.game.player_table_order) do
+      for i=1,6 do
+        UI.setAttribute(pcol.."_hud_die_"..tostring(i).."_image","image",C.die_elements[i])
+        UI.setClass(pcol.."_hud_die_"..tostring(i).."_image","image_active")
+      end
+    end
+    UI.setAttribute("hud_pnl","active",true)
+    UI.setAttribute("spell_card_pnl","visibility","Pink")
+    UI.setAttribute("alteration_card_pnl","visibility","Pink")
+  elseif id == "demo_spell" then
+    UI.setAttribute("hud_pnl","active",false)
+    UI.setAttribute("spell_card_pnl","visibility","")
+    UI.setAttribute("alteration_card_pnl","visibility","Pink")
+  elseif id == "demo_alt_select" then
+    local i = tonumber(Split(UI.getAttribute("alteration_card_img","image"),"-")[2])
+    if i == nil then i = 1 end
+    if button == "-2" and i < 44 then i = i + 1
+    elseif button == "-3" and i > 1 then i = i - 1
+    end
+    UI.setAttribute("hud_pnl","active",false)
+    UI.setAttribute("spell_card_pnl","visibility","Pink")
+    UI.setAttribute("alteration_select_action_row","active",true)
+    UI.setAttribute("alteration_convert_dice_row","active",false)
+    UI.setAttribute("alteration_card_img","image","Alt-"..tostring(i))
+    local card = alterations[i]
+    assert(card, "demo(): can't find card data")
+    if card.primary then
+      UI_setAttribute("alteration_primary_action_txt","text","PRIMARY: "..card.primary.actions[1].desc)
+      local or_state = false
+      if #card.primary.actions > 1 then
+        UI_setAttribute("alteration_primary_or_action_txt","text","OR: "..card.primary.actions[2].desc)
+        or_state = true
+      end
+      UI.setAttribute("alteration_primary_or_action_pnl","active",or_state)
+    else
+      UI.setAttribute("alteration_primary_action_txt","text","undefined")
+      UI.setAttribute("alteration_primary_or_action_txt","text","undefined")
+    end
+    local secondary = card.secondary ~= nil
+    if secondary and card.secondary.aetherflow then secondary = secondary and pdata.aetherflow ~= nil end
+    if secondary then
+      UI.setAttribute("alteration_secondary_action_txt","text","SECONDARY: "..card.secondary.desc)
+    end
+    UI.setAttribute("alteration_card_pnl","visibility","")
+  elseif id == "demo_alt_dice" then
+    UI.setAttribute("hud_pnl","active",false)
+    UI.setAttribute("spell_card_pnl","visibility","Pink")
+    UI.setAttribute("alteration_select_action_row","active",false)
+    UI.setAttribute("alteration_convert_dice_row","active",true)
+    for i=1,7 do
+      UI.setClass("convert_to_die_"..tostring(i).."_img","image_inactive")
+    end
+    UI.setAttribute("alteration_card_pnl","visibility","")
+  elseif id == "demo_close" then
+    UI.setAttribute("hud_pnl","active",false)
+    UI.setAttribute("spell_card_pnl","visibility","Pink")
+    UI.setAttribute("alteration_select_action_row","active",true)
+    UI.setAttribute("alteration_convert_dice_row","active",false)
+    UI.setAttribute("alteration_card_pnl","visibility","Pink")
+    UI.setAttribute("dmeo_pnl","active",false)
+    UI.setAttribute("start_pnl","active",true)
+    GD.game.demo = false
+  else
+    log("ERROR: demo(): invalid id")
+  end
+end
 
 --[[ ******** TESTING ******** --]]
 
