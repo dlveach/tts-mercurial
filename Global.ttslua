@@ -3,21 +3,19 @@
 Work items for converstion of beta to production version:
 
   --BUG MINOR don't show any buttons (cast/take) while edit acuity spell panel is active.
+  --BUG MINOR if a player moves another player's spell card it jumps to their playerboard.
+      Easy to fix, correct player just drops it and it goes back to the right board.
+      Could avoid by checking ownership in pdata.active_spell_cards.  Maybe set memo for
+      owner like I do on Alteration cards.
 
-  --TODO: Endgame stuff.  MVP done. All needs to be tested.
-        -- DONE all take buttons disabled
-        -- mystrune disabled (or not)???
-        -- DONE disallow card play
-        -- DONE only enable cast button
-        -- Maybe blow away the g_lower board?  Or cover it with an endgame dialog?
+  --TODO: Endgame question: mystrune disabled (or not)???  Waiting on designer to answer.
 
   --BUG: something wrong with image asset "Spell-4".  Will not load.
-        --HACK: WORKAROUND: just load Spell-3 whenever Spell-4 comes up.
+        --HACK: WORKAROUND: just load Spell-5 whenever Spell-4 comes up.
 
 Future possible stuff for greater enhancement
 
   --TODO: add undo for some functions
-      -- take alteration card for sure
       -- recycle spell?
       -- take back used alterations?
 
@@ -30,12 +28,6 @@ Future possible stuff for greater enhancement
 
   --TODO: change arcanas into cards, move data into cards.ttslua
 
-  --TODO: OPTIMIZE add discarded alteration cards counter to player data.  Check on playerboard
-        ui update to avoid locating deck with physics everyt time.  Only do if count > 0.
-
-  --TODO: MAYBE? Change UI_setAttribute back to UI.setAttribute in UI update functions,
-          persistent state no longer needed there.
-
   --TODO: eleminate redundancy in Spell card info and images.  Bunch of same.
 
   --TODO: automate assigning resources to spell cards???  At least for fixed dice slots.
@@ -47,10 +39,10 @@ env.version = "1.0.2 production release"
 env.test= {}
 -- env.test.test_players = {"Green", "Blue", "Yellow", "Red"}
 -- env.test.test_players = {"Yellow", "Red", "Blue"}
-env.test.test_players = {"Red", "Blue"}
+-- env.test.test_players = {"Red", "Blue"}
 -- env.test.test_players = {"Green", "Blue"}
 -- env.test.test_players = {"Green", "Blue"}
-env.test.auto_switch = true
+env.test.auto_switch = false
 env.test.in_dev = false
 env.test.trace = true
 env.test.debug = false
@@ -276,6 +268,10 @@ function startGameBtn()
     seated = env.test.test_players
   end
   if env.test.debug then log("Seated players: "); log(seated) end
+  if #seated < 2 then
+    broadcastToAll("2 - 4 players needed for this game.")
+    return
+  end
   local colors_ok = true;
   for _,c in ipairs(seated) do
     if not(contains(env.game.player_table_order,c)) then
@@ -1434,24 +1430,29 @@ function takeAlterationBtn(player, button, id)
       if t.slot == slot then take = t; break end
     end
     assert(take, "Global:takeAlterationBtn() could not locate take action to undo")
-    local card = getObjectFromGUID(take.card_guid)
-    local cdata = alterations[take.card_id]
-    for _,s in ipairs(cdata.sigils) do
-      if pdata.alt_sigils[s] > 0 then pdata.alt_sigils[s] = pdata.alt_sigils[s] - 1 end
+    --confirm player has the acuity to return it
+    if pdata.acuity < take.acuity then
+      log("WARN: "..player.color.." does not have enough Acuity to return Alteration") --DEBUG
+    else
+      local card = getObjectFromGUID(take.card_guid)
+      local cdata = alterations[take.card_id]
+      for _,s in ipairs(cdata.sigils) do
+        if pdata.alt_sigils[s] > 0 then pdata.alt_sigils[s] = pdata.alt_sigils[s] - 1 end
+      end
+      local i = indexOf(pdata.alteration_cards, take.card_guid)
+      table.remove(pdata.alteration_cards, i)
+      card.memo = nil
+      card.setPosition(GD.game.alterations[slot].pos)
+      card.setLock(true)
+      GD.game.alterations[slot].card_guid = take.card_guid
+      GD.game.alterations[slot].card_id = take.card_id
+      if take.acuity > 0 then
+        GD.game.alterations[slot].acuity = take.acuity
+        pdata.acuity = pdata.acuity - take.acuity
+        if pdata.acuity < 0 then pdata.acuity = 0 end
+      end
+      table.insert(pdata.actions.take, "any")
     end
-    local i = indexOf(pdata.alteration_cards, take.card_guid)
-    table.remove(pdata.alteration_cards, i)
-    card.memo = nil
-    card.setPosition(GD.game.alterations[slot].pos)
-    card.setLock(true)
-    GD.game.alterations[slot].card_guid = take.card_guid
-    GD.game.alterations[slot].card_id = take.card_id
-    if take.acuity > 0 then
-      GD.game.alterations[slot].acuity = take.acuity
-      pdata.acuity = pdata.acuity - take.acuity
-      if pdata.acuity < 0 then pdata.acuity = 0 end
-    end
-    table.insert(pdata.actions.take, "any")
     table.remove(pdata.take_alteration, take.index)
     for i,t in ipairs(pdata.take_alteration) do t.index = i end --TODO: HACK: ugly. find better way
     updateHUD()
@@ -1936,13 +1937,6 @@ function alterationDlgHandler(player, button, id)
         if pdata.alt_sigils[s] > 0 then pdata.alt_sigils[s] = pdata.alt_sigils[s] - 1
         else log("Global:alterationDlgHandler() unable to decrement sigil "..s.." during discard") end
       end
-      --cleanup take undo if any
-      for _,take in ipairs(pdata.take_alteration) do
-        if take.card_id == card.id then
-          table.remove(pdata.take_alteration, take.index)
-          for i,t in ipairs(pdata.take_alteration) do t.index = i end --TODO: HACK: ugly. find better way
-        end
-      end
     else
       local memo = JSON.decode(obj.memo)
       if env.test.debug then
@@ -1975,6 +1969,8 @@ end
     UPDATE:
     Added undo button controls.  If one or more player.take_alteration action is
     defined then show undo button for the location it defines.
+    TODO: this is a mess with all the undo button display.  Duplication of checks
+    done elsewhere, etc.  Need to redesign.
   --]]
 function updateAlterationButtons(state)
   if env.test.trace then log("Global:updateAlterationButtons() "..tostring(state)) end
@@ -1989,7 +1985,7 @@ function updateAlterationButtons(state)
   for i=1,6 do
     local undo = false
     for _,take in ipairs(pdata.take_alteration) do
-      if take.slot == i then
+      if take.slot == i and pdata.acuity >= take.acuity then
         object_UI_setAttribute(g_lower, "alterations_undo_"..tostring(i).."_pnl", "active", undo_state)
         object_UI_setAttribute(g_lower, "alterations_take_"..tostring(i).."_pnl", "active", false)
         undo = true
@@ -2225,7 +2221,7 @@ function showPaySpellDlg(card_index, pcol)
   end
   updateSpellCostDlg()
   local id = card.getGMNotes()
-  if id == "4" then id = "3" end --HACK: BUG: Spell-4 image won't load, WORKAROUND: Spell-3 is the same image
+  if id == "4" then id = "5" end --HACK: BUG: Spell-4 image won't load, WORKAROUND: Spell-5 is the same image
   local card_image = "Spell-"..card.getGMNotes()
   if env.test.debug then
     log("---- Clearing card image")
@@ -3195,9 +3191,9 @@ function updateHUD(player_color)
       local id = pcol.."_hud_die_"..tostring(i).."_image"
       UI.setAttribute(id,"image",C.die_elements[d.value])
       if d.allocated then   --TODO: use gray border same as in class board?
-        UI.setAttribute(id, "color", "rgb(0.4,0.4,0.4)")
+        UI.setAttribute(id, "color", "rgb(0.35,0.35,0.35)")
       else
-        UI.setAttribute(id, "color", "white")
+        UI.setAttribute(id, "color", "rgba(1,1,1,1)")
       end
     end
     for sigil,count in pairs(pdata.sigils) do
@@ -3454,6 +3450,7 @@ function checkEndGame(pcol)
       print("Endgame triggered by player "..pcol.."!")
       print("Remaining players may only cast spells.")
     end
+    UI_setAttribute("endgame_txt","text","Endgame triggered by player "..pcol.."!")
     UI_setAttribute("endgame_pnl","active", true)
     --remove spell cards
     for _,card in ipairs(GD.game.spells) do

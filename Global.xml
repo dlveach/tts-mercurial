@@ -1089,7 +1089,7 @@
       </Row>
       <Row preferredHeight="50">
         <Cell>
-          <Text class="hud_header" fontSize="20" text="Remaining players cast spells in turn order"/>
+          <Text id="endgame_2_txt" class="hud_header" fontSize="18" text="Other players may only cast any spells they have."/>
         </Cell>
       </Row>
     </TableLayout>
