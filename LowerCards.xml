@@ -15,6 +15,9 @@
   <Button class="take_button"
     fontSize="20"
     text="Take" />
+  <Button class="undo_button"
+    fontSize="20"
+    text="Return" />
   <!-- Alterations acuity -->
   <Panel class="alt_acuity"
     padding="5 10 0 0" />
@@ -22,7 +25,7 @@
     color="rgb(1,1,0)"
     alignment="MiddleLeft"
     fontSize="20"
-    text="00" />
+    text="-" />
   <HorizontalLayout class="alt_acuity"
     spacing="0"
     padding="0 10 7 7"
@@ -92,33 +95,51 @@
 <Panel id="alterations_buttons_pnl" class="main" position="25 0 -6" >
   <HorizontalLayout spacing="0">
     <Panel>
-      <Panel id="alterations_button_1_pnl" class="inner">
-        <Button id="alterations_button_1_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      <Panel id="alterations_take_1_pnl" class="inner">
+        <Button id="alterations_take_1_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      </Panel>
+      <Panel id="alterations_undo_1_pnl" class="inner" active="false">
+        <Button id="alterations_undo_1_btn" class="undo_button" onClick="Global/takeAlterationBtn"/>
       </Panel>
     </Panel>
     <Panel>
-      <Panel id="alterations_button_2_pnl" class="inner">
-        <Button id="alterations_button_2_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      <Panel id="alterations_take_2_pnl" class="inner">
+        <Button id="alterations_take_2_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      </Panel>
+      <Panel id="alterations_undo_2_pnl" class="inner" active="false">
+        <Button id="alterations_undo_2_btn" class="undo_button" onClick="Global/takeAlterationBtn"/>
       </Panel>
     </Panel>
     <Panel>
-      <Panel id="alterations_button_3_pnl" class="inner">
-        <Button id="alterations_button_3_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      <Panel id="alterations_take_3_pnl" class="inner">
+        <Button id="alterations_take_3_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      </Panel>
+      <Panel id="alterations_undo_3_pnl" class="inner" active="false">
+        <Button id="alterations_undo_3_btn" class="undo_button" onClick="Global/takeAlterationBtn"/>
       </Panel>
     </Panel>
     <Panel>
-      <Panel id="alterations_button_4_pnl" class="inner">
-        <Button id="alterations_button_4_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      <Panel id="alterations_take_4_pnl" class="inner">
+        <Button id="alterations_take_4_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      </Panel>
+      <Panel id="alterations_undo_4_pnl" class="inner" active="false">
+        <Button id="alterations_undo_4_btn" class="undo_button" onClick="Global/takeAlterationBtn"/>
       </Panel>
     </Panel>
     <Panel>
-      <Panel id="alterations_button_5_pnl" class="inner">
-        <Button id="alterations_button_5_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      <Panel id="alterations_take_5_pnl" class="inner">
+        <Button id="alterations_take_5_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      </Panel>
+      <Panel id="alterations_undo_5_pnl" class="inner" active="false">
+        <Button id="alterations_undo_5_btn" class="undo_button" onClick="Global/takeAlterationBtn"/>
       </Panel>
     </Panel>
     <Panel>
-      <Panel id="alterations_button_6_pnl" class="inner">
-        <Button id="alterations_button_6_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      <Panel id="alterations_take_6_pnl" class="inner">
+        <Button id="alterations_take_6_btn" class="take_button" onClick="Global/takeAlterationBtn"/>
+      </Panel>
+      <Panel id="alterations_undo_6_pnl" class="inner" active="false">
+        <Button id="alterations_undo_6_btn" class="undo_button" onClick="Global/takeAlterationBtn"/>
       </Panel>
     </Panel>
   </HorizontalLayout>

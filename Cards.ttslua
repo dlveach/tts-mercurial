@@ -1806,10 +1806,6 @@ alterations = {
       max = 2,
       post = {type="gain_play",amount=1},
     },
-    discard = {
-      desc = "Spend one Acuity and discard this card then take another card."
-    },
-
   },
   { id = 26,
     guid = "772725",
@@ -1882,7 +1878,7 @@ alterations = {
         {
           desc = "Discard 3 Acuity.  Then take 5 Acuity.",
           action = "gain_n_acuity",
-          amouint = 5,
+          amount = 5,
           pre = {type="pay_acuity",amount=3},
         },
       },
