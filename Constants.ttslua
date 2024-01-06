@@ -1,48 +1,49 @@
 C = {}
-C.guids = {}
-C.guids.board_zones = {}
-C.guids.board_zones[1] = "60521c"
-C.guids.board_zones[2] = "bfde3d"
-C.guids.board_zones[3] = "147962"
-C.guids.board_zones[4] = "e02b04"
-C.guids.color_bars = {}
-C.guids.color_bars[1] = "4e97a8"
-C.guids.color_bars[2] = "fcab5e"
-C.guids.color_bars[3] = "3a88ad"
-C.guids.color_bars[4] = "277168"
-C.guids.positions = {}
-C.guids.positions[1] = "b8eff4"
-C.guids.positions[2] = "e6fa43"
-C.guids.positions[3] = "d025bf"
-C.guids.positions[4] = "5ae6ac"
-C.guids.cast = ""
-C.guids.take = ""
-C.guids.class_boards = {}
-C.guids.class_boards.mystcaller = "be09eb"
-C.guids.class_boards.elementalist = "e47526"
-C.guids.class_boards.archanist = "625f56"
-C.guids.class_boards.enchanter = "69525a"
-C.guids.class_boards.chaosmancer = "d453e1"
-C.guids.player_boards = {}
-C.guids.player_boards[1] = "b8eff4"
-C.guids.player_boards[2] = "e6fa43"
-C.guids.player_boards[3] = "d025bf"
-C.guids.player_boards[4] = "5ae6ac"
-C.guids.spells_deck = "922556"
-C.spells_deck_position = {x=8.1198, y=1.2505, z=-9.6790}
-C.guids.alterations_deck = "4c5ccc"
-C.alterations_deck_pos = {x=8.1403, y=1.1013, z=-3.7780}
-C.guids.heroics_deck = "c147d7"
-C.heroics_deck_pos = {x=8.1396, y=1.0675, z=2.3360}
-C.guids.artifacts_deck = "5e6187"
-C.guids.myst_rune_1 = "3444cf"
-C.guids.myst_rune_2 = "8b61f9"
-C.guids.table_UI = "ba7e59"  --TODO: fix UI
-C.guids.lower_cards = "4635ee"
-C.guids.upper_cards = "2f3d61"
-C.guids.dice_flip_chart = "e7eb8b"
-C.guids.excess_spell_prestige = "b53adf"
-
+--[[ game GUIDs --]]
+C.guids = {
+  board_zones = {
+    "60521c",
+    "bfde3d",
+    "147962",
+    "e02b04",
+  },
+  color_bars = {
+    "4e97a8",
+    "fcab5e",
+    "3a88ad",
+    "277168",
+  },
+  positions = {
+    "b8eff4",
+    "e6fa43",
+    "d025bf",
+    "5ae6ac",
+  },
+  class_boards = {
+    mystcaller = "be09eb",
+    elementalist = "e47526",
+    archanist = "625f56",
+    enchanter = "69525a",
+    chaosmancer = "d453e1",
+  },
+  player_boards = {
+    "b8eff4",
+    "e6fa43",
+    "d025bf",
+    "5ae6ac",
+  },
+  spells_deck = "922556",
+  alterations_deck = "4c5ccc",
+  heroics_deck = "c147d7",
+  artifacts_deck = "5e6187",
+  myst_rune_1 = "3444cf",
+  myst_rune_2 = "8b61f9",
+  lower_cards = "4635ee", --"Take" board
+  upper_cards = "2f3d61", --"Cast" board
+  dice_flip_chart = "e7eb8b",
+  excess_spell_prestige = "b53adf",
+}
+--[[ setup stuff for player cast boards --]]
 C.setup={
   Arcanist = {
     start_deck = "a25cd5",
@@ -106,8 +107,7 @@ C.setup={
     acuity_discount = 1,
   },
 }
-
---card decal stuff
+--[[ card decal stuff --]]
 card_decal_pos = {0,0.364,-1.124}
 card_decal_rot = {90,180,0}
 card_decal_scale = {0.97,0.81,11.54}
@@ -127,7 +127,7 @@ C.card_decals = {
     ["scale"] = card_decal_scale,
   }
 }
-
+--[[ TODO: still used? ]]
 C.default_cast_params = {
   direction    = {0,1,0},
   type         = 2,
@@ -248,33 +248,100 @@ C.arcanas = {
     },
   }
 }
-
-C.pos = {}
+--[[ TODO: still used? ]]
 C.rot = {}
-C.pos.spells = {}
-C.pos.spells[1] = {-9.20, 1.07, -15.54}
-C.pos.spells[2] = {-6.09, 1.07, -15.54}
-C.pos.spells[3] = {-2.97, 1.07, -15.54}
-C.pos.spells[4] = {0.15, 1.07, -15.54}
-C.pos.spells[5] = {3.25, 1.07, -15.54}
-C.pos.spells[6] = {6.36, 1.07, -15.54}
-C.pos.alterations = {}
-C.pos.alterations[1] = {-9.31, 1.07, -7.77}
-C.pos.alterations[2] = {-6.11, 1.07, -7.77}
-C.pos.alterations[3] = {-2.97, 1.07, -7.77}
-C.pos.alterations[4] = {0.15, 1.07, -7.77}
-C.pos.alterations[5] = {3.25, 1.07, -7.77}
-C.pos.alterations[6] = {6.37, 1.07, -7.77}
-C.pos.heroics = {}
-C.pos.heroics[1] = {-9.20, 1.07, 3.25}
-C.pos.heroics[2] = {-6.09, 1.07, 3.25}
-C.pos.heroics[3] = {-2.98, 1.07, 3.25}
-C.pos.heroics[4] = {0.15, 1.07, 3.25}
-C.pos.heroics[5] = {3.27, 1.07, 3.25}
-C.pos.heroics[6] = {6.40, 1.07, 3.25}
-C.pos.myst_rune = {7.25, 1.06, 15.02} --{2.51, 1.06, 12.54}
-C.pos.dice_flip = {-4.87, 0.96, 20.73}
-C.pos.excess_spell_prestige = {5.40, 0.96, 20.98}
-
+--[[ World positions for things --]]
+C.pos = {
+  spells = {
+    {-9.20, 1.07, -15.54},
+    {-6.09, 1.07, -15.54},
+    {-2.97, 1.07, -15.54},
+    {0.15, 1.07, -15.54},
+    {3.25, 1.07, -15.54},
+    {6.36, 1.07, -15.54},
+  },
+  alterations = {
+    {-9.31, 1.07, -7.77},
+    {-6.11, 1.07, -7.77},
+    {-2.97, 1.07, -7.77},
+    {0.15, 1.07, -7.77},
+    {3.25, 1.07, -7.77},
+    {6.37, 1.07, -7.77},
+  },
+  heroics = {
+    {-9.20, 1.07, 3.25},
+    {-6.09, 1.07, 3.25},
+    {-2.98, 1.07, 3.25},
+    {0.15, 1.07, 3.25},
+    {3.27, 1.07, 3.25},
+    {6.40, 1.07, 3.25},
+  },
+  spells_deck_position = {x=8.1198, y=1.2505, z=-9.6790},
+  alterations_deck_pos = {x=8.1403, y=1.1013, z=-3.7780},
+  heroics_deck_pos = {x=8.1396, y=1.0675, z=2.3360},
+  myst_rune = {7.25, 1.06, 15.02},
+  dice_flip = {-4.87, 0.96, 20.73},
+  excess_spell_prestige = {5.40, 0.96, 20.98},
+}
+--[[ Dice translation stuffs --]]
 C.die_elements = {"Fire", "Earth", "Aether", "Void", "Lightning", "Water"}
 C.die_flip = {6,5,4,3,2,1}
+--[[ Spell card image map --]]
+C.spell_image_map = {
+  "3ruin2s",
+  "3ruin2s",
+  "3ruin2s",
+  "5ruin3s",
+  "5ruin3s",
+  "7ruin4s",
+  "7ruin4s",
+  "4,6ruin3s",
+  "4,6ruin3s",
+  "4,6ruin3s",
+  "6,8ruin4s",
+  "6,8ruin4s",
+  "4rest2s",
+  "4rest2s",
+  "4rest2s",
+  "7rest3s",
+  "7rest3s",
+  "10rest4s",
+  "10rest4s",
+  "3,5rest2s",
+  "3,5rest2s",
+  "3,5rest2s",
+  "6,8rest3s",
+  "6,8rest3s",
+  "2ruin,3rest2s",
+  "2ruin,3rest2s",
+  "5ruin,7rest3s",
+  "5ruin,7rest3s",
+  "7ruin,10rest4s",
+  "7ruin,10rest4s",
+  "1xnsp-ruin2s",
+  "1xnsp-ruin2s",
+  "1xnsp-ruin2s",
+  "2xnsp-ruin3s",
+  "2xnsp-ruin3s",
+  "3xnsp-rest3s",
+  "3xnsp-rest3s",
+  "3xnsp-rest3s",
+  "4xnsp-rest4s",
+  "4xnsp-rest4s",
+  "1,2xnsp-ruin2s",
+  "1,2xnsp-ruin2s",
+  "2,3xnsp-rest3s",
+  "2,3xnsp-rest3s",
+  "nacuity-ruin3s",
+  "nacuity-ruin3s",
+  "nacuity-rest2s",
+  "nacuity-rest2s",
+  "ruin-rest2x3s",
+  "rest-ruin2s",
+  "lnk2x3s",
+  "lnk2x3s",
+  "lnk3x5s",
+  "lnk3x5s",
+  "lnk2,3x4s",
+  "lnk2,3x4s",
+}

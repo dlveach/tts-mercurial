@@ -9,6 +9,7 @@ Work items for converstion of beta to production version:
       owner like I do on Alteration cards.
 
   --TODO: Endgame question: mystrune disabled (or not)???  Waiting on designer to answer.
+      --Answer is in, yes can activate mystrune during endgame.  TODO: enable it
 
   --BUG: something wrong with image asset "Spell-4".  Will not load.
         --HACK: WORKAROUND: just load Spell-5 whenever Spell-4 comes up.
@@ -27,8 +28,6 @@ Future possible stuff for greater enhancement
   - TODO: start options in UI start game panel
 
   --TODO: change arcanas into cards, move data into cards.ttslua
-
-  --TODO: eleminate redundancy in Spell card info and images.  Bunch of same.
 
   --TODO: automate assigning resources to spell cards???  At least for fixed dice slots.
 
@@ -1924,7 +1923,7 @@ function alterationDlgHandler(player, button, id)
           assert(false, "Global:alterationDlgHandler() unknown alterations deck object")
         end
       else
-        obj.setPosition(C.alterations_deck_pos)
+        obj.setPosition(C.pos.alterations_deck_pos)
         GD.game.alterations_deck_guid = obj.getGUID()
         Wait.condition(function() obj.setLock(true) end, function() return obj.resting end)
       end
@@ -2221,18 +2220,10 @@ function showPaySpellDlg(card_index, pcol)
   end
   updateSpellCostDlg()
   local id = card.getGMNotes()
-  if id == "4" then id = "5" end --HACK: BUG: Spell-4 image won't load, WORKAROUND: Spell-5 is the same image
-  local card_image = "Spell-"..card.getGMNotes()
-  if env.test.debug then
-    log("---- Clearing card image")
-    UI_setAttribute("spell_cost_card_img","image","")  --HACK: trying to force image load
-    Wait.frames(function()
-      log("---- Setting card image: "..card_image)
-      UI_setAttribute("spell_cost_card_img","image",card_image)
-    end,1)
-  else
-    UI_setAttribute("spell_cost_card_img","image",card_image)
-  end
+  -- if id == "4" then id = "5" end --HACK: BUG: Spell-4 image won't load, WORKAROUND: Spell-5 is the same image
+  -- local card_image = "Spell-"..card.getGMNotes()
+  local card_image = C.spell_image_map[tonumber(id)]
+  UI_setAttribute("spell_cost_card_img","image",card_image)
   UI_setAttribute("spell_card_pnl","visibility",pcol)
   updateHUD(pcol)
 end
@@ -2606,7 +2597,7 @@ function recycleSpellBtn(player, button, id)
       assert(false, "Global:recycleSpellBtn() unknown spell deck object")
     end
   else
-    card.setPosition(C.spells_deck_position)
+    card.setPosition(C.pos.spells_deck_position)
     GD.game.spells_deck_guid = card.getGUID()
     Wait.condition(function() card.setLock(true) end, function() return card.resting end)
   end
@@ -3373,7 +3364,7 @@ function getHeroicsDeck()
   if deck then return deck end
   -- No deck object so use cast to find it
   local p = simpleDeepCopy(C.default_cast_params)
-  p.origin = C.heroics_deck_pos
+  p.origin = C.pos.heroics_deck_pos
   local hits = Physics.cast({p})
   if hits then
     for _,hit in pairs(hits) do
@@ -3399,7 +3390,7 @@ function getAlterationsDeck()
   local deck = getObjectFromGUID(GD.game.alterations_deck_guid)
   if deck then return deck end
   -- No deck object so find it
-  local deck = findObject(C.alterations_deck_pos, {"Deck","Card"}, env.test.debug)
+  local deck = findObject(C.pos.alterations_deck_pos, {"Deck","Card"}, env.test.debug)
   if not(deck) then log("WARN: Global: getAlterationsDeck(): No deck found")
   else GD.game.alterations_deck_guid = deck.getGUID() end
   return deck
@@ -3539,6 +3530,8 @@ function finalScore()
   UI_setAttribute("score_panel","active",true)
 end
 
+--////////// Utility ////////////
+
 --[[ If game not started, hide start panel and show demo dialog to host.
   --TODO: ignore (return from) all dialog buttons when demo active.
 --]]
@@ -3566,6 +3559,15 @@ function demo(player, button, id)
     UI.setAttribute("spell_card_pnl","visibility","Pink")
     UI.setAttribute("alteration_card_pnl","visibility","Pink")
   elseif id == "demo_spell" then
+    local i = tonumber(UI.getAttribute("spell_cost_card_img","hidden"))
+    if not(i) then i = 1 end
+    if i == nil then i = 1 end
+    if button == "-2" and i < 56 then i = i + 1
+    elseif button == "-3" and i > 1 then i = i - 1
+    end
+    log("Spell Image Map: Spell id "..tostring(i).." -> "..C.spell_image_map[i])
+    UI.setAttribute("spell_cost_card_img","image",C.spell_image_map[i])
+    UI.setAttribute("spell_cost_card_img","hidden",tostring(i))
     UI.setAttribute("hud_pnl","active",false)
     UI.setAttribute("spell_card_pnl","visibility","")
     UI.setAttribute("alteration_card_pnl","visibility","Pink")
@@ -3580,6 +3582,7 @@ function demo(player, button, id)
     UI.setAttribute("alteration_select_action_row","active",true)
     UI.setAttribute("alteration_convert_dice_row","active",false)
     UI.setAttribute("alteration_card_img","image","Alt-"..tostring(i))
+    log("Showing image Alt-"..tostring(i))
     local card = alterations[i]
     assert(card, "demo(): can't find card data")
     if card.primary then
@@ -3621,6 +3624,10 @@ function demo(player, button, id)
   else
     log("ERROR: demo(): invalid id")
   end
+end
+
+function testImageMap(id)
+  log(C.spell_image_map[id])
 end
 
 --[[ Force reload of all UI elements when somethign isn't showing.
