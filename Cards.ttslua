@@ -1643,7 +1643,7 @@ alterations = {
         {
           desc = "Convert 1 Fire to Lightning or Water (+1 ea Red Sigil).",
           action = "convert",
-          from = {"Lightning"},
+          from = {"Fire"},
           to = {"Water","Lightning"},
           min = 1,
           max = 1,
