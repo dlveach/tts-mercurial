@@ -149,7 +149,7 @@ function updateUI(pdata)
       self.UI.setAttribute("player_done_pnl","active",false)
     else
       self.UI.setAttribute("edit_acuity_pnl", "active",true)
-      self.UI.setAttribute("cast_spell_pnl","active",pdata.cast_allowed)
+      self.UI.setAttribute("cast_spell_pnl","active", pdata.activity == 0)
       local state = indexOf(pdata.actions.take,"any") > 0
       if not(state) then state = state and indexOf(pdata.actions.take,"spell") > 0 end
       self.UI.setAttribute("player_done_pnl","active",not(state))

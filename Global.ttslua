@@ -3,22 +3,18 @@
 Work items for converstion of beta to production version:
 
   --BUG MINOR don't show any buttons (cast/take) while edit acuity spell panel is active.
-  --BUG MINOR if a player moves another player's spell card it jumps to their playerboard.
-      Easy to fix, correct player just drops it and it goes back to the right board.
-      Could avoid by checking ownership in pdata.active_spell_cards.  Maybe set memo for
-      owner like I do on Alteration cards.
-
-  --TODO: Endgame question: mystrune disabled (or not)???  Waiting on designer to answer.
-      --Answer is in, yes can activate mystrune during endgame.  TODO: enable it
-
-  --BUG: something wrong with image asset "Spell-4".  Will not load.
-        --HACK: WORKAROUND: just load Spell-5 whenever Spell-4 comes up.
+    -- maybe no big deal
 
 Future possible stuff for greater enhancement
 
   --TODO: add undo for some functions
-      -- recycle spell?
-      -- take back used alterations?
+      -- undo recycle spell?
+        -- check enough acuity to undo
+      -- undo take back used alterations?
+          -- keep track of returned cards
+          -- disable undo if any of them played
+      -- alteration "immediate" actions (take acuity etc.)
+      -- could possibly undo for dice conversion (not reroll)
 
   --TODO: smart spell card placement.  In generating map.
       -- move link spell(s) to highest value base spell (easy)
@@ -715,7 +711,7 @@ function takeUsedAlterationsBtn(player, button, id)
   local index = indexOf(pdata.actions.take, "any")
   if index > 0 then table.remove(pdata.actions.take, index)
   else log("WARN: takeUsedAlterationsBtn(): unable to decrement take actions") end
-  pdata.cast_allowed = false
+  pdata.activity = pdata.activity + 1
   updateHUD()
 end
 
@@ -796,7 +792,7 @@ function startPlayerTurn(pcol)
       object_UI_setAttribute(g_lower, "alterations_take_"..tostring(i).."_pnl", "active", true)
     end
     pdata.active = true
-    pdata.cast_allowed = true
+    pdata.activity = 0
     if GD.env.verbose then print("Active player is " .. GD.game.player_order[GD.game.current_player]) end
     updateHUD()
   end
@@ -1209,8 +1205,8 @@ function updateScore(pcol)
     pdata.score.arcanas = pdata.score.arcanas + a.base_vp
     if a.bonus.spell_type == "Fire" or a.bonus.spell_type == "Water" then
       local c = 0
-      for _,s in ipairs(pdata.cast_spells) do
-        local d = spells[s.id]
+      for _,id in ipairs(pdata.cast_spells) do
+        local d = spells[id]
         if contains(d.dice, a.bonus.spell_type) then c = c + 1 end
       end
       local bonus = math.floor(c/a.bonus.count)
@@ -1219,22 +1215,22 @@ function updateScore(pcol)
       pdata.score.arcanas = pdata.score.arcanas + math.floor(#pdata.cast_spells/a.bonus.count)
     elseif a.bonus.spell_type == "slot_count" then
       local c = 0
-      for _,s in ipairs(pdata.cast_spells) do
-        local d = spells[s.id]
+      for _,id in ipairs(pdata.cast_spells) do
+        local d = spells[id]
         if d.slots >= a.bonus.slot_count then c = c + 1 end
       end
       pdata.score.arcanas = pdata.score.arcanas + math.floor(c/a.bonus.count)
     elseif a.bonus.spell_type == "aether_mod" then
       local c = 0
-      for _,s in ipairs(pdata.cast_spells) do
-        local d = spells[s.id]
+      for _,id in ipairs(pdata.cast_spells) do
+        local d = spells[id]
         if d.aether_mod then c = c + 1 end
       end
       pdata.score.arcanas = pdata.score.arcanas + math.floor(c/a.bonus.count)
     elseif a.bonus.spell_type == "not_aether" then
       local c = 0
-      for _,s in ipairs(pdata.cast_spells) do
-        local d = spells[s.id]
+      for _,id in ipairs(pdata.cast_spells) do
+        local d = spells[id]
         if not(d.aether_mod) then c = c + 1 end
       end
       pdata.score.arcanas = pdata.score.arcanas + math.floor(c/a.bonus.count)
@@ -1254,19 +1250,31 @@ function onObjectDrop(pcol, obj)
         return
       end
       if env.test.trace then log("Global: onObjectDrop() spell card "..obj.getGUID()) end
+      if env.test.debug then assert(obj.memo, "ERROR: no memo for spell card "..obj.getGUID()) end
+      local memo = JSON.decode(obj.memo)
+      if memo.player == "" then return end
+      if memo.player ~= pcol then
+        if env.test.debug then log("WARN: player "..pcol.." does not own spell card "..obj.getGUID()) end
+        pcol = memo.player
+      end
       local player_board = getObjectFromGUID(GD.game.players[pcol].player_board)
-      local data = spells[tonumber(obj.getGMNotes())]
-      local params = {
-        guid = obj.getGUID(),
-        map = GD.game.players[pcol].spell_power.card_map,
-        card_data = data
-      }
-      if data.option then setSpellCardDecal(obj, pcol) end
-      local map = player_board.call("locateSpell", params)
-      assert(map, "Global:onObjectDrop(): player_board locateSpell() did not return a map")
-      GD.game.players[pcol].spell_power.card_map = simpleDeepCopy(map)
-      updateSpellPower(pcol)
-      updateHUD()  --TODO: ok to update spell/alteration buttons here?
+      if indexOf(GD.game.players[pcol].cast_spells, tonumber(obj.getGMNotes())) > 0 then
+        player_board.call("placeCastSpell",{guid=obj.getGUID()})
+        return
+      else
+        local data = spells[tonumber(obj.getGMNotes())]
+        local params = {
+          guid = obj.getGUID(),
+          map = GD.game.players[pcol].spell_power.card_map,
+          card_data = data
+        }
+        if data.option then setSpellCardDecal(obj, pcol) end
+        local map = player_board.call("locateSpell", params)
+        assert(map, "Global:onObjectDrop(): player_board locateSpell() did not return a map")
+        GD.game.players[pcol].spell_power.card_map = simpleDeepCopy(map)
+        updateSpellPower(pcol)
+        updateHUD()
+      end
     elseif obj.hasTag("Alteration") then
       if contains(Player[pcol].getHandObjects(), obj) then return end --ignore moving in hand
       local current = GD.game.player_order[GD.game.current_player]
@@ -1297,6 +1305,15 @@ function onObjectDrop(pcol, obj)
       else
         log("ERROR: onObjectDrop(): alteration card "..obj.getGUID().." has no memo data.") --should not happen
       end
+    elseif obj.hasTag("Heroic") then
+      local memo = JSON.decode(obj.memo)
+      if memo.player == "" then return end
+      if memo.player ~= pcol then
+        if env.test.debug then log("WARN: player "..pcol.." does not own Heroic card "..obj.getGUID()) end
+        pcol = memo.player
+      end
+      local player_board = getObjectFromGUID(GD.game.players[pcol].player_board)
+      player_board.call("placeHeroicCard",{guid=obj.getGUID(),index=memo.index})
     end
   end
 end
@@ -1309,25 +1326,29 @@ end
 function setSpellCardDecal(card, pcol)
   local data = spells[tonumber(card.getGMNotes())]
   assert(data, "setSpellCardDecal() no data for card "..card.getGUID())
-  if card.memo ~= nil then
+  local memo = JSON.decode(card.memo)
+  if memo.type ~= nil then
     --Set decal based on previous setting stored in card memo
-    if card.memo == "Restore" then
+    if memo.type == "Restore" then
       card.addDecal(C.card_decals["Restore"])
-    elseif card.memo == "Ruin" then
+    elseif memo.type == "Ruin" then
       card.addDecal(C.card_decals["Ruin"])
     else
-      log(self.getName().." ERROR: unexpected memo value on card "..card.getGUID())
+      if env.test.debug then
+        assert(false,"Global:setSpellCardDecal() unexpected memo.type value on card "..card.getGUID())
+      end
     end
   else
     --Default initial decal by which card spell power is greater right now
     local s = GD.game.players[pcol].spell_power
     if s.net_ruin > s.net_restore then
       card.addDecal(C.card_decals.Ruin)
-      card.memo = "Ruin"
+      memo.type = "Ruin"
     else
       card.addDecal(C.card_decals.Restore)
-      card.memo = "Restore"
+      memo.type = "Restore"
     end
+    card.memo = JSON.encode(memo)
   end
   createCardButton(card)
 end
@@ -1367,15 +1388,19 @@ function cardButton(card, player_color, mouse)
     card.setDecals({})
     if decals[1].name == "Restore" then
       card.addDecal(C.card_decals.Ruin)
-      card.memo = "Ruin"
+      local memo = JSON.decode(card.memo)
+      memo.type = "Ruin"
+      card.memo = JSON.encode(memo)
     elseif decals[1].name == "Ruin" then
       card.addDecal(C.card_decals.Restore)
-      card.memo = "Restore"
+      local memo = JSON.decode(card.memo)
+      memo.type = "Restore"
+      card.memo = JSON.encode(memo)
     else
       log("Global: cardButton() ERROR: unidentified decal on card")
     end
     updateSpellPower(player_color)
-    updateHUD()  --TODO: ok to update spell/alteration buttons here?
+    updateHUD()
   end
 end
 
@@ -1387,6 +1412,7 @@ end
     'undo': Card is returned to the board and all associated resources removed from player.
 --]]
 function takeAlterationBtn(player, button, id)
+  if GD.game.demo then return end
   if env.test.trace then log("Global:takeAlterationBtn() "..tostring(player.color)..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local pdata = GD.game.players[player.color]
@@ -1406,7 +1432,7 @@ function takeAlterationBtn(player, button, id)
     GD.game.alterations[slot].card_id = 0
     assert(card, "Global:takeAlterationBtn() could not locate card")
     table.insert(pdata.alteration_cards, card.getGUID())
-    card.memo = JSON.encode({used=false,player=player.color})
+    card.memo = JSON.encode({player=player.color,used=false,})
     card.deal(1,player.color)
     for _,s in ipairs(cdata.sigils) do
       pdata.alt_sigils[s] = pdata.alt_sigils[s] + 1
@@ -1421,7 +1447,7 @@ function takeAlterationBtn(player, button, id)
     local i = indexOf(pdata.actions.take, "any")
     if i > 0 then table.remove(pdata.actions.take, i)
     else log("WARN: takeAlterationBtn(): unable to decrement take actions") end
-    pdata.cast_allowed = false
+    pdata.activity = pdata.activity + 1
     updateHUD()
   elseif action == "undo" then
     local take
@@ -1451,6 +1477,7 @@ function takeAlterationBtn(player, button, id)
         if pdata.acuity < 0 then pdata.acuity = 0 end
       end
       table.insert(pdata.actions.take, "any")
+      if pdata.activity > 0 then pdata.activity = pdata.activity - 1 end
     end
     table.remove(pdata.take_alteration, take.index)
     for i,t in ipairs(pdata.take_alteration) do t.index = i end --TODO: HACK: ugly. find better way
@@ -1591,6 +1618,7 @@ end
     Also see showAlterationDlg() for data structure reference.
 --]]
 function alterationDlgHandler(player, button, id)
+  if GD.game.demo then return end
   if env.test.trace then log("Global: alterationDlgHandler() "..player.color..", "..tostring(id)..", "..tostring(button)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local action = Split(id,"_")[2]
@@ -1894,7 +1922,7 @@ function alterationDlgHandler(player, button, id)
         end
       end
     end
-    pdata.cast_allowed = false
+    pdata.activity = pdata.activity + 1
     pdata.actions.play = pdata.actions.play - 1
     local obj = getObjectFromGUID(card.guid)
     assert(obj, "alterationDlgHandler(): could not instantiate card object")
@@ -2082,6 +2110,7 @@ end
 
 --[[ Handler for the mystrune activate dialog. ]]
 function mystruneActivateDlg(player, button, id)
+  if GD.game.demo then return end
   if env.test.trace then log("Global:mystruneActivateDlg() "..player.color..", "..tostring(id)..", "..tostring(button)) end
   if not(GD.game.started) then return end --TODO: remove after development
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
@@ -2145,6 +2174,7 @@ end
 
 --[[ Handler for the take Spell button. ]]
 function takeSpellBtn(player, button, id)
+  if GD.game.demo then return end
   if env.test.trace then log("Global: takeSpellBtn() "..tostring(player.color)..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local card_index = tonumber(Split(id,"_")[3])
@@ -2279,6 +2309,7 @@ end
 
 --[[ Handler for pay spell cost dialog --]]
 function spellCostHandler(player, button, id)
+  if GD.game.demo then return end
   if env.test.trace then log("Global: spellCostHandler() "..tostring(player.color)..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local dlg = GD.game.players[player.color].spell_cost
@@ -2389,6 +2420,7 @@ function spellCostHandler(player, button, id)
       card_id=GD.game.spells[dlg.card_index].card_id,
       guid=card.getGUID()
     })
+    card.memo = JSON.encode({player=player.color,})
     --auto place card (TODO: primitively for now)
     local data = spells[tonumber(card.getGMNotes())]
     local params = {
@@ -2411,7 +2443,7 @@ function spellCostHandler(player, button, id)
       if take == "spell" then index=i; break end --priortize remove spell take
     end
     table.remove(pdata.actions.take, index)
-    pdata.cast_allowed = false
+    pdata.activity = pdata.activity + 1
     UI_setAttribute("spell_card_pnl","visibility","Pink")
     pdata.spell_cost = nil
     Wait.condition(function()
@@ -2565,6 +2597,7 @@ end
 
 --[[ Handler for Recycle Leftmost Spell button. ]]
 function recycleSpellBtn(player, button, id)
+  if GD.game.demo then return end
   if env.test.trace then log("Global: recycleSpellBtn() "..tostring(player.color)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local pdata = GD.game.players[player.color]
@@ -2613,7 +2646,7 @@ function recycleSpellBtn(player, button, id)
   local index = indexOf(pdata.actions.take, "any")
   if index > 0 then table.remove(pdata.actions.take, index)
   else log("WARN: takeAlterationBtn(): unable to decrement take actions") end
-  pdata.cast_allowed = false
+  pdata.activity = pdata.activity + 1
   updateHUD()
 end
 
@@ -2621,6 +2654,7 @@ end
 
 --[[ Handler for the Cast spell button. ] ]]
 function castSpellBtn(player, button, id)
+  if GD.game.demo then return end
   if env.test.trace then log("Global: castSpellBtn() "..player.color..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local pdata = GD.game.players[player.color]
@@ -2709,6 +2743,7 @@ end
 
 --[[ Handler for the take Heroic button. ]]
 function takeHeroicBtn(player, button, id)
+  if GD.game.demo then return end
   if env.test.trace then log("Global: takeHeroicBtn() "..tostring(player.color)..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local pdata = GD.game.players[player.color]
@@ -2738,6 +2773,7 @@ function takeHeroicBtn(player, button, id)
     local board = getObjectFromGUID(pdata.player_board)
     assert(board, "Global:takeHeroicBtn() could not locate player board")
     board.call("placeHeroicCard",{guid=card.getGUID(),index=#pdata.heroics})
+    card.memo = JSON.encode({player=player.color,index=#pdata.heroics})
     GD.game.heroics[index].card_id = ""
     GD.game.heroics[index].card_guid = ""
     if GD.env.verbose then print("Heroic bonus: "..pdata.player_color.." gains 1 Mana and 1 Acuity") end
@@ -2823,6 +2859,7 @@ end
 
 --[[ Handler for the cast consolation dialog. ]]
 function castConsolationHandler(player, button, id)
+  if GD.game.demo then return end
   if env.test.trace then log("Global: castConsolationHandler() "..tostring(player.color)..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local pdata = GD.game.players[player.color]
@@ -2880,6 +2917,7 @@ end
 
 --[[ Handler for the Myst select spell type dialog.]]
 function castMystHandler(player, button, id)
+  if GD.game.demo then return end
   if env.test.trace then log("Global:castMystHandler() "..tostring(player.color)..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local pdata = GD.game.players[player.color]
@@ -2918,6 +2956,7 @@ end
 
 --[[ Handler for the Myst Rune choice dialog.]]
 function castMystruneHandler(player, button, id)
+  if GD.game.demo then return end
   if env.test.trace then log("Global:castMystruneHandler() "..tostring(player.color)..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local pdata = GD.game.players[player.color]
@@ -2953,6 +2992,7 @@ end
 
 --[[ Handler for the take Arcana buttons. ]]
 function takeArcanaBtn(player, button, id)
+  if GD.game.demo then return end
   if env.test.trace then log("Global:takeArcanaBtn() "..tostring(player.color)..", "..tostring(id)) end
   if player.color ~= GD.game.player_order[GD.game.current_player] then return end
   local pdata = GD.game.players[player.color]
@@ -2978,23 +3018,23 @@ function castCleanup(pcol)
   for _,s in ipairs(pdata.spell_power.card_map.base_spells) do
     if s.guid ~= "" then
       board.call("placeCastSpell",{guid=s.guid})
-      table.insert(pdata.cast_spells, {id=s.id})
+      table.insert(pdata.cast_spells, s.id)
     end
   end
   for _,s in ipairs(pdata.spell_power.card_map.enchant_spells) do
     if s.guid ~= "" then
       board.call("placeCastSpell",{guid=s.guid})
-      table.insert(pdata.cast_spells, {id=s.id})
+      table.insert(pdata.cast_spells, s.id)
     end
   end
   for i,link in ipairs(pdata.spell_power.card_map.link_spells) do
     if #link == 1 then --single card
       board.call("placeCastSpell",{guid=link[1].guid})
-      table.insert(pdata.cast_spells, {id=link[1].id})
+      table.insert(pdata.cast_spells, link[1].id)
     elseif #link > 1 then --handle a deck here
       local list = board.call("placeLinkSpellDeck",{index=i})
       for _,card_id in ipairs(list) do
-        table.insert(pdata.cast_spells, {id=card_id})
+        table.insert(pdata.cast_spells, card_id)
       end
     end
   end
@@ -3223,7 +3263,7 @@ function updateHUD(player_color)
       --handle case of myst rune owned by player
       if pdata.mystrune then
         local o = getObjectFromGUID(pdata.mystrune)
-        o.UI.setAttribute("ui_panel","active", not(dialog_open))
+        o.UI.setAttribute("ui_panel","active", not(dialog_open) or GD.game.endgame)
       end
     else
       if pdata.mystrune then
@@ -3267,7 +3307,7 @@ function onObjectLeaveContainer(container, obj)
     if not(GD.game.started) and container.hasTag("Start_Deck") then
       --special case for start card decks being dealt out
       if container.memo ~= nil then obj.memo = container.memo
-      else log("WARN: start deck memo is nil for guid "..container.getGUID())end
+      else log("WARN: start deck memo is nil for guid "..container.getGUID()) end --DEBUG
     end
     if obj.hasTag("Alteration") then
       local data = alterations[tonumber(obj.getGMNotes())]
@@ -3291,18 +3331,21 @@ function onObjectLeaveContainer(container, obj)
       end
       if env.test.debug then obj.setName(data.id)
       else obj.setName("") end
+      if obj.memo == nil then obj.memo = JSON.encode({player="",used=false,}) end
     elseif obj.hasTag("Spell") then
       local data = spells[tonumber(obj.getGMNotes())]
       if GD.env.card_tooltips then obj.setDescription(data.desc) end
       if env.test.debug then obj.setName(data.id)
       else obj.setName("") end
       data.guid = obj.getGUID()
+      if obj.memo == nil then obj.memo = JSON.encode({player="",}) end
     elseif obj.hasTag("Heroic") then
       local data = heroics[tonumber(obj.getGMNotes())]
       if GD.env.card_tooltips then obj.setDescription(data.desc) end
       if env.test.debug then obj.setName(data.id)
       else obj.setName("") end
       data.guid = obj.getGUID()
+      obj.memo = JSON.encode({player="",})
     end
   end
 end
@@ -3312,10 +3355,27 @@ end
     on spells with both types of spell power.
     Also clear spell card from map, to allow for drop to new location.
 --]]
-function onObjectPickUp(player_color, obj)
+function onObjectPickUp(pcol, obj)
   if GD.game.started then
-    if obj.hasTag("Spell") then
-      if env.test.debug then log("Player "..player_color.." picked up spell card "..obj.getGUID()) end
+    if obj.hasTag("Spell") and obj.tag ~= "Deck" then
+      if env.test.debug then
+        log("Player "..pcol.." picked up spell card "..obj.getGUID())
+        assert(obj.memo, "Global:onObjectPickup() no memo for spell card")
+      end
+      local memo = JSON.decode(obj.memo)
+      if memo.player == "" then
+        log("WARN: Global:onObjectPickup() player "..pcol.." picked up an unassigned spell card.")
+        return
+      end
+      if memo.player ~= pcol then
+        log("WARN: Global:onObjectPickup()  player "..pcol.." picked up spell card they do not own "..obj.getGUID())
+        pcol = memo.player
+      end
+      local pdata = GD.game.players[pcol]
+      if indexOf(pdata.cast_spells, tonumber(obj.getGMNotes())) > 0 then
+        log("WARN: Global:onObjectPickup() spell card "..obj.getGUID().." has been cast by player "..pcol)
+        return
+      end
       -- Clear any decals and buttons on a spell card when picked up
       if obj.getDecals() ~= nil then
         obj.setDecals({})
@@ -3325,7 +3385,6 @@ function onObjectPickUp(player_color, obj)
       end
       --remove the card from the player's spell_power card map.
       local cdata = spells[tonumber(obj.getGMNotes())]
-      local pdata = GD.game.players[player_color]
       local type = "base_spells"
       if cdata.enchant ~= nil then
         type = "enchant_spells"
@@ -3416,7 +3475,6 @@ end
 --[[ Check end game conditions.  Set state if reached. ]]
 function checkEndGame(pcol)
   if env.test.trace then log("Global: checkEndGame() "..tostring(pcol)) end
-  -- if GD.game.endgame then return end --already triggered
   local max = 5
   if #GD.game.player_order == 3 then
     max = 4
