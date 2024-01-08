@@ -1065,8 +1065,9 @@ function getCardSpellPower(card, pcol)
     ruin = spell.acuity.ruin * GD.game.players[pcol].acuity
   end
   if spell.option then
-    if card.memo == "Restore" then ruin = 0
-    elseif card.memo == "Ruin" then restore = 0
+    local memo = JSON.decode(card.memo)
+    if memo.type == "Restore" then ruin = 0
+    elseif memo.type == "Ruin" then restore = 0
     else
       log("ERROR: getCardSpellPower() invalid memo for option card id "..spell.id)
     end
